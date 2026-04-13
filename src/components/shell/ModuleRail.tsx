@@ -21,12 +21,6 @@ const ICONS: Record<TabId, JSX.Element> = {
       <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
     </svg>
   ),
-  building: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <rect x="4" y="4" width="16" height="16" />
-      <path d="M4 9h16M4 15h16M9 4v16M15 4v16" />
-    </svg>
-  ),
   hazards: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
       <path d="M12 3l9 16H3L12 3z" />
@@ -52,17 +46,15 @@ const CODES: Record<TabId, string> = {
   climate: '03',
   wind: '04',
   sun: '05',
-  building: '06',
-  hazards: '07',
-  air: '08',
-  context: '09',
+  hazards: '06',
+  air: '07',
+  context: '08',
 };
 
 const LABELS: Record<TabId, string> = {
   climate: 'CLM',
   wind: 'WND',
   sun: 'SUN',
-  building: 'BLD',
   hazards: 'HZD',
   air: 'AIR',
   context: 'CTX',

@@ -139,7 +139,6 @@ export type TabId =
   | 'climate'
   | 'wind'
   | 'sun'
-  | 'building'
   | 'hazards'
   | 'air'
   | 'context';
@@ -148,7 +147,6 @@ export const TAB_ORDER: TabId[] = [
   'climate',
   'wind',
   'sun',
-  'building',
   'hazards',
   'air',
   'context',
@@ -158,7 +156,6 @@ export const TAB_LABELS: Record<TabId, string> = {
   climate: 'Climate',
   wind: 'Wind',
   sun: 'Sun',
-  building: 'Building',
   hazards: 'Hazards',
   air: 'Air',
   context: 'Context',

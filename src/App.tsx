@@ -4,7 +4,7 @@ import type { Slot } from './hooks/useUrlState';
 import { MapCanvas, type BaseMap } from './components/shell/MapCanvas';
 import { MapHud } from './components/shell/MapHud';
 import { LocationIntelCard } from './components/shell/LocationIntelCard';
-import { LayerToggle } from './components/shell/LayerToggle';
+import { BuildingCard } from './components/shell/BuildingCard';
 import { ModuleRail } from './components/shell/ModuleRail';
 import { ModuleSheet } from './components/shell/ModuleSheet';
 import { BottomStrip } from './components/shell/BottomStrip';
@@ -96,7 +96,7 @@ export default function App() {
               activeSlot={state.slot}
             />
 
-            <div className="absolute top-6 left-6 z-30 pointer-events-auto">
+            <div className="absolute top-6 left-6 z-30 pointer-events-auto flex flex-col gap-3 max-h-[calc(100vh-96px)] overflow-y-auto overflow-x-hidden pr-1">
               <LocationIntelCard
                 coordsA={state.coordsA}
                 coordsB={state.coordsB}
@@ -108,16 +108,17 @@ export default function App() {
                 resolvingB={resolvingB}
                 activeSlot={state.slot}
                 compareMode={compareMode}
+                baseMap={baseMap}
+                onBaseMapChange={setBaseMap}
                 onSetSlot={setSlot}
                 onChangeA={setCoordsA}
                 onChangeB={setCoordsB}
                 onEnableCompare={enableCompare}
                 onDisableCompare={disableCompare}
               />
-            </div>
 
-            <div className="absolute top-6 right-6 z-30 pointer-events-auto">
-              <LayerToggle baseMap={baseMap} onBaseMapChange={setBaseMap} />
+              <BuildingCard coords={state.coordsA} slot="A" />
+              {compareMode && <BuildingCard coords={state.coordsB} slot="B" />}
             </div>
 
             <ModuleSheet

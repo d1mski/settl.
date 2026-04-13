@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Coordinates } from '../../types';
 import type { Slot } from '../../hooks/useUrlState';
+import type { BaseMap } from './MapCanvas';
 import { formatCoordinate, parseCoordinates } from '../../utils/coordinates';
 import { forwardGeocode, type GeocodeResult } from '../../hooks/useNominatim';
 import { Panel } from '../hud/Panel';
@@ -16,6 +17,8 @@ interface Props {
   resolvingB: boolean;
   activeSlot: Slot;
   compareMode: boolean;
+  baseMap: BaseMap;
+  onBaseMapChange: (base: BaseMap) => void;
   onSetSlot: (slot: Slot) => void;
   onChangeA: (coords: Coordinates | null) => void;
   onChangeB: (coords: Coordinates | null) => void;
@@ -34,6 +37,8 @@ export function LocationIntelCard({
   resolvingB,
   activeSlot,
   compareMode,
+  baseMap,
+  onBaseMapChange,
   onSetSlot,
   onChangeA,
   onChangeB,
@@ -136,7 +141,7 @@ export function LocationIntelCard({
               placeholder={
                 activeSlot === 'b' ? 'TGT B · COORD / DMS / ADDR' : 'TGT A · COORD / DMS / ADDR'
               }
-              className={`flex-1 bg-void border px-2.5 py-1.5 text-[11px] font-mono text-ink outline-none placeholder:text-dim tracking-wider transition-colors ${
+              className={`flex-1 min-w-0 bg-void border px-2.5 py-1.5 text-[11px] font-mono text-ink outline-none placeholder:text-dim tracking-wider transition-colors ${
                 activeSlot === 'b'
                   ? 'border-amber/50 focus:border-amber'
                   : 'border-edge focus:border-cyan'
@@ -145,7 +150,7 @@ export function LocationIntelCard({
             <button
               onClick={handleSubmit}
               disabled={searching}
-              className={`px-3 py-1.5 border bg-void text-[10px] font-mono uppercase tracking-widest transition-colors disabled:opacity-40 ${
+              className={`shrink-0 px-3 py-1.5 border bg-void text-[10px] font-mono uppercase tracking-widest transition-colors disabled:opacity-40 ${
                 activeSlot === 'b'
                   ? 'border-amber/50 text-amber hover:border-amber hover:bg-amber/5'
                   : 'border-edge text-cyan hover:border-cyan hover:bg-cyan/5'
@@ -153,6 +158,7 @@ export function LocationIntelCard({
             >
               {searching ? '...' : 'EXEC'}
             </button>
+            <ThemeToggle baseMap={baseMap} onBaseMapChange={onBaseMapChange} />
           </div>
 
           {error && (
@@ -209,6 +215,48 @@ export function LocationIntelCard({
         </div>
       </div>
     </Panel>
+  );
+}
+
+function ThemeToggle({
+  baseMap,
+  onBaseMapChange,
+}: {
+  baseMap: BaseMap;
+  onBaseMapChange: (base: BaseMap) => void;
+}) {
+  return (
+    <div className="shrink-0 flex border border-edge">
+      <button
+        onClick={() => onBaseMapChange('dark')}
+        title="Dark basemap"
+        aria-label="Dark basemap"
+        className={`w-7 flex items-center justify-center transition-colors ${
+          baseMap === 'dark'
+            ? 'bg-cyan/15 text-cyan'
+            : 'bg-void text-muted hover:text-ink'
+        }`}
+      >
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" />
+        </svg>
+      </button>
+      <button
+        onClick={() => onBaseMapChange('light')}
+        title="Light basemap"
+        aria-label="Light basemap"
+        className={`w-7 flex items-center justify-center transition-colors border-l border-edge ${
+          baseMap === 'light'
+            ? 'bg-cyan/15 text-cyan'
+            : 'bg-void text-muted hover:text-ink'
+        }`}
+      >
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </svg>
+      </button>
+    </div>
   );
 }
 

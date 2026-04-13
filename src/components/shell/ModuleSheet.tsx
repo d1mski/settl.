@@ -16,9 +16,6 @@ const WindModule = lazy(() =>
 const SunModule = lazy(() =>
   import('../modules/SunModule').then((m) => ({ default: m.SunModule })),
 );
-const BuildingModule = lazy(() =>
-  import('../modules/BuildingModule').then((m) => ({ default: m.BuildingModule })),
-);
 const HazardsModule = lazy(() =>
   import('../modules/HazardsModule').then((m) => ({ default: m.HazardsModule })),
 );
@@ -33,18 +30,16 @@ const MODULE_CODES: Record<TabId, string> = {
   climate: '03',
   wind: '04',
   sun: '05',
-  building: '06',
-  hazards: '07',
-  air: '08',
-  context: '09',
+  hazards: '06',
+  air: '07',
+  context: '08',
 };
 
 const MODULE_SUBTITLES: Record<TabId, string> = {
   climate: 'THERMAL · PRECIP · UV',
   wind: 'ROSE · GUSTS · CALM %',
   sun: 'SUN PATH · FACADE · GOLDEN',
-  building: 'FOOTPRINT · ORIENTATION',
-  hazards: 'SEISMIC HISTORY · M3+',
+  hazards: 'SEISMIC + WILDFIRE NRT',
   air: 'AQI · PM2.5/10 · NO2 · O3',
   context: 'WIKI · AMENITIES · NUISANCE',
 };
@@ -134,9 +129,6 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose }: 
                   )}
                   {active === 'sun' && (
                     <SunModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
-                  )}
-                  {active === 'building' && (
-                    <BuildingModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
                   )}
                   {active === 'hazards' && (
                     <HazardsModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
