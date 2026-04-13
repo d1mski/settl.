@@ -10,7 +10,7 @@ interface CacheEntry<T> {
 }
 
 // Bump to invalidate all cached entries when the schema / parsing changes.
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 export async function cacheGet<T>(key: string): Promise<T | null> {
   try {

@@ -122,6 +122,11 @@ input[type='text']::placeholder {
   isolation: isolate;
 }
 
+/* Lift CARTO Dark Matter — keep the identity, raise the black floor */
+:root:not(.theme-light) .leaflet-tile {
+  filter: brightness(1.35) contrast(0.92) saturate(1.05);
+}
+
 .leaflet-control-attribution {
   background: rgb(var(--c-void) / 0.75) !important;
   color: rgb(var(--c-muted)) !important;

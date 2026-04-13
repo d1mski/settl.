@@ -8,7 +8,7 @@ import type {
   ResolvedLocation,
 } from '../types';
 import { initialModuleState } from '../types';
-import { fetchJson } from '../utils/fetcher';
+import { fetchJson, FetchError } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
 import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
@@ -17,6 +17,8 @@ const BASE = 'https://archive-api.open-meteo.com/v1/archive';
 const HOURLY_VARS = [
   'wind_speed_10m',
   'wind_direction_10m',
+  'wind_speed_100m',
+  'wind_direction_100m',
   'wind_gusts_10m',
   'temperature_2m',
   'relative_humidity_2m',
@@ -44,8 +46,27 @@ const DAILY_VARS = [
 
 const cache = new Map<string, ClimateData>();
 
-function makeKey(coords: Coordinates, start: string, end: string): string {
-  return `${coords.lat.toFixed(4)}|${coords.lon.toFixed(4)}|${start}|${end}`;
+function makeKey(coords: Coordinates, start: string, end: string, model: string): string {
+  return `${coords.lat.toFixed(4)}|${coords.lon.toFixed(4)}|${start}|${end}|${model}`;
+}
+
+interface ModelChoice {
+  id: string;
+  display: string;
+  resolutionKm: number;
+}
+
+const ERA5: ModelChoice = {
+  id: 'era5_seamless',
+  display: 'ERA5-SEAMLESS',
+  resolutionKm: 9,
+};
+
+function pickModel(_coords: Coordinates): ModelChoice {
+  // CERRA (5.5km) was tried here but its archive schema doesn't expose
+  // `rain` / `cloud_cover` as separate vars, so the whole fetch 400s.
+  // Sticking with ERA5-seamless until a per-model var list is wired up.
+  return ERA5;
 }
 
 function defaultDateRange(): { start: string; end: string } {
@@ -68,11 +89,12 @@ interface OpenMeteoResponse {
   daily: Record<string, number[] | string[]>;
 }
 
-const MODEL = 'era5_seamless';
-const MODEL_DISPLAY = 'ERA5-SEAMLESS';
-const MODEL_RESOLUTION_KM = 9;
-
-function buildUrl(coords: Coordinates, start: string, end: string): string {
+function buildUrl(
+  coords: Coordinates,
+  start: string,
+  end: string,
+  model: ModelChoice,
+): string {
   const params = new URLSearchParams({
     latitude: coords.lat.toString(),
     longitude: coords.lon.toString(),
@@ -84,7 +106,7 @@ function buildUrl(coords: Coordinates, start: string, end: string): string {
     windspeed_unit: 'kmh',
     temperature_unit: 'celsius',
     precipitation_unit: 'mm',
-    models: MODEL,
+    models: model.id,
   });
   return `${BASE}?${params.toString()}`;
 }
@@ -97,14 +119,41 @@ function strArr(obj: Record<string, number[] | string[]>, key: string): string[]
   return (obj[key] as string[]) ?? [];
 }
 
+const RETRY_DELAYS_MS = [3000, 9000, 20000];
+
+async function fetchWithBackoff(
+  url: string,
+  signal: AbortSignal,
+): Promise<OpenMeteoResponse> {
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fetchJson<OpenMeteoResponse>(url, { signal, timeoutMs: 25000 });
+    } catch (err) {
+      if (signal.aborted) throw err;
+      const is429 = err instanceof FetchError && err.status === 429;
+      if (!is429 || attempt === RETRY_DELAYS_MS.length) throw err;
+      const delay = RETRY_DELAYS_MS[attempt];
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(resolve, delay);
+        signal.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(new DOMException('aborted', 'AbortError'));
+        }, { once: true });
+      });
+    }
+  }
+  throw new Error('unreachable');
+}
+
 async function fetchOpenMeteo(
   coords: Coordinates,
   start: string,
   end: string,
+  model: ModelChoice,
   signal: AbortSignal,
 ): Promise<ClimateData> {
-  const url = buildUrl(coords, start, end);
-  const raw = await fetchJson<OpenMeteoResponse>(url, { signal, timeoutMs: 25000 });
+  const url = buildUrl(coords, start, end, model);
+  const raw = await fetchWithBackoff(url, signal);
 
   const resolved: Coordinates = { lat: raw.latitude, lon: raw.longitude };
   const distanceMeters = haversine(coords, resolved);
@@ -114,14 +163,16 @@ async function fetchOpenMeteo(
     resolved,
     elevation: raw.elevation,
     distanceMeters,
-    model: MODEL_DISPLAY,
-    modelResolutionKm: MODEL_RESOLUTION_KM,
+    model: model.display,
+    modelResolutionKm: model.resolutionKm,
   };
 
   const hourly: HourlyWeather = {
     time: strArr(raw.hourly, 'time'),
     windSpeed10m: arr(raw.hourly, 'wind_speed_10m'),
     windDirection10m: arr(raw.hourly, 'wind_direction_10m'),
+    windSpeed100m: arr(raw.hourly, 'wind_speed_100m'),
+    windDirection100m: arr(raw.hourly, 'wind_direction_100m'),
     windGusts10m: arr(raw.hourly, 'wind_gusts_10m'),
     temperature2m: arr(raw.hourly, 'temperature_2m'),
     relativeHumidity2m: arr(raw.hourly, 'relative_humidity_2m'),
@@ -163,7 +214,8 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
       return;
     }
     const { start, end } = defaultDateRange();
-    const key = makeKey(coords, start, end);
+    const model = pickModel(coords);
+    const key = makeKey(coords, start, end, model.id);
     const cached = cache.get(key);
     if (cached) {
       setState({ status: 'success', data: cached, error: null });
@@ -184,7 +236,7 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
         return;
       }
       try {
-        const data = await fetchOpenMeteo(coords, start, end, ctrl.signal);
+        const data = await fetchOpenMeteo(coords, start, end, model, ctrl.signal);
         if (ctrl.signal.aborted) return;
         cache.set(key, data);
         void cacheSet(key, data, TTL.openMeteoArchive);
@@ -192,8 +244,14 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
       } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
-        const message = err instanceof Error ? err.message : String(err);
-        setState({ status: 'error', data: null, error: message });
+        const friendlier =
+          err instanceof FetchError && err.status === 429
+            ? 'Rate-limited by Open-Meteo (retried 3×). Wait 30s and try again.'
+            : err instanceof Error
+            ? err.message
+            : String(err);
+        setState({ status: 'error', data: null, error: friendlier });
+        return;
       }
     })();
 
@@ -204,3 +262,4 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
 
   return state;
 }
+

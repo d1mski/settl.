@@ -2,6 +2,8 @@ import type { HeatmapData } from '../../utils/climateAggregation';
 
 interface Props {
   data: HeatmapData;
+  scaleMin?: number;
+  scaleMax?: number;
 }
 
 const MONTH_LABELS = [
@@ -27,7 +29,7 @@ function temperatureColor(temp: number, min: number, max: number): string {
   return lerp(MID, HOT, (t - 0.5) * 2);
 }
 
-export function HeatmapGrid({ data }: Props) {
+export function HeatmapGrid({ data, scaleMin, scaleMax }: Props) {
   const cellW = 22;
   const cellH = 20;
   const marginLeft = 38;
@@ -35,6 +37,9 @@ export function HeatmapGrid({ data }: Props) {
   const marginBottom = 22;
   const width = marginLeft + 24 * cellW + 8;
   const height = marginTop + 12 * cellH + marginBottom;
+  const effMin = scaleMin ?? data.minTemp;
+  const effMax = scaleMax ?? data.maxTemp;
+  const isShared = scaleMin !== undefined || scaleMax !== undefined;
 
   return (
     <div className="overflow-x-auto">
@@ -103,7 +108,7 @@ export function HeatmapGrid({ data }: Props) {
                 y={y}
                 width={cellW - 1}
                 height={cellH - 1}
-                fill={temperatureColor(cell.tempMean, data.minTemp, data.maxTemp)}
+                fill={temperatureColor(cell.tempMean, effMin, effMax)}
               >
                 <title>
                   {MONTH_LABELS[m]} {h.toString().padStart(2, '0')}:00 ·{' '}
@@ -123,6 +128,19 @@ export function HeatmapGrid({ data }: Props) {
           letterSpacing="0.05em"
         >
           {data.minTemp.toFixed(1)}°C
+        </text>
+        <text
+          x={marginLeft + 12 * cellW}
+          y={height - 4}
+          fontSize={8}
+          fontFamily="JetBrains Mono, monospace"
+          fill="#6a768b"
+          textAnchor="middle"
+          letterSpacing="0.1em"
+        >
+          {isShared
+            ? `SCALE ${effMin.toFixed(0)}…${effMax.toFixed(0)}°C`
+            : `RANGE ${(data.maxTemp - data.minTemp).toFixed(1)}°C`}
         </text>
         <text
           x={marginLeft + 24 * cellW - 4}

@@ -285,14 +285,26 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
         </div>
       </SectionContainer>
 
-      <SectionContainer code="02" title="THERMAL MATRIX" subtitle="A | B · MONTH × HOUR">
+      <SectionContainer code="02" title="THERMAL MATRIX" subtitle="A | B · SHARED SCALE · MONTH × HOUR">
         <div className="grid gap-3 md:grid-cols-2">
           <SubChart label="A">
-            <HeatmapGrid data={a.heatmap} />
+            <HeatmapGrid
+              data={a.heatmap}
+              scaleMin={Math.min(a.heatmap.minTemp, b.heatmap.minTemp)}
+              scaleMax={Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp)}
+            />
           </SubChart>
           <SubChart label="B">
-            <HeatmapGrid data={b.heatmap} />
+            <HeatmapGrid
+              data={b.heatmap}
+              scaleMin={Math.min(a.heatmap.minTemp, b.heatmap.minTemp)}
+              scaleMax={Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp)}
+            />
           </SubChart>
+        </div>
+        <div className="text-[9px] font-mono uppercase tracking-widest text-dim mt-2">
+          ※ Both heatmaps share {Math.min(a.heatmap.minTemp, b.heatmap.minTemp).toFixed(1)}°C →{' '}
+          {Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp).toFixed(1)}°C so cell colors are directly comparable.
         </div>
       </SectionContainer>
 

@@ -41,47 +41,56 @@ export function BuildingCard({ coords, slot }: Props) {
         ) : !state.data || !state.data.found ? (
           <div className="border border-warn/30 bg-warn/5 px-3 py-2">
             <div className="text-[9px] font-mono uppercase tracking-widest text-warn">
-              ※ NO OSM POLYGON ≤60M
+              ※ NO OSM FOOTPRINT ≤400M
             </div>
             <div className="text-[9px] font-mono text-muted mt-0.5">
-              Facade cross-ref unavailable. Building may be un-mapped.
+              Area appears un-mapped on OSM. Dense building data requires
+              community-mapped polygons — small villages often have gaps.
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <div className="shrink-0">
-              <BuildingCompass building={state.data} size={150} />
-            </div>
-            <div className="grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 text-[10px] font-mono min-w-0">
-              <span className="text-muted">AXIS</span>
-              <span className={`${tone} tabular-nums`}>
-                {state.data.longestEdgeBearing.toFixed(0)}°{' '}
-                <span className="text-muted">
-                  {cardinal(state.data.longestEdgeBearing)}
+          <>
+            <div className="flex items-center gap-3">
+              <div className="shrink-0">
+                <BuildingCompass building={state.data} size={150} />
+              </div>
+              <div className="grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 text-[10px] font-mono min-w-0">
+                <span className="text-muted">AXIS</span>
+                <span className={`${tone} tabular-nums`}>
+                  {state.data.longestEdgeBearing.toFixed(0)}°{' '}
+                  <span className="text-muted">
+                    {cardinal(state.data.longestEdgeBearing)}
+                  </span>
                 </span>
-              </span>
-              <span className="text-muted">AREA</span>
-              <span className="text-ink tabular-nums">
-                {state.data.areaSqm.toFixed(0)} m²
-              </span>
-              {state.data.levels !== null && (
-                <>
-                  <span className="text-muted">LVL</span>
-                  <span className="text-ink tabular-nums">{state.data.levels}</span>
-                </>
-              )}
-              {state.data.type && (
-                <>
-                  <span className="text-muted">TYPE</span>
-                  <span className="text-ink uppercase truncate">{state.data.type}</span>
-                </>
-              )}
-              <span className="text-muted">FRNT</span>
-              <span className={`${tone}`}>
-                {state.data.facades[0]?.cardinal ?? '—'}
-              </span>
+                <span className="text-muted">AREA</span>
+                <span className="text-ink tabular-nums">
+                  {state.data.areaSqm.toFixed(0)} m²
+                </span>
+                {state.data.levels !== null && (
+                  <>
+                    <span className="text-muted">LVL</span>
+                    <span className="text-ink tabular-nums">{state.data.levels}</span>
+                  </>
+                )}
+                {state.data.type && (
+                  <>
+                    <span className="text-muted">TYPE</span>
+                    <span className="text-ink uppercase truncate">{state.data.type}</span>
+                  </>
+                )}
+                <span className="text-muted">FRNT</span>
+                <span className={`${tone}`}>
+                  {state.data.facades[0]?.cardinal ?? '—'}
+                </span>
+              </div>
             </div>
-          </div>
+            {state.data.matchDistanceM !== null &&
+              state.data.matchDistanceM > 40 && (
+                <div className="mt-2 text-[9px] font-mono uppercase tracking-widest text-warn/80">
+                  ⚠ NEAREST FOOTPRINT {state.data.matchDistanceM.toFixed(0)}M FROM PIN
+                </div>
+              )}
+          </>
         )}
       </div>
     </Panel>

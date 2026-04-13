@@ -30,6 +30,8 @@ export interface HourlyWeather {
   time: string[];
   windSpeed10m: number[];
   windDirection10m: number[];
+  windSpeed100m: number[];
+  windDirection100m: number[];
   windGusts10m: number[];
   temperature2m: number[];
   relativeHumidity2m: number[];
@@ -86,6 +88,7 @@ export interface BuildingData {
   type: string | null;
   longestEdgeBearing: number;
   facades: BuildingFacade[];
+  matchDistanceM: number | null;
 }
 
 export interface EarthquakeEvent {

@@ -104,5 +104,6 @@ export function emptyBuilding(): BuildingData {
     type: null,
     longestEdgeBearing: 0,
     facades: [],
+    matchDistanceM: null,
   };
 }

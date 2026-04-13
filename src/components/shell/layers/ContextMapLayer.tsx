@@ -58,35 +58,39 @@ function FeaturePins({
 }) {
   return (
     <>
-      {features.slice(0, 160).map((f) => {
-        const color = CATEGORY_COLORS[f.category];
-        return (
-          <CircleMarker
-            key={`feat-${slot}-${f.elementType}-${f.id}`}
-            center={[f.lat, f.lon]}
-            radius={4}
-            pathOptions={{
-              color,
-              fillColor: color,
-              fillOpacity: slot === 'A' ? 0.7 : 0.5,
-              weight: 1,
-              dashArray: slot === 'B' ? '2 2' : undefined,
-            }}
-          >
-            <Popup>
-              <div className="font-mono text-[10px] leading-snug">
-                <div className="font-bold">{f.name ?? f.subtype}</div>
-                <div className="uppercase text-gray-500">
-                  {f.category} · {f.subtype}
+      {features
+        .filter((f) => Number.isFinite(f.lat) && Number.isFinite(f.lon))
+        .slice(0, 160)
+        .map((f) => {
+          const color = CATEGORY_COLORS[f.category];
+          const dist = typeof f.distanceKm === 'number' ? f.distanceKm.toFixed(2) : '—';
+          return (
+            <CircleMarker
+              key={`feat-${slot}-${f.elementType}-${f.id}`}
+              center={[f.lat, f.lon]}
+              radius={4}
+              pathOptions={{
+                color,
+                fillColor: color,
+                fillOpacity: slot === 'A' ? 0.7 : 0.5,
+                weight: 1,
+                dashArray: slot === 'B' ? '2 2' : undefined,
+              }}
+            >
+              <Popup>
+                <div className="font-mono text-[10px] leading-snug">
+                  <div className="font-bold">{f.name ?? f.subtype}</div>
+                  <div className="uppercase text-gray-500">
+                    {f.category} · {f.subtype}
+                  </div>
+                  <div className={tone === 'cyan' ? 'text-cyan-600' : 'text-amber-600'}>
+                    {dist} KM · TGT·{slot}
+                  </div>
                 </div>
-                <div className={tone === 'cyan' ? 'text-cyan-600' : 'text-amber-600'}>
-                  {f.distanceKm.toFixed(2)} KM · TGT·{slot}
-                </div>
-              </div>
-            </Popup>
-          </CircleMarker>
-        );
-      })}
+              </Popup>
+            </CircleMarker>
+          );
+        })}
     </>
   );
 }
@@ -102,7 +106,14 @@ function WikiPins({
 }) {
   return (
     <>
-      {articles.slice(0, 12).map((article) => (
+      {articles
+        .filter((a) => Number.isFinite(a.lat) && Number.isFinite(a.lon))
+        .slice(0, 12)
+        .map((article) => {
+          const dist = typeof article.distanceKm === 'number'
+            ? article.distanceKm.toFixed(1)
+            : '—';
+          return (
         <CircleMarker
           key={`wiki-${slot}-${article.language}-${article.pageid}`}
           center={[article.lat, article.lon]}
@@ -123,7 +134,7 @@ function WikiPins({
                 {article.title}
               </div>
               <div className="uppercase text-gray-500 mt-0.5">
-                {article.language.toUpperCase()} · {article.distanceKm.toFixed(1)}
+                {article.language.toUpperCase()} · {dist}
                 KM · TGT·{slot}
               </div>
               {article.extract && (
@@ -143,7 +154,8 @@ function WikiPins({
             </div>
           </Popup>
         </CircleMarker>
-      ))}
+          );
+        })}
     </>
   );
 }

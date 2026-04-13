@@ -48,12 +48,22 @@ async function fetchFromEndpoint(
   });
 }
 
+const SEARCH_RADIUS_M = 400;
+
+function buildQuery(coords: Coordinates): string {
+  return (
+    `[out:json][timeout:15];(` +
+    `way["building"](around:${SEARCH_RADIUS_M},${coords.lat},${coords.lon});` +
+    `way["building:part"](around:${SEARCH_RADIUS_M},${coords.lat},${coords.lon});` +
+    `);out body geom qt;`
+  );
+}
+
 async function fetchBuilding(
   coords: Coordinates,
   signal: AbortSignal,
 ): Promise<BuildingData> {
-  const query =
-    `[out:json][timeout:10];way["building"](around:60,${coords.lat},${coords.lon});out body geom;`;
+  const query = buildQuery(coords);
 
   let lastErr: unknown = null;
   for (const endpoint of ENDPOINTS) {
@@ -113,7 +123,7 @@ function interpretResponse(
 
   const levelsTag = best.tags?.['building:levels'];
   const parsedLevels = levelsTag ? parseInt(levelsTag, 10) : NaN;
-  const rawType = best.tags?.building;
+  const rawType = best.tags?.building ?? best.tags?.['building:part'];
   const type = rawType && rawType !== 'yes' ? rawType : null;
 
   return {
@@ -124,6 +134,7 @@ function interpretResponse(
     type,
     longestEdgeBearing: analysis.longestEdgeBearing,
     facades: analysis.facades,
+    matchDistanceM: bestDist,
   };
 }
 

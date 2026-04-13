@@ -11,6 +11,7 @@ import type { Coordinates, TabId } from '../../types';
 import { iconA, iconB } from '../../utils/mapIcons';
 import { ContextMapLayer } from './layers/ContextMapLayer';
 import { HazardsMapLayer } from './layers/HazardsMapLayer';
+import { ClimateCellLayer } from './layers/ClimateCellLayer';
 
 const DEFAULT_CENTER: [number, number] = [30, 20];
 const CITY_ZOOM = 13;
@@ -179,6 +180,9 @@ export function MapCanvas({
         )}
         {activeTab === 'hazards' && (
           <HazardsMapLayer coordsA={coordsA} coordsB={coordsB} />
+        )}
+        {(activeTab === 'wind' || activeTab === 'climate') && (
+          <ClimateCellLayer coordsA={coordsA} coordsB={coordsB} />
         )}
 
         {showLine && (

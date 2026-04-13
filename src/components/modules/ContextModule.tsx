@@ -333,7 +333,7 @@ function WikiList({
           <div className="flex items-baseline justify-between gap-2">
             <div className="text-[11px] font-mono text-ink truncate">{article.title}</div>
             <div className="text-[9px] font-mono text-cyan tabular-nums shrink-0 uppercase tracking-widest">
-              {article.distanceKm.toFixed(1)}KM
+              {typeof article.distanceKm === 'number' ? `${article.distanceKm.toFixed(1)}KM` : '—'}
             </div>
           </div>
           {!compact && article.extract && (
