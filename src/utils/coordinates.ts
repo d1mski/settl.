@@ -91,3 +91,38 @@ export function formatDistanceKm(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)} m`;
   return `${(meters / 1000).toFixed(meters < 10000 ? 2 : 1)} km`;
 }
+
+// Nominatim display_name returns a comma-separated admin hierarchy that often
+// repeats the same place across multiple nested divisions (e.g. "Municipal Unit
+// of Patras, Municipality of Patras, Achaia Regional Unit, Western Greece,
+// Peloponnese, Western Greece and the Ionian, Greece"). This compacts it to the
+// most specific tokens plus the country, dropping any token that is a case-
+// insensitive substring of one already kept.
+export function simplifyAddress(displayName: string | null, maxFront = 2): string {
+  if (!displayName) return '';
+  const parts = displayName
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0];
+
+  const country = parts[parts.length - 1];
+  const front = parts.slice(0, -1);
+  const kept: string[] = [];
+
+  for (const part of front) {
+    // Skip pure postal codes (all digits, optional spaces)
+    if (/^\d[\d\s-]*$/.test(part)) continue;
+    const lower = part.toLowerCase();
+    const redundant = kept.some((k) => {
+      const kLower = k.toLowerCase();
+      return kLower === lower || kLower.includes(lower) || lower.includes(kLower);
+    });
+    if (redundant) continue;
+    kept.push(part);
+    if (kept.length >= maxFront) break;
+  }
+
+  return [...kept, country].join(', ');
+}

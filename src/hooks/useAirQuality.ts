@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { AqiSample, Coordinates, ModuleState } from '../types';
 import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
+import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
 const BASE = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 
@@ -87,18 +88,27 @@ export function useAirQuality(
     controllerRef.current = ctrl;
     setState({ status: 'loading', data: null, error: null });
 
-    fetchAqi(coords, ctrl.signal)
-      .then((samples) => {
+    void (async () => {
+      const persistent = await cacheGet<AqiSample[]>(key);
+      if (ctrl.signal.aborted) return;
+      if (persistent) {
+        cache.set(key, persistent);
+        setState({ status: 'success', data: persistent, error: null });
+        return;
+      }
+      try {
+        const samples = await fetchAqi(coords, ctrl.signal);
         if (ctrl.signal.aborted) return;
         cache.set(key, samples);
+        void cacheSet(key, samples, TTL.openMeteoAirQuality);
         setState({ status: 'success', data: samples, error: null });
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const message = err instanceof Error ? err.message : String(err);
         setState({ status: 'error', data: null, error: message });
-      });
+      }
+    })();
 
     return () => ctrl.abort();
   }, [coords?.lat, coords?.lon]);

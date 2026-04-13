@@ -9,8 +9,9 @@ import {
   YAxis,
 } from 'recharts';
 import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet';
-import type { Coordinates, EarthquakeEvent } from '../../types';
+import type { Coordinates, EarthquakeEvent, WildfireEvent } from '../../types';
 import { useEarthquakes } from '../../hooks/useEarthquakes';
+import { useWildfires } from '../../hooks/useWildfires';
 import { StatReadout } from '../hud/StatReadout';
 import { DualReadout } from '../hud/DualReadout';
 import { SectionHeader } from '../hud/SectionHeader';
@@ -70,6 +71,8 @@ function buildYears(data: EarthquakeEvent[]) {
 export function HazardsModule({ coordsA, coordsB, compareMode }: Props) {
   const a = useEarthquakes(coordsA);
   const b = useEarthquakes(coordsB);
+  const firesA = useWildfires(coordsA);
+  const firesB = useWildfires(coordsB);
 
   if (!coordsA) return <EmptyState />;
   if (a.status === 'loading' || a.status === 'idle') return <LoadingSkeleton />;
@@ -80,26 +83,57 @@ export function HazardsModule({ coordsA, coordsB, compareMode }: Props) {
   if (isCompare) {
     if (b.status === 'loading' || b.status === 'idle') return <LoadingSkeleton />;
     if (b.status === 'error' || !b.data) return <ErrorState error={b.error} />;
-    return <CompareView coordsA={coordsA} coordsB={coordsB!} eventsA={a.data} eventsB={b.data} />;
+    return (
+      <CompareView
+        coordsA={coordsA}
+        coordsB={coordsB!}
+        eventsA={a.data}
+        eventsB={b.data}
+        firesA={firesA.data ?? []}
+        firesB={firesB.data ?? []}
+        firesAStatus={firesA.status}
+        firesBStatus={firesB.status}
+      />
+    );
   }
 
-  return <SingleView coords={coordsA} events={a.data} />;
+  return (
+    <SingleView
+      coords={coordsA}
+      events={a.data}
+      fires={firesA.data ?? []}
+      firesStatus={firesA.status}
+    />
+  );
 }
 
-function SingleView({ coords, events }: { coords: Coordinates; events: EarthquakeEvent[] }) {
+function SingleView({
+  coords,
+  events,
+  fires,
+  firesStatus,
+}: {
+  coords: Coordinates;
+  events: EarthquakeEvent[];
+  fires: WildfireEvent[];
+  firesStatus: string;
+}) {
   const summary = useMemo(() => summarise(events), [events]);
   const years = useMemo(() => buildYears(events), [events]);
 
   if (events.length === 0) {
     return (
-      <div className="border border-good/40 bg-good/5 p-4">
-        <div className="text-[9px] font-mono uppercase tracking-widest text-good flex items-center gap-2">
-          <span>✓ SEISMICALLY QUIET</span>
-          <span className="flex-1 h-px bg-good/30" />
+      <div className="space-y-5">
+        <div className="border border-good/40 bg-good/5 p-4">
+          <div className="text-[9px] font-mono uppercase tracking-widest text-good flex items-center gap-2">
+            <span>✓ SEISMICALLY QUIET</span>
+            <span className="flex-1 h-px bg-good/30" />
+          </div>
+          <div className="text-[10px] font-mono text-ink mt-1">
+            No M3.0+ events within 100 km in past 10 years.
+          </div>
         </div>
-        <div className="text-[10px] font-mono text-ink mt-1">
-          No M3.0+ events within 100 km in past 10 years.
-        </div>
+        <WildfireSection fires={fires} status={firesStatus} code="02" />
       </div>
     );
   }
@@ -115,7 +149,7 @@ function SingleView({ coords, events }: { coords: Coordinates; events: Earthquak
 
       <Section code="01" title="SEISMIC MAP" subtitle="RADIUS ∝ MAG · COLOR = DEPTH">
         <div className="border border-edge h-[320px]">
-          <MapContainer center={[coords.lat, coords.lon]} zoom={7} scrollWheelZoom zoomControl={false} className="h-full w-full">
+          <MapContainer center={[coords.lat, coords.lon]} zoom={9} scrollWheelZoom zoomControl={false} className="h-full w-full">
             <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
             {events.map((e) => (
               <CircleMarker key={e.id} center={[e.lat, e.lon]} radius={Math.max(3, (e.magnitude - 2) * 4)} pathOptions={{ color: depthColor(e.depth), fillColor: depthColor(e.depth), fillOpacity: 0.5, weight: 1 }}>
@@ -143,6 +177,8 @@ function SingleView({ coords, events }: { coords: Coordinates; events: Earthquak
           </BarChart>
         </ResponsiveContainer>
       </Section>
+
+      <WildfireSection fires={fires} status={firesStatus} code="03" />
     </div>
   );
 }
@@ -152,11 +188,19 @@ function CompareView({
   coordsB,
   eventsA,
   eventsB,
+  firesA,
+  firesB,
+  firesAStatus,
+  firesBStatus,
 }: {
   coordsA: Coordinates;
   coordsB: Coordinates;
   eventsA: EarthquakeEvent[];
   eventsB: EarthquakeEvent[];
+  firesA: WildfireEvent[];
+  firesB: WildfireEvent[];
+  firesAStatus: string;
+  firesBStatus: string;
 }) {
   const sumA = useMemo(() => summarise(eventsA), [eventsA]);
   const sumB = useMemo(() => summarise(eventsB), [eventsB]);
@@ -199,7 +243,7 @@ function CompareView({
 
       <Section code="01" title="SEISMIC MAP" subtitle="A (CYAN) ↔ B (AMBER) · M3.0+ · 100KM RADIUS">
         <div className="border border-edge h-[360px]">
-          <MapContainer center={[centerLat, centerLon]} zoom={5} scrollWheelZoom zoomControl={false} className="h-full w-full">
+          <MapContainer center={[centerLat, centerLon]} zoom={7} scrollWheelZoom zoomControl={false} className="h-full w-full">
             <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
             <CircleMarker center={[coordsA.lat, coordsA.lon]} radius={5} pathOptions={{ color: '#7eeaff', fillColor: '#7eeaff', fillOpacity: 0.9, weight: 2 }}>
               <Popup>PIN A</Popup>
@@ -237,6 +281,97 @@ function CompareView({
           </BarChart>
         </ResponsiveContainer>
       </Section>
+
+      <Section code="03" title="WILDFIRE · NRT" subtitle="A | B · EONET OPEN + FIRMS 7D">
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-widest text-cyan mb-1.5">TGT·A</div>
+            <WildfireList fires={firesA} status={firesAStatus} />
+          </div>
+          <div>
+            <div className="text-[9px] font-mono uppercase tracking-widest text-amber mb-1.5">TGT·B</div>
+            <WildfireList fires={firesB} status={firesBStatus} />
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function WildfireSection({
+  fires,
+  status,
+  code,
+}: {
+  fires: WildfireEvent[];
+  status: string;
+  code: string;
+}) {
+  return (
+    <Section code={code} title="WILDFIRE · NRT" subtitle="EONET OPEN + FIRMS 7D · ≤220KM">
+      <WildfireList fires={fires} status={status} />
+    </Section>
+  );
+}
+
+function WildfireList({
+  fires,
+  status,
+}: {
+  fires: WildfireEvent[];
+  status: string;
+}) {
+  if (status === 'loading' || status === 'idle') return <LoadingSkeleton />;
+  if (status === 'error')
+    return (
+      <div className="text-[9px] font-mono uppercase tracking-widest text-muted">
+        WILDFIRE FEED UNREACHABLE
+      </div>
+    );
+
+  if (fires.length === 0) {
+    return (
+      <div className="border border-good/30 bg-good/5 px-3 py-2">
+        <div className="text-[9px] font-mono uppercase tracking-widest text-good">
+          ✓ NO ACTIVE HOTSPOTS IN RANGE
+        </div>
+      </div>
+    );
+  }
+
+  const eonetCount = fires.filter((f) => f.source === 'EONET').length;
+  const firmsCount = fires.filter((f) => f.source === 'FIRMS').length;
+  const closest = fires[0];
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-3 text-[9px] font-mono uppercase tracking-widest text-muted">
+        <span>EONET <span className="text-risk tabular-nums">{eonetCount}</span></span>
+        <span>FIRMS <span className="text-risk tabular-nums">{firmsCount}</span></span>
+        <span>CLOSEST <span className="text-risk tabular-nums">{closest.distanceKm.toFixed(1)} KM</span></span>
+      </div>
+      <div className="grid gap-1">
+        {fires.slice(0, 6).map((fire) => (
+          <div key={fire.id} className="border border-edge bg-void/40 px-2 py-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <div className="text-[11px] font-mono text-ink truncate">
+                {fire.title ?? `${fire.source} HOTSPOT`}
+              </div>
+              <div className="text-[9px] font-mono text-risk tabular-nums shrink-0 uppercase tracking-widest">
+                {fire.distanceKm.toFixed(1)}KM
+              </div>
+            </div>
+            <div className="text-[9px] font-mono uppercase tracking-widest text-muted mt-0.5">
+              {fire.source} · {fire.date.slice(0, 10)}
+              {fire.frp != null && ` · FRP ${fire.frp.toFixed(1)}MW`}
+              {fire.confidence && ` · ${fire.confidence.toUpperCase()}`}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="text-[9px] font-mono uppercase tracking-widest text-dim">
+        ※ HOTSPOTS OVERLAID ON MAIN MAP WHILE HAZARDS TAB ACTIVE
+      </div>
     </div>
   );
 }

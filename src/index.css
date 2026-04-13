@@ -2,25 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Theme palettes. Every Tailwind color utility reads from these
+   vars, so swapping the `.theme-light` class on <html> changes
+   the entire HUD palette at runtime without rebuilding.
+   ============================================================ */
+
 :root {
-  --void: #06080f;
-  --bg: #080b15;
-  --panel: #0d121e;
-  --rail: #0a0e18;
-  --edge: #1a2338;
-  --edge-bright: #2d3a55;
-  --ink: #e8eef5;
-  --muted: #6a768b;
-  --cyan: #7eeaff;
-  --amber: #ffb347;
+  /* DARK — operator night-ops / space-command */
+  --c-void: 6 8 15;
+  --c-bg: 8 11 21;
+  --c-panel: 13 18 30;
+  --c-rail: 10 14 24;
+  --c-edge: 26 35 56;
+  --c-edge-bright: 45 58 85;
+  --c-ink: 232 238 245;
+  --c-muted: 106 118 139;
+  --c-dim: 61 71 89;
+  --c-cyan: 126 234 255;
+  --c-amber: 255 179 71;
+  --c-risk: 255 77 94;
+  --c-warn: 255 179 71;
+  --c-good: 102 255 163;
+  --c-backdrop-a: 126 234 255;
+  --c-backdrop-b: 255 179 71;
+
+  color-scheme: dark;
+}
+
+.theme-light {
+  /* LIGHT — operator day-ops / engineering paper chart */
+  --c-void: 236 240 234;
+  --c-bg: 244 246 241;
+  --c-panel: 255 255 255;
+  --c-rail: 231 234 226;
+  --c-edge: 182 195 211;
+  --c-edge-bright: 92 108 134;
+  --c-ink: 14 22 36;
+  --c-muted: 80 94 120;
+  --c-dim: 138 155 180;
+  --c-cyan: 0 101 141;
+  --c-amber: 186 89 0;
+  --c-risk: 180 32 46;
+  --c-warn: 186 89 0;
+  --c-good: 9 130 70;
+  --c-backdrop-a: 0 101 141;
+  --c-backdrop-b: 186 89 0;
+
+  color-scheme: light;
+}
+
+html {
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 html,
 body,
 #root {
   height: 100%;
-  background: var(--void);
-  color: var(--ink);
+  background: rgb(var(--c-void));
+  color: rgb(var(--c-ink));
 }
 
 body {
@@ -29,9 +70,10 @@ body {
   text-rendering: optimizeLegibility;
   overflow: hidden;
   background-image:
-    radial-gradient(ellipse at 20% 10%, rgba(126, 234, 255, 0.04), transparent 60%),
-    radial-gradient(ellipse at 80% 90%, rgba(255, 179, 71, 0.03), transparent 60%),
-    linear-gradient(180deg, #080b15 0%, #06080f 100%);
+    radial-gradient(ellipse at 20% 10%, rgb(var(--c-backdrop-a) / 0.04), transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgb(var(--c-backdrop-b) / 0.035), transparent 60%),
+    linear-gradient(180deg, rgb(var(--c-bg)) 0%, rgb(var(--c-void)) 100%);
+  transition: background-color 300ms ease;
 }
 
 body::before {
@@ -43,11 +85,17 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.55 0 0 0 0 0.65 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   opacity: 0.55;
   mix-blend-mode: overlay;
+  transition: opacity 300ms ease;
+}
+
+.theme-light body::before {
+  opacity: 0.28;
+  mix-blend-mode: multiply;
 }
 
 ::selection {
-  background: rgba(126, 234, 255, 0.3);
-  color: var(--ink);
+  background: rgb(var(--c-cyan) / 0.3);
+  color: rgb(var(--c-ink));
 }
 
 input,
@@ -58,24 +106,25 @@ textarea {
 }
 
 input[type='text']::placeholder {
-  color: #3d4759;
+  color: rgb(var(--c-dim));
   letter-spacing: 0.05em;
 }
 
-/* Leaflet dark theme tweaks */
+/* ============================================================
+   Leaflet theming — all colors via CSS vars so swap is seamless
+   ============================================================ */
+
 .leaflet-container {
-  background: #05070d;
+  background: rgb(var(--c-void));
   font-family: 'JetBrains Mono', monospace !important;
-  /* CRITICAL: contain leaflet panes (tilePane z=200, overlayPane z=400) inside their own
-     stacking context, otherwise they paint over sibling HUD overlays. */
   z-index: 0;
   position: relative;
   isolation: isolate;
 }
 
 .leaflet-control-attribution {
-  background: rgba(8, 11, 21, 0.7) !important;
-  color: #5a6578 !important;
+  background: rgb(var(--c-void) / 0.75) !important;
+  color: rgb(var(--c-muted)) !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 9px !important;
   padding: 2px 6px !important;
@@ -83,51 +132,66 @@ input[type='text']::placeholder {
 }
 
 .leaflet-control-attribution a {
-  color: #7eeaff !important;
+  color: rgb(var(--c-cyan)) !important;
   text-decoration: none;
 }
 
 .leaflet-control-zoom {
-  border: 1px solid rgba(126, 234, 255, 0.25) !important;
-  background: rgba(8, 11, 21, 0.85) !important;
+  border: 1px solid rgb(var(--c-cyan) / 0.25) !important;
+  background: rgb(var(--c-void) / 0.85) !important;
 }
 
 .leaflet-control-zoom a {
   background: transparent !important;
-  color: #e8eef5 !important;
+  color: rgb(var(--c-ink)) !important;
   border: none !important;
   font-family: 'JetBrains Mono', monospace !important;
   font-weight: 400 !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background: rgba(126, 234, 255, 0.1) !important;
-  color: #7eeaff !important;
+  background: rgb(var(--c-cyan) / 0.1) !important;
+  color: rgb(var(--c-cyan)) !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: rgba(8, 11, 21, 0.95) !important;
-  color: #e8eef5 !important;
-  border: 1px solid rgba(126, 234, 255, 0.3) !important;
+  background: rgb(var(--c-void) / 0.95) !important;
+  color: rgb(var(--c-ink)) !important;
+  border: 1px solid rgb(var(--c-cyan) / 0.3) !important;
   border-radius: 0 !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 8px 32px rgb(var(--c-void) / 0.6) !important;
   font-family: 'JetBrains Mono', monospace !important;
 }
 
 .leaflet-popup-tip {
-  background: rgba(8, 11, 21, 0.95) !important;
-  border: 1px solid rgba(126, 234, 255, 0.3) !important;
+  background: rgb(var(--c-void) / 0.95) !important;
+  border: 1px solid rgb(var(--c-cyan) / 0.3) !important;
 }
 
 .leaflet-popup-close-button {
-  color: #6a768b !important;
+  color: rgb(var(--c-muted)) !important;
+}
+
+.leaflet-tooltip {
+  background: rgb(var(--c-void) / 0.95) !important;
+  color: rgb(var(--c-ink)) !important;
+  border: 1px solid rgb(var(--c-cyan) / 0.35) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 6px 20px rgb(var(--c-void) / 0.5) !important;
+}
+
+.leaflet-tooltip:before {
+  border-top-color: rgb(var(--c-cyan) / 0.35) !important;
 }
 
 .leaflet-bar {
   box-shadow: none !important;
 }
 
-/* Custom scrollbar */
+/* ============================================================
+   Custom scrollbar
+   ============================================================ */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -138,25 +202,31 @@ input[type='text']::placeholder {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(126, 234, 255, 0.15);
+  background: rgb(var(--c-cyan) / 0.15);
   border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(126, 234, 255, 0.3);
+  background: rgb(var(--c-cyan) / 0.3);
 }
 
-/* Recharts dark theme text */
+/* ============================================================
+   Recharts theming — axis + grid via CSS var fallback
+   ============================================================ */
+
 .recharts-text {
-  fill: #6a768b !important;
+  fill: rgb(var(--c-muted)) !important;
 }
 
 .recharts-cartesian-axis-line,
 .recharts-cartesian-axis-tick-line {
-  stroke: #1a2338 !important;
+  stroke: rgb(var(--c-edge)) !important;
 }
 
-/* Stagger utility */
+/* ============================================================
+   Stagger reveal on module sheet mount
+   ============================================================ */
+
 .stagger > * {
   opacity: 0;
   animation: reveal 0.5s ease-out forwards;
@@ -176,7 +246,10 @@ input[type='text']::placeholder {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* HUD panel corner brackets — applied via className="hud-brackets" */
+/* ============================================================
+   HUD panel corner brackets
+   ============================================================ */
+
 .hud-brackets {
   position: relative;
 }
@@ -187,7 +260,7 @@ input[type='text']::placeholder {
   position: absolute;
   width: 10px;
   height: 10px;
-  border-color: rgba(126, 234, 255, 0.55);
+  border-color: rgb(var(--c-cyan) / 0.55);
   border-style: solid;
   border-width: 0;
   pointer-events: none;
@@ -215,7 +288,7 @@ input[type='text']::placeholder {
   position: absolute;
   width: 8px;
   height: 8px;
-  border-color: rgba(126, 234, 255, 0.5);
+  border-color: rgb(var(--c-cyan) / 0.5);
   border-style: solid;
   border-width: 0;
   pointer-events: none;
@@ -250,10 +323,13 @@ input[type='text']::placeholder {
 }
 
 .text-shadow-hud {
-  text-shadow: 0 0 12px rgba(126, 234, 255, 0.4);
+  text-shadow: 0 0 12px rgb(var(--c-cyan) / 0.4);
 }
 
-/* line-clamp utility */
+/* ============================================================
+   Utility
+   ============================================================ */
+
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -261,20 +337,26 @@ input[type='text']::placeholder {
   overflow: hidden;
 }
 
-/* HUD pin (custom Leaflet DivIcon) */
+/* ============================================================
+   HUD pin (custom Leaflet DivIcon used for A/B markers)
+   ============================================================ */
+
 .hud-pin-wrapper {
   background: transparent !important;
   border: none !important;
 }
+
 .hud-pin {
   position: relative;
   width: 32px;
   height: 32px;
-  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 0 6px rgb(var(--c-void) / 0.7));
 }
+
 .hud-pin svg {
   display: block;
 }
+
 .hud-pin-label {
   position: absolute;
   top: -2px;
@@ -284,5 +366,5 @@ input[type='text']::placeholder {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.15em;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.85);
+  text-shadow: 0 0 4px rgb(var(--c-void) / 0.85);
 }

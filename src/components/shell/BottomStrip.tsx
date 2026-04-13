@@ -80,12 +80,12 @@ export function BottomStrip({
       </div>
 
       {!compare ? (
-        <div className="flex-1 px-4 flex items-center gap-3 text-muted truncate">
-          <span>TGT A</span>
+        <div className="flex-1 px-4 flex items-center gap-3 text-muted min-w-0">
+          <span className="shrink-0">TGT A</span>
           {coordsA ? (
             <>
-              <span className="text-cyan tabular-nums">{fmtCoord(coordsA)}</span>
-              <span className="text-edge-bright">·</span>
+              <span className="text-cyan tabular-nums shrink-0">{fmtCoord(coordsA)}</span>
+              <span className="text-edge-bright shrink-0">·</span>
               <span className="text-ink truncate">
                 {resolvingA ? 'RESOLVING...' : (resolvedA ?? '—')}
               </span>

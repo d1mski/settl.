@@ -1,14 +1,11 @@
 import type { Coordinates } from '../../types';
 import type { Slot } from '../../hooks/useUrlState';
-import { computeCompareGeometry, formatDistance } from '../../utils/compareUtils';
 
 interface Props {
   coordsA: Coordinates | null;
   coordsB: Coordinates | null;
   compareMode: boolean;
   activeSlot: Slot;
-  resolvedA: string | null;
-  resolvingA: boolean;
 }
 
 export function MapHud({
@@ -16,12 +13,8 @@ export function MapHud({
   coordsB,
   compareMode,
   activeSlot,
-  resolvedA,
-  resolvingA,
 }: Props) {
-  const compare = compareMode && coordsA && coordsB
-    ? computeCompareGeometry(coordsA, coordsB)
-    : null;
+  const compare = compareMode && coordsA !== null && coordsB !== null;
 
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -51,9 +44,9 @@ export function MapHud({
         </div>
       )}
 
-      {/* Active slot indicator (when compare mode is on) */}
+      {/* Active slot indicator (when compare mode is on) — below the layer toggle */}
       {compareMode && (
-        <div className="absolute top-6 right-[88px] border border-edge bg-void/85 backdrop-blur-sm px-2 py-1 flex items-center gap-1.5">
+        <div className="absolute top-6 left-[372px] border border-edge bg-void/85 backdrop-blur-sm px-2 py-1 flex items-center gap-1.5">
           <span className="text-[8px] font-mono uppercase tracking-widest text-muted">CLICK SETS</span>
           <span
             className={`text-[10px] font-mono font-semibold ${activeSlot === 'b' ? 'text-amber' : 'text-cyan'}`}
@@ -63,44 +56,6 @@ export function MapHud({
         </div>
       )}
 
-      {/* Bottom-center telemetry readout */}
-      <div className="absolute bottom-16 left-1/2 -translate-x-1/2">
-        {compare ? (
-          <div className="border border-edge bg-void/80 backdrop-blur-sm px-4 py-1.5 flex items-center gap-3 text-[10px] font-mono tracking-widest">
-            <span className="text-cyan">A</span>
-            <span className="text-edge-bright">↔</span>
-            <span className="text-amber">B</span>
-            <span className="text-edge-bright">·</span>
-            <span className="text-ink">{formatDistance(compare.distanceKm)}</span>
-            <span className="text-muted">@</span>
-            <span className="text-ink">
-              {compare.bearingAtoB.toFixed(0)}° {compare.cardinalAtoB}
-            </span>
-          </div>
-        ) : (
-          <div className="border border-cyan/30 bg-void/80 backdrop-blur-sm px-4 py-1.5 flex items-center gap-4 text-[10px] font-mono tracking-widest">
-            {coordsA ? (
-              <>
-                <span className="text-cyan tabular-nums">
-                  {coordsA.lat >= 0 ? 'N' : 'S'}
-                  {Math.abs(coordsA.lat).toFixed(5)}°
-                </span>
-                <span className="text-edge-bright">·</span>
-                <span className="text-cyan tabular-nums">
-                  {coordsA.lon >= 0 ? 'E' : 'W'}
-                  {Math.abs(coordsA.lon).toFixed(5)}°
-                </span>
-                <span className="text-edge-bright">·</span>
-                <span className="text-muted uppercase truncate max-w-[360px]">
-                  {resolvingA ? 'RESOLVING...' : (resolvedA ?? 'NO FIX')}
-                </span>
-              </>
-            ) : (
-              <span className="text-muted uppercase">NO TARGET ACQUIRED — CLICK MAP TO SET PIN</span>
-            )}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

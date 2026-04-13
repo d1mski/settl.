@@ -22,6 +22,8 @@ export interface ResolvedLocation {
   resolved: Coordinates;
   elevation: number;
   distanceMeters: number;
+  model: string;
+  modelResolutionKm: number;
 }
 
 export interface HourlyWeather {
@@ -95,6 +97,22 @@ export interface EarthquakeEvent {
   place: string;
   lat: number;
   lon: number;
+}
+
+export interface WildfireEvent {
+  id: string;
+  source: 'EONET' | 'FIRMS';
+  title: string | null;
+  lat: number;
+  lon: number;
+  date: string;
+  distanceKm: number;
+  magnitudeValue: number | null;
+  magnitudeUnit: string | null;
+  brightness: number | null;
+  confidence: string | null;
+  frp: number | null;
+  polygon: Coordinates[] | null;
 }
 
 export interface AqiSample {

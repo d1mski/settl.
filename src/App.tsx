@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Coordinates, TabId } from './types';
 import type { Slot } from './hooks/useUrlState';
-import { MapCanvas } from './components/shell/MapCanvas';
+import { MapCanvas, type BaseMap } from './components/shell/MapCanvas';
 import { MapHud } from './components/shell/MapHud';
 import { LocationIntelCard } from './components/shell/LocationIntelCard';
+import { LayerToggle } from './components/shell/LayerToggle';
 import { ModuleRail } from './components/shell/ModuleRail';
 import { ModuleSheet } from './components/shell/ModuleSheet';
 import { BottomStrip } from './components/shell/BottomStrip';
@@ -16,6 +17,16 @@ export default function App() {
   const { result: geocodedA, loading: resolvingA } = useReverseGeocode(state.coordsA);
   const { result: geocodedB, loading: resolvingB } = useReverseGeocode(state.coordsB);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [baseMap, setBaseMap] = useState<BaseMap>('dark');
+
+  useEffect(() => {
+    const el = document.documentElement;
+    if (baseMap === 'light') el.classList.add('theme-light');
+    else el.classList.remove('theme-light');
+    return () => {
+      // leave class in place between renders; only cleanup on unmount
+    };
+  }, [baseMap]);
 
   const compareMode = state.coordsB !== null;
 
@@ -75,24 +86,24 @@ export default function App() {
               onChangeB={setCoordsB}
               activeSlot={state.slot}
               compareMode={compareMode}
+              baseMap={baseMap}
+              activeTab={activeTab}
             />
             <MapHud
               coordsA={state.coordsA}
               coordsB={state.coordsB}
               compareMode={compareMode}
               activeSlot={state.slot}
-              resolvedA={geocodedA?.displayName ?? null}
-              resolvingA={resolvingA}
             />
 
             <div className="absolute top-6 left-6 z-30 pointer-events-auto">
               <LocationIntelCard
                 coordsA={state.coordsA}
                 coordsB={state.coordsB}
-                resolvedA={geocodedA?.displayName ?? null}
+                resolvedA={geocodedA?.cleanAddress ?? null}
                 countryA={geocodedA?.countryCode ?? null}
                 resolvingA={resolvingA}
-                resolvedB={geocodedB?.displayName ?? null}
+                resolvedB={geocodedB?.cleanAddress ?? null}
                 countryB={geocodedB?.countryCode ?? null}
                 resolvingB={resolvingB}
                 activeSlot={state.slot}
@@ -103,6 +114,10 @@ export default function App() {
                 onEnableCompare={enableCompare}
                 onDisableCompare={disableCompare}
               />
+            </div>
+
+            <div className="absolute top-6 right-6 z-30 pointer-events-auto">
+              <LayerToggle baseMap={baseMap} onBaseMapChange={setBaseMap} />
             </div>
 
             <ModuleSheet
@@ -125,7 +140,7 @@ export default function App() {
           coordsA={state.coordsA}
           coordsB={state.coordsB}
           resolvingA={resolvingA}
-          resolvedA={geocodedA?.displayName ?? null}
+          resolvedA={geocodedA?.cleanAddress ?? null}
           compareMode={compareMode}
         />
       </div>

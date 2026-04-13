@@ -3,6 +3,7 @@ import type { Coordinates, EarthquakeEvent, ModuleState } from '../types';
 import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
+import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
 const BASE = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
 
@@ -97,18 +98,27 @@ export function useEarthquakes(
     controllerRef.current = ctrl;
     setState({ status: 'loading', data: null, error: null });
 
-    fetchEvents(coords, ctrl.signal)
-      .then((events) => {
+    void (async () => {
+      const persistent = await cacheGet<EarthquakeEvent[]>(key);
+      if (ctrl.signal.aborted) return;
+      if (persistent) {
+        cache.set(key, persistent);
+        setState({ status: 'success', data: persistent, error: null });
+        return;
+      }
+      try {
+        const events = await fetchEvents(coords, ctrl.signal);
         if (ctrl.signal.aborted) return;
         cache.set(key, events);
+        void cacheSet(key, events, TTL.earthquakes);
         setState({ status: 'success', data: events, error: null });
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const message = err instanceof Error ? err.message : String(err);
         setState({ status: 'error', data: null, error: message });
-      });
+      }
+    })();
 
     return () => ctrl.abort();
   }, [coords?.lat, coords?.lon]);

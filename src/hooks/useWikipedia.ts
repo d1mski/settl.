@@ -3,6 +3,7 @@ import type { Coordinates, ModuleState, WikiArticle } from '../types';
 import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
+import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
 const COUNTRY_TO_LANG: Record<string, string> = {
   GR: 'el',
@@ -165,18 +166,27 @@ export function useWikipedia(
     controllerRef.current = ctrl;
     setState({ status: 'loading', data: null, error: null });
 
-    fetchBoth(coords, countryCode, ctrl.signal)
-      .then((articles) => {
+    void (async () => {
+      const persistent = await cacheGet<WikiArticle[]>(key);
+      if (ctrl.signal.aborted) return;
+      if (persistent) {
+        cache.set(key, persistent);
+        setState({ status: 'success', data: persistent, error: null });
+        return;
+      }
+      try {
+        const articles = await fetchBoth(coords, countryCode, ctrl.signal);
         if (ctrl.signal.aborted) return;
         cache.set(key, articles);
+        void cacheSet(key, articles, TTL.wikipedia);
         setState({ status: 'success', data: articles, error: null });
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const message = err instanceof Error ? err.message : String(err);
         setState({ status: 'error', data: null, error: message });
-      });
+      }
+    })();
 
     return () => ctrl.abort();
   }, [coords?.lat, coords?.lon, countryCode]);

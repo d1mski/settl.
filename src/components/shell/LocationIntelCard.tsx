@@ -289,7 +289,11 @@ function FixBlock({
           <span className="text-ink">{country ?? '—'}</span>
           <span className="text-muted">LOC</span>
           <span className="text-ink truncate" title={resolved ?? ''}>
-            {resolving ? <span className={`${toneText} opacity-70`}>RESOLVING...</span> : (resolved ?? '—')}
+            {resolving ? (
+              <span className={`${toneText} opacity-70`}>RESOLVING...</span>
+            ) : (
+              resolved ?? '—'
+            )}
           </span>
         </div>
       ) : (

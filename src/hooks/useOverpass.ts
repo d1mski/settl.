@@ -4,6 +4,7 @@ import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
 import { analyseBuildingPolygon, emptyBuilding } from '../utils/buildingOrientation';
 import { haversine } from '../utils/coordinates';
+import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
 const ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
@@ -151,18 +152,27 @@ export function useOverpassBuilding(
     controllerRef.current = ctrl;
     setState({ status: 'loading', data: null, error: null });
 
-    fetchBuilding(coords, ctrl.signal)
-      .then((data) => {
+    void (async () => {
+      const persistent = await cacheGet<BuildingData>(key);
+      if (ctrl.signal.aborted) return;
+      if (persistent) {
+        cache.set(key, persistent);
+        setState({ status: 'success', data: persistent, error: null });
+        return;
+      }
+      try {
+        const data = await fetchBuilding(coords, ctrl.signal);
         if (ctrl.signal.aborted) return;
         cache.set(key, data);
+        void cacheSet(key, data, TTL.overpassBuilding);
         setState({ status: 'success', data, error: null });
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const message = err instanceof Error ? err.message : String(err);
         setState({ status: 'error', data: null, error: message });
-      });
+      }
+    })();
 
     return () => ctrl.abort();
   }, [coords?.lat, coords?.lon]);

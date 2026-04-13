@@ -10,6 +10,7 @@ import type {
 import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
+import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
 const BASE = 'https://archive-api.open-meteo.com/v1/archive';
 
@@ -67,6 +68,10 @@ interface OpenMeteoResponse {
   daily: Record<string, number[] | string[]>;
 }
 
+const MODEL = 'era5_seamless';
+const MODEL_DISPLAY = 'ERA5-SEAMLESS';
+const MODEL_RESOLUTION_KM = 9;
+
 function buildUrl(coords: Coordinates, start: string, end: string): string {
   const params = new URLSearchParams({
     latitude: coords.lat.toString(),
@@ -79,6 +84,7 @@ function buildUrl(coords: Coordinates, start: string, end: string): string {
     windspeed_unit: 'kmh',
     temperature_unit: 'celsius',
     precipitation_unit: 'mm',
+    models: MODEL,
   });
   return `${BASE}?${params.toString()}`;
 }
@@ -108,6 +114,8 @@ async function fetchOpenMeteo(
     resolved,
     elevation: raw.elevation,
     distanceMeters,
+    model: MODEL_DISPLAY,
+    modelResolutionKm: MODEL_RESOLUTION_KM,
   };
 
   const hourly: HourlyWeather = {
@@ -167,18 +175,27 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
     controllerRef.current = ctrl;
     setState({ status: 'loading', data: null, error: null });
 
-    fetchOpenMeteo(coords, start, end, ctrl.signal)
-      .then((data) => {
+    void (async () => {
+      const persistent = await cacheGet<ClimateData>(key);
+      if (ctrl.signal.aborted) return;
+      if (persistent) {
+        cache.set(key, persistent);
+        setState({ status: 'success', data: persistent, error: null });
+        return;
+      }
+      try {
+        const data = await fetchOpenMeteo(coords, start, end, ctrl.signal);
         if (ctrl.signal.aborted) return;
         cache.set(key, data);
+        void cacheSet(key, data, TTL.openMeteoArchive);
         setState({ status: 'success', data, error: null });
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
         if (err instanceof DOMException && err.name === 'AbortError') return;
         const message = err instanceof Error ? err.message : String(err);
         setState({ status: 'error', data: null, error: message });
-      });
+      }
+    })();
 
     return () => {
       ctrl.abort();

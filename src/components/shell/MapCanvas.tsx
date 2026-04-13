@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   MapContainer,
   Marker,
@@ -7,10 +7,15 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import type { Coordinates } from '../../types';
+import type { Coordinates, TabId } from '../../types';
 import { iconA, iconB } from '../../utils/mapIcons';
+import { ContextMapLayer } from './layers/ContextMapLayer';
+import { HazardsMapLayer } from './layers/HazardsMapLayer';
 
 const DEFAULT_CENTER: [number, number] = [30, 20];
+const CITY_ZOOM = 13;
+
+export type BaseMap = 'dark' | 'light';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -19,6 +24,8 @@ interface Props {
   onChangeB: (coords: Coordinates) => void;
   activeSlot: 'a' | 'b';
   compareMode: boolean;
+  baseMap: BaseMap;
+  activeTab: TabId | null;
 }
 
 function ClickHandler({
@@ -54,17 +61,42 @@ function FitToCoords({
         [coordsA.lat, coordsA.lon],
         [coordsB.lat, coordsB.lon],
       ];
-      map.fitBounds(bounds, { padding: [120, 120], maxZoom: 14, animate: true });
+      map.fitBounds(bounds, { padding: [120, 120], maxZoom: 13, animate: true });
     } else if (coordsA) {
-      map.setView([coordsA.lat, coordsA.lon], Math.max(map.getZoom(), 16), {
+      map.setView([coordsA.lat, coordsA.lon], Math.max(map.getZoom(), CITY_ZOOM), {
         animate: true,
       });
     } else if (coordsB) {
-      map.setView([coordsB.lat, coordsB.lon], Math.max(map.getZoom(), 16), {
+      map.setView([coordsB.lat, coordsB.lon], Math.max(map.getZoom(), CITY_ZOOM), {
         animate: true,
       });
     }
   }, [coordsA?.lat, coordsA?.lon, coordsB?.lat, coordsB?.lon, map]);
+  return null;
+}
+
+function UserLocationInitial({
+  initialHasCoords,
+}: {
+  initialHasCoords: boolean;
+}) {
+  const map = useMap();
+  const firedRef = useRef(false);
+  useEffect(() => {
+    if (firedRef.current) return;
+    if (initialHasCoords) return;
+    if (!('geolocation' in navigator)) return;
+    firedRef.current = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        map.setView([pos.coords.latitude, pos.coords.longitude], CITY_ZOOM, {
+          animate: true,
+        });
+      },
+      undefined,
+      { timeout: 10000, maximumAge: 5 * 60 * 1000, enableHighAccuracy: false },
+    );
+  }, [map, initialHasCoords]);
   return null;
 }
 
@@ -97,15 +129,26 @@ export function MapCanvas({
   onChangeB,
   activeSlot,
   compareMode,
+  baseMap,
+  activeTab,
 }: Props) {
-  const [initial] = useState<{ center: [number, number]; zoom: number }>(
-    () => ({
-      center: coordsA ? [coordsA.lat, coordsA.lon] : DEFAULT_CENTER,
-      zoom: coordsA ? 16 : 3,
-    }),
-  );
+  const [initial] = useState<{
+    center: [number, number];
+    zoom: number;
+    hadCoords: boolean;
+  }>(() => ({
+    center: coordsA ? [coordsA.lat, coordsA.lon] : DEFAULT_CENTER,
+    zoom: coordsA ? CITY_ZOOM : 3,
+    hadCoords: coordsA !== null,
+  }));
 
   const showLine = compareMode && coordsA && coordsB;
+  const baseUrl =
+    baseMap === 'light'
+      ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const attribution =
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
   return (
     <div className="absolute inset-0">
@@ -117,15 +160,10 @@ export function MapCanvas({
         className="h-full w-full"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-          maxZoom={19}
-        />
-        <TileLayer
-          attribution=""
-          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-          maxZoom={19}
-          opacity={0.85}
+          key={`base-${baseMap}`}
+          attribution={attribution}
+          url={baseUrl}
+          maxZoom={20}
         />
         <ClickHandler
           activeSlot={activeSlot}
@@ -133,7 +171,15 @@ export function MapCanvas({
           onChangeB={onChangeB}
         />
         <FitToCoords coordsA={coordsA} coordsB={coordsB} />
+        <UserLocationInitial initialHasCoords={initial.hadCoords} />
         <MapInvalidator />
+
+        {activeTab === 'context' && (
+          <ContextMapLayer coordsA={coordsA} coordsB={coordsB} />
+        )}
+        {activeTab === 'hazards' && (
+          <HazardsMapLayer coordsA={coordsA} coordsB={coordsB} />
+        )}
 
         {showLine && (
           <Polyline

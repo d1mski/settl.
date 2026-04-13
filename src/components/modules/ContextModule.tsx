@@ -1,12 +1,10 @@
 import { useMemo, type ReactNode } from 'react';
-import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet';
 import type { Coordinates, WikiArticle } from '../../types';
 import { useWikipedia } from '../../hooks/useWikipedia';
 import { useReverseGeocode } from '../../hooks/useNominatim';
 import {
   nearestByType,
   useOverpassFeatures,
-  type FeatureCategory,
   type NearbyFeature,
 } from '../../hooks/useOverpassFeatures';
 import { SectionHeader } from '../hud/SectionHeader';
@@ -17,17 +15,6 @@ interface Props {
   coordsB: Coordinates | null;
   compareMode: boolean;
 }
-
-const CATEGORY_COLORS: Record<FeatureCategory, string> = {
-  amenity: '#66ffa3',
-  industrial: '#ffb347',
-  airport: '#ff4d5e',
-  water: '#7eeaff',
-  park: '#66ffa3',
-  place: '#e8eef5',
-  transit: '#a5d8ff',
-  other: '#6a768b',
-};
 
 const HAZARD_KEYWORDS = ['flood', 'fire', 'landslide', 'tsunami', 'earthquake', 'eruption'];
 
@@ -46,8 +33,6 @@ export function ContextModule({ coordsA, coordsB, compareMode }: Props) {
   if (isCompare) {
     return (
       <CompareView
-        coordsA={coordsA}
-        coordsB={coordsB!}
         wikiA={wikiA.data ?? []}
         wikiB={wikiB.data ?? []}
         wikiAStatus={wikiA.status}
@@ -62,7 +47,6 @@ export function ContextModule({ coordsA, coordsB, compareMode }: Props) {
 
   return (
     <SingleView
-      coords={coordsA}
       wiki={wikiA.data ?? []}
       wikiStatus={wikiA.status}
       wikiError={wikiA.error}
@@ -74,7 +58,6 @@ export function ContextModule({ coordsA, coordsB, compareMode }: Props) {
 }
 
 function SingleView({
-  coords,
   wiki,
   wikiStatus,
   wikiError,
@@ -82,7 +65,6 @@ function SingleView({
   featuresStatus,
   featuresError,
 }: {
-  coords: Coordinates;
   wiki: WikiArticle[];
   wikiStatus: string;
   wikiError: string | null;
@@ -92,22 +74,25 @@ function SingleView({
 }) {
   const hazardMentions = useMemo(() => collectHazards(wiki), [wiki]);
   const nearest = useMemo(() => nearestByType(features), [features]);
+  const featureCounts = useMemo(() => summariseFeatures(features), [features]);
 
   return (
     <div className="space-y-5">
+      <OverlayHint />
+
       <Section code="01" title="WIKIPEDIA INTEL" subtitle="GEOTAGGED · ≤10KM · EN + LOCAL">
         <WikiList wiki={wiki} status={wikiStatus} error={wikiError} />
       </Section>
 
       {hazardMentions.length > 0 && <HazardBanner hits={hazardMentions} />}
 
-      <Section code="02" title="NEARBY FEATURES" subtitle="AMENITIES · NUISANCES · ≤2.5KM">
+      <Section code="02" title="NEARBY FEATURES" subtitle="CATEGORY COUNTS · OVERLAID ON MAP">
         {featuresStatus === 'loading' || featuresStatus === 'idle' ? (
           <LoadingSkeleton />
         ) : featuresStatus === 'error' ? (
           <div className="text-[10px] font-mono text-risk break-words">{featuresError}</div>
         ) : (
-          <FeaturesMap coords={coords} features={features} />
+          <FeatureCounts counts={featureCounts} />
         )}
       </Section>
 
@@ -121,8 +106,6 @@ function SingleView({
 }
 
 function CompareView({
-  coordsA,
-  coordsB,
   wikiA,
   wikiB,
   wikiAStatus,
@@ -132,8 +115,6 @@ function CompareView({
   featuresAStatus,
   featuresBStatus,
 }: {
-  coordsA: Coordinates;
-  coordsB: Coordinates;
   wikiA: WikiArticle[];
   wikiB: WikiArticle[];
   wikiAStatus: string;
@@ -145,9 +126,13 @@ function CompareView({
 }) {
   const nearestA = useMemo(() => nearestByType(featuresA), [featuresA]);
   const nearestB = useMemo(() => nearestByType(featuresB), [featuresB]);
+  const countsA = useMemo(() => summariseFeatures(featuresA), [featuresA]);
+  const countsB = useMemo(() => summariseFeatures(featuresB), [featuresB]);
 
   return (
     <div className="space-y-5">
+      <OverlayHint />
+
       <Section code="01" title="WIKIPEDIA INTEL" subtitle="A | B · GEOTAGGED ≤10KM">
         <div className="grid gap-3 md:grid-cols-2">
           <SubChart label="A">
@@ -159,20 +144,20 @@ function CompareView({
         </div>
       </Section>
 
-      <Section code="02" title="NEARBY FEATURES" subtitle="A | B · ≤2.5KM">
+      <Section code="02" title="NEARBY FEATURES" subtitle="A | B · CATEGORY COUNTS">
         <div className="grid gap-3 md:grid-cols-2">
           <SubChart label="A">
             {featuresAStatus === 'loading' || featuresAStatus === 'idle' ? (
               <LoadingSkeleton />
             ) : (
-              <FeaturesMap coords={coordsA} features={featuresA} mini />
+              <FeatureCounts counts={countsA} />
             )}
           </SubChart>
           <SubChart label="B">
             {featuresBStatus === 'loading' || featuresBStatus === 'idle' ? (
               <LoadingSkeleton />
             ) : (
-              <FeaturesMap coords={coordsB} features={featuresB} mini />
+              <FeatureCounts counts={countsB} />
             )}
           </SubChart>
         </div>
@@ -208,6 +193,80 @@ function CompareView({
           </table>
         </div>
       </Section>
+    </div>
+  );
+}
+
+interface FeatureCountRow {
+  category: string;
+  count: number;
+  color: string;
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+  amenity: '#66ffa3',
+  industrial: '#ffb347',
+  airport: '#ff4d5e',
+  water: '#7eeaff',
+  park: '#66ffa3',
+  transit: '#a5d8ff',
+};
+
+function summariseFeatures(features: NearbyFeature[]): FeatureCountRow[] {
+  const map = new Map<string, number>();
+  for (const f of features) {
+    if (f.category === 'other' || f.category === 'place') continue;
+    map.set(f.category, (map.get(f.category) ?? 0) + 1);
+  }
+  const rows: FeatureCountRow[] = [];
+  for (const [category, count] of map.entries()) {
+    rows.push({ category, count, color: CATEGORY_COLORS[category] ?? '#6a768b' });
+  }
+  rows.sort((a, b) => b.count - a.count);
+  return rows;
+}
+
+function FeatureCounts({ counts }: { counts: FeatureCountRow[] }) {
+  if (counts.length === 0) {
+    return (
+      <div className="text-[9px] font-mono uppercase tracking-widest text-dim">
+        NO TAGGED FEATURES IN RANGE
+      </div>
+    );
+  }
+  const max = Math.max(...counts.map((c) => c.count));
+  return (
+    <div className="space-y-1">
+      {counts.map((row) => (
+        <div key={row.category} className="flex items-center gap-2">
+          <div className="w-16 text-[9px] font-mono uppercase tracking-widest text-muted shrink-0">
+            {row.category}
+          </div>
+          <div className="flex-1 h-3 bg-void/50 border border-edge relative overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0"
+              style={{
+                width: `${(row.count / max) * 100}%`,
+                background: row.color,
+                opacity: 0.55,
+              }}
+            />
+          </div>
+          <div className="text-[10px] font-mono tabular-nums text-ink w-8 text-right">
+            {row.count}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OverlayHint() {
+  return (
+    <div className="border border-cyan/30 bg-cyan/5 px-3 py-1.5">
+      <div className="text-[9px] font-mono uppercase tracking-widest text-cyan/80">
+        ※ WIKI PINS + FEATURE MARKERS OVERLAID ON MAIN MAP
+      </div>
     </div>
   );
 }
@@ -285,50 +344,6 @@ function WikiList({
         </a>
       ))}
     </div>
-  );
-}
-
-function FeaturesMap({
-  coords,
-  features,
-  mini,
-}: {
-  coords: Coordinates;
-  features: NearbyFeature[];
-  mini?: boolean;
-}) {
-  return (
-    <>
-      <div className={`border border-edge ${mini ? 'h-[200px]' : 'h-[280px]'}`}>
-        <MapContainer center={[coords.lat, coords.lon]} zoom={14} scrollWheelZoom zoomControl={false} className="h-full w-full">
-          <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
-          <CircleMarker center={[coords.lat, coords.lon]} radius={5} pathOptions={{ color: '#e8eef5', fillColor: '#e8eef5', fillOpacity: 0.9, weight: 2 }}>
-            <Popup>PIN</Popup>
-          </CircleMarker>
-          {features.slice(0, 200).map((f) => (
-            <CircleMarker key={`${f.elementType}-${f.id}`} center={[f.lat, f.lon]} radius={3} pathOptions={{ color: CATEGORY_COLORS[f.category], fillColor: CATEGORY_COLORS[f.category], fillOpacity: 0.7, weight: 1 }}>
-              <Popup>
-                <div className="font-mono text-[10px]">
-                  <div><strong>{f.name ?? f.subtype}</strong></div>
-                  <div>{f.category} · {f.subtype}</div>
-                  <div>{f.distanceKm.toFixed(2)} km</div>
-                </div>
-              </Popup>
-            </CircleMarker>
-          ))}
-        </MapContainer>
-      </div>
-      {!mini && (
-        <div className="flex flex-wrap gap-3 mt-2 text-[8px] font-mono uppercase tracking-widest text-muted">
-          {(['amenity', 'industrial', 'airport', 'water', 'park', 'transit'] as FeatureCategory[]).map((cat) => (
-            <span key={cat} className="flex items-center gap-1.5">
-              <span className="w-2 h-2 inline-block" style={{ background: CATEGORY_COLORS[cat] }} />
-              {cat}
-            </span>
-          ))}
-        </div>
-      )}
-    </>
   );
 }
 
