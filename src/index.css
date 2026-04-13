@@ -1,0 +1,288 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --void: #06080f;
+  --bg: #080b15;
+  --panel: #0d121e;
+  --rail: #0a0e18;
+  --edge: #1a2338;
+  --edge-bright: #2d3a55;
+  --ink: #e8eef5;
+  --muted: #6a768b;
+  --cyan: #7eeaff;
+  --amber: #ffb347;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: var(--void);
+  color: var(--ink);
+}
+
+body {
+  font-family: 'JetBrains Mono', ui-monospace, 'Menlo', monospace;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(126, 234, 255, 0.04), transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(255, 179, 71, 0.03), transparent 60%),
+    linear-gradient(180deg, #080b15 0%, #06080f 100%);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.55 0 0 0 0 0.65 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.55;
+  mix-blend-mode: overlay;
+}
+
+::selection {
+  background: rgba(126, 234, 255, 0.3);
+  color: var(--ink);
+}
+
+input,
+button,
+select,
+textarea {
+  font: inherit;
+}
+
+input[type='text']::placeholder {
+  color: #3d4759;
+  letter-spacing: 0.05em;
+}
+
+/* Leaflet dark theme tweaks */
+.leaflet-container {
+  background: #05070d;
+  font-family: 'JetBrains Mono', monospace !important;
+  /* CRITICAL: contain leaflet panes (tilePane z=200, overlayPane z=400) inside their own
+     stacking context, otherwise they paint over sibling HUD overlays. */
+  z-index: 0;
+  position: relative;
+  isolation: isolate;
+}
+
+.leaflet-control-attribution {
+  background: rgba(8, 11, 21, 0.7) !important;
+  color: #5a6578 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  padding: 2px 6px !important;
+  letter-spacing: 0.03em;
+}
+
+.leaflet-control-attribution a {
+  color: #7eeaff !important;
+  text-decoration: none;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(126, 234, 255, 0.25) !important;
+  background: rgba(8, 11, 21, 0.85) !important;
+}
+
+.leaflet-control-zoom a {
+  background: transparent !important;
+  color: #e8eef5 !important;
+  border: none !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 400 !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(126, 234, 255, 0.1) !important;
+  color: #7eeaff !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(8, 11, 21, 0.95) !important;
+  color: #e8eef5 !important;
+  border: 1px solid rgba(126, 234, 255, 0.3) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(8, 11, 21, 0.95) !important;
+  border: 1px solid rgba(126, 234, 255, 0.3) !important;
+}
+
+.leaflet-popup-close-button {
+  color: #6a768b !important;
+}
+
+.leaflet-bar {
+  box-shadow: none !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(126, 234, 255, 0.15);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(126, 234, 255, 0.3);
+}
+
+/* Recharts dark theme text */
+.recharts-text {
+  fill: #6a768b !important;
+}
+
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {
+  stroke: #1a2338 !important;
+}
+
+/* Stagger utility */
+.stagger > * {
+  opacity: 0;
+  animation: reveal 0.5s ease-out forwards;
+}
+
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+.stagger > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger > *:nth-child(8) { animation-delay: 0.40s; }
+
+@keyframes reveal {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* HUD panel corner brackets — applied via className="hud-brackets" */
+.hud-brackets {
+  position: relative;
+}
+
+.hud-brackets::before,
+.hud-brackets::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: rgba(126, 234, 255, 0.55);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+
+.hud-brackets::before {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.hud-brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+.hud-brackets-full {
+  position: relative;
+}
+
+.hud-brackets-full > .bracket {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: rgba(126, 234, 255, 0.5);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+
+.hud-brackets-full > .bracket.tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.hud-brackets-full > .bracket.tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+
+.hud-brackets-full > .bracket.bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+.hud-brackets-full > .bracket.br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+.text-shadow-hud {
+  text-shadow: 0 0 12px rgba(126, 234, 255, 0.4);
+}
+
+/* line-clamp utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* HUD pin (custom Leaflet DivIcon) */
+.hud-pin-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+.hud-pin {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.7));
+}
+.hud-pin svg {
+  display: block;
+}
+.hud-pin-label {
+  position: absolute;
+  top: -2px;
+  left: 100%;
+  margin-left: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.85);
+}

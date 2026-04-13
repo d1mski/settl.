@@ -1,0 +1,392 @@
+import { useMemo, type ReactNode } from 'react';
+import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet';
+import type { Coordinates, WikiArticle } from '../../types';
+import { useWikipedia } from '../../hooks/useWikipedia';
+import { useReverseGeocode } from '../../hooks/useNominatim';
+import {
+  nearestByType,
+  useOverpassFeatures,
+  type FeatureCategory,
+  type NearbyFeature,
+} from '../../hooks/useOverpassFeatures';
+import { SectionHeader } from '../hud/SectionHeader';
+import { LoadingSkeleton } from '../ui/LoadingSkeleton';
+
+interface Props {
+  coordsA: Coordinates | null;
+  coordsB: Coordinates | null;
+  compareMode: boolean;
+}
+
+const CATEGORY_COLORS: Record<FeatureCategory, string> = {
+  amenity: '#66ffa3',
+  industrial: '#ffb347',
+  airport: '#ff4d5e',
+  water: '#7eeaff',
+  park: '#66ffa3',
+  place: '#e8eef5',
+  transit: '#a5d8ff',
+  other: '#6a768b',
+};
+
+const HAZARD_KEYWORDS = ['flood', 'fire', 'landslide', 'tsunami', 'earthquake', 'eruption'];
+
+export function ContextModule({ coordsA, coordsB, compareMode }: Props) {
+  const geoA = useReverseGeocode(coordsA);
+  const geoB = useReverseGeocode(coordsB);
+  const wikiA = useWikipedia(coordsA, geoA.result?.countryCode ?? null);
+  const wikiB = useWikipedia(coordsB, geoB.result?.countryCode ?? null);
+  const featuresA = useOverpassFeatures(coordsA);
+  const featuresB = useOverpassFeatures(coordsB);
+
+  if (!coordsA) return <EmptyState />;
+
+  const isCompare = compareMode && coordsA && coordsB;
+
+  if (isCompare) {
+    return (
+      <CompareView
+        coordsA={coordsA}
+        coordsB={coordsB!}
+        wikiA={wikiA.data ?? []}
+        wikiB={wikiB.data ?? []}
+        wikiAStatus={wikiA.status}
+        wikiBStatus={wikiB.status}
+        featuresA={featuresA.data ?? []}
+        featuresB={featuresB.data ?? []}
+        featuresAStatus={featuresA.status}
+        featuresBStatus={featuresB.status}
+      />
+    );
+  }
+
+  return (
+    <SingleView
+      coords={coordsA}
+      wiki={wikiA.data ?? []}
+      wikiStatus={wikiA.status}
+      wikiError={wikiA.error}
+      features={featuresA.data ?? []}
+      featuresStatus={featuresA.status}
+      featuresError={featuresA.error}
+    />
+  );
+}
+
+function SingleView({
+  coords,
+  wiki,
+  wikiStatus,
+  wikiError,
+  features,
+  featuresStatus,
+  featuresError,
+}: {
+  coords: Coordinates;
+  wiki: WikiArticle[];
+  wikiStatus: string;
+  wikiError: string | null;
+  features: NearbyFeature[];
+  featuresStatus: string;
+  featuresError: string | null;
+}) {
+  const hazardMentions = useMemo(() => collectHazards(wiki), [wiki]);
+  const nearest = useMemo(() => nearestByType(features), [features]);
+
+  return (
+    <div className="space-y-5">
+      <Section code="01" title="WIKIPEDIA INTEL" subtitle="GEOTAGGED · ≤10KM · EN + LOCAL">
+        <WikiList wiki={wiki} status={wikiStatus} error={wikiError} />
+      </Section>
+
+      {hazardMentions.length > 0 && <HazardBanner hits={hazardMentions} />}
+
+      <Section code="02" title="NEARBY FEATURES" subtitle="AMENITIES · NUISANCES · ≤2.5KM">
+        {featuresStatus === 'loading' || featuresStatus === 'idle' ? (
+          <LoadingSkeleton />
+        ) : featuresStatus === 'error' ? (
+          <div className="text-[10px] font-mono text-risk break-words">{featuresError}</div>
+        ) : (
+          <FeaturesMap coords={coords} features={features} />
+        )}
+      </Section>
+
+      {nearest.length > 0 && featuresStatus === 'success' && (
+        <Section code="03" title="DISTANCE TO NEAREST" subtitle="ESSENTIAL · ≤1.5KM">
+          <NearestTable nearest={nearest} />
+        </Section>
+      )}
+    </div>
+  );
+}
+
+function CompareView({
+  coordsA,
+  coordsB,
+  wikiA,
+  wikiB,
+  wikiAStatus,
+  wikiBStatus,
+  featuresA,
+  featuresB,
+  featuresAStatus,
+  featuresBStatus,
+}: {
+  coordsA: Coordinates;
+  coordsB: Coordinates;
+  wikiA: WikiArticle[];
+  wikiB: WikiArticle[];
+  wikiAStatus: string;
+  wikiBStatus: string;
+  featuresA: NearbyFeature[];
+  featuresB: NearbyFeature[];
+  featuresAStatus: string;
+  featuresBStatus: string;
+}) {
+  const nearestA = useMemo(() => nearestByType(featuresA), [featuresA]);
+  const nearestB = useMemo(() => nearestByType(featuresB), [featuresB]);
+
+  return (
+    <div className="space-y-5">
+      <Section code="01" title="WIKIPEDIA INTEL" subtitle="A | B · GEOTAGGED ≤10KM">
+        <div className="grid gap-3 md:grid-cols-2">
+          <SubChart label="A">
+            <WikiList wiki={wikiA} status={wikiAStatus} error={null} compact />
+          </SubChart>
+          <SubChart label="B">
+            <WikiList wiki={wikiB} status={wikiBStatus} error={null} compact />
+          </SubChart>
+        </div>
+      </Section>
+
+      <Section code="02" title="NEARBY FEATURES" subtitle="A | B · ≤2.5KM">
+        <div className="grid gap-3 md:grid-cols-2">
+          <SubChart label="A">
+            {featuresAStatus === 'loading' || featuresAStatus === 'idle' ? (
+              <LoadingSkeleton />
+            ) : (
+              <FeaturesMap coords={coordsA} features={featuresA} mini />
+            )}
+          </SubChart>
+          <SubChart label="B">
+            {featuresBStatus === 'loading' || featuresBStatus === 'idle' ? (
+              <LoadingSkeleton />
+            ) : (
+              <FeaturesMap coords={coordsB} features={featuresB} mini />
+            )}
+          </SubChart>
+        </div>
+      </Section>
+
+      <Section code="03" title="DISTANCE TO NEAREST" subtitle="A vs B · ≤1.5KM">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[10px] font-mono">
+            <thead>
+              <tr className="text-muted uppercase tracking-widest text-left border-b border-edge">
+                <th className="py-1.5 pr-2 font-normal">CATEGORY</th>
+                <th className="py-1.5 pr-2 font-normal text-cyan">A · DIST</th>
+                <th className="py-1.5 pr-2 font-normal text-amber">B · DIST</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nearestA.map(({ label }, i) => {
+                const fA = nearestA[i].feature;
+                const fB = nearestB[i].feature;
+                return (
+                  <tr key={label} className="border-b border-edge/50">
+                    <td className="py-1.5 pr-2 text-ink uppercase">{label}</td>
+                    <td className="py-1.5 pr-2 text-cyan tabular-nums">
+                      {fA ? `${fA.distanceKm.toFixed(2)} KM` : '—'}
+                    </td>
+                    <td className="py-1.5 pr-2 text-amber tabular-nums">
+                      {fB ? `${fB.distanceKm.toFixed(2)} KM` : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function collectHazards(wiki: WikiArticle[]): Array<{ title: string; keyword: string }> {
+  const hits: Array<{ title: string; keyword: string }> = [];
+  for (const a of wiki) {
+    if (!a.extract) continue;
+    const lower = a.extract.toLowerCase();
+    for (const kw of HAZARD_KEYWORDS) {
+      if (lower.includes(kw)) {
+        hits.push({ title: a.title, keyword: kw });
+        break;
+      }
+    }
+  }
+  return hits;
+}
+
+function HazardBanner({ hits }: { hits: Array<{ title: string; keyword: string }> }) {
+  return (
+    <div className="border border-warn/40 bg-warn/5 px-3 py-2">
+      <div className="text-[9px] font-mono uppercase tracking-widest text-warn flex items-center gap-2">
+        <span>※ HAZARD KEYWORDS DETECTED</span>
+        <span className="flex-1 h-px bg-warn/30" />
+      </div>
+      <div className="text-[10px] font-mono text-ink mt-1 space-y-0.5">
+        {hits.map((h, i) => (
+          <div key={i}>
+            <span className="text-warn uppercase">[{h.keyword}]</span>{' '}
+            <span className="text-muted">{h.title}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function WikiList({
+  wiki,
+  status,
+  error,
+  compact,
+}: {
+  wiki: WikiArticle[];
+  status: string;
+  error: string | null;
+  compact?: boolean;
+}) {
+  if (status === 'loading' || status === 'idle') return <LoadingSkeleton />;
+  if (status === 'error' && error) return <div className="text-[10px] font-mono text-risk break-words">{error}</div>;
+  if (wiki.length === 0) return <div className="text-[9px] font-mono uppercase tracking-widest text-dim">NO ARTICLES IN RANGE</div>;
+  const limit = compact ? 5 : 8;
+  return (
+    <div className="grid gap-1.5">
+      {wiki.slice(0, limit).map((article) => (
+        <a
+          key={`${article.language}-${article.pageid}`}
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block border border-edge bg-void/40 px-2 py-1.5 hover:border-cyan/60 hover:bg-cyan/5 transition-colors"
+        >
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-[11px] font-mono text-ink truncate">{article.title}</div>
+            <div className="text-[9px] font-mono text-cyan tabular-nums shrink-0 uppercase tracking-widest">
+              {article.distanceKm.toFixed(1)}KM
+            </div>
+          </div>
+          {!compact && article.extract && (
+            <div className="text-[10px] font-mono text-muted mt-1 line-clamp-3 leading-relaxed">
+              {article.extract}
+            </div>
+          )}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function FeaturesMap({
+  coords,
+  features,
+  mini,
+}: {
+  coords: Coordinates;
+  features: NearbyFeature[];
+  mini?: boolean;
+}) {
+  return (
+    <>
+      <div className={`border border-edge ${mini ? 'h-[200px]' : 'h-[280px]'}`}>
+        <MapContainer center={[coords.lat, coords.lon]} zoom={14} scrollWheelZoom zoomControl={false} className="h-full w-full">
+          <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
+          <CircleMarker center={[coords.lat, coords.lon]} radius={5} pathOptions={{ color: '#e8eef5', fillColor: '#e8eef5', fillOpacity: 0.9, weight: 2 }}>
+            <Popup>PIN</Popup>
+          </CircleMarker>
+          {features.slice(0, 200).map((f) => (
+            <CircleMarker key={`${f.elementType}-${f.id}`} center={[f.lat, f.lon]} radius={3} pathOptions={{ color: CATEGORY_COLORS[f.category], fillColor: CATEGORY_COLORS[f.category], fillOpacity: 0.7, weight: 1 }}>
+              <Popup>
+                <div className="font-mono text-[10px]">
+                  <div><strong>{f.name ?? f.subtype}</strong></div>
+                  <div>{f.category} · {f.subtype}</div>
+                  <div>{f.distanceKm.toFixed(2)} km</div>
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
+        </MapContainer>
+      </div>
+      {!mini && (
+        <div className="flex flex-wrap gap-3 mt-2 text-[8px] font-mono uppercase tracking-widest text-muted">
+          {(['amenity', 'industrial', 'airport', 'water', 'park', 'transit'] as FeatureCategory[]).map((cat) => (
+            <span key={cat} className="flex items-center gap-1.5">
+              <span className="w-2 h-2 inline-block" style={{ background: CATEGORY_COLORS[cat] }} />
+              {cat}
+            </span>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-[10px] font-mono">
+        <thead>
+          <tr className="text-muted uppercase tracking-widest text-left border-b border-edge">
+            <th className="py-2 pr-3 font-normal">CATEGORY</th>
+            <th className="py-2 pr-3 font-normal">NAME</th>
+            <th className="py-2 pr-3 font-normal text-right">DIST</th>
+          </tr>
+        </thead>
+        <tbody>
+          {nearest.map(({ label, feature }) => (
+            <tr key={label} className="border-b border-edge/50">
+              <td className="py-2 pr-3 text-ink uppercase">{label}</td>
+              <td className="py-2 pr-3 text-muted truncate max-w-[220px]">
+                {feature ? feature.name ?? feature.subtype : '—'}
+              </td>
+              <td className="py-2 pr-3 text-cyan tabular-nums text-right">
+                {feature ? `${feature.distanceKm.toFixed(2)} KM` : 'NONE'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Section({ code, title, subtitle, children }: { code: string; title: string; subtitle?: string; children: ReactNode }) {
+  return (
+    <div>
+      <SectionHeader code={code} title={title} subtitle={subtitle} />
+      <div className="border border-edge bg-bg/40 p-3">{children}</div>
+    </div>
+  );
+}
+
+function SubChart({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="border border-edge bg-bg/40">
+      <div className="px-2 py-1 border-b border-edge text-[9px] font-mono uppercase tracking-widest flex items-center gap-1.5">
+        <span className={`inline-block w-1.5 h-1.5 ${label === 'A' ? 'bg-cyan' : 'bg-amber'}`} />
+        <span className={label === 'A' ? 'text-cyan' : 'text-amber'}>TGT · {label}</span>
+      </div>
+      <div className="p-2">{children}</div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="border border-edge bg-bg/40 p-6 text-center">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-cyan/70 mb-1">▸ AWAITING TARGET</div>
+      <div className="text-[9px] font-mono uppercase tracking-wider text-muted">SET COORD TO QUERY LOCAL CONTEXT</div>
+    </div>
+  );
+}

@@ -1,0 +1,269 @@
+import { useMemo, type ReactNode } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { CircleMarker, MapContainer, Popup, TileLayer } from 'react-leaflet';
+import type { Coordinates, EarthquakeEvent } from '../../types';
+import { useEarthquakes } from '../../hooks/useEarthquakes';
+import { StatReadout } from '../hud/StatReadout';
+import { DualReadout } from '../hud/DualReadout';
+import { SectionHeader } from '../hud/SectionHeader';
+import { LoadingSkeleton } from '../ui/LoadingSkeleton';
+import { signedFixed, deltaTone } from '../../utils/compareUtils';
+
+interface Props {
+  coordsA: Coordinates | null;
+  coordsB: Coordinates | null;
+  compareMode: boolean;
+}
+
+const AXIS_PROPS = { stroke: '#3d4759', fontSize: 9, fontFamily: 'JetBrains Mono, monospace', tickLine: false };
+const GRID_PROPS = { stroke: '#1a2338', strokeDasharray: '2 4', vertical: false } as const;
+const TOOLTIP_STYLE = {
+  background: '#080b15',
+  border: '1px solid #2d3a55',
+  fontFamily: 'JetBrains Mono, monospace',
+  fontSize: 11,
+  borderRadius: 0,
+  padding: '6px 10px',
+};
+
+function depthColor(depth: number): string {
+  if (depth < 10) return '#ff4d5e';
+  if (depth < 35) return '#ffb347';
+  if (depth < 70) return '#a5d8ff';
+  return '#7eeaff';
+}
+
+function summarise(data: EarthquakeEvent[]) {
+  if (data.length === 0) {
+    return { count: 0, largest: null as EarthquakeEvent | null, closest: null as number | null };
+  }
+  let largest = data[0];
+  let closest = Infinity;
+  for (const e of data) {
+    if (e.magnitude > largest.magnitude) largest = e;
+    if (e.distanceKm < closest) closest = e.distanceKm;
+  }
+  return { count: data.length, largest, closest };
+}
+
+function buildYears(data: EarthquakeEvent[]) {
+  const map = new Map<number, number>();
+  for (const e of data) {
+    const y = parseInt(e.date.slice(0, 4), 10);
+    map.set(y, (map.get(y) ?? 0) + 1);
+  }
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: 10 }, (_, i) => {
+    const year = currentYear - 9 + i;
+    return { label: year.toString().slice(-2), count: map.get(year) ?? 0 };
+  });
+}
+
+export function HazardsModule({ coordsA, coordsB, compareMode }: Props) {
+  const a = useEarthquakes(coordsA);
+  const b = useEarthquakes(coordsB);
+
+  if (!coordsA) return <EmptyState />;
+  if (a.status === 'loading' || a.status === 'idle') return <LoadingSkeleton />;
+  if (a.status === 'error' || !a.data) return <ErrorState error={a.error} />;
+
+  const isCompare = compareMode && coordsA && coordsB;
+
+  if (isCompare) {
+    if (b.status === 'loading' || b.status === 'idle') return <LoadingSkeleton />;
+    if (b.status === 'error' || !b.data) return <ErrorState error={b.error} />;
+    return <CompareView coordsA={coordsA} coordsB={coordsB!} eventsA={a.data} eventsB={b.data} />;
+  }
+
+  return <SingleView coords={coordsA} events={a.data} />;
+}
+
+function SingleView({ coords, events }: { coords: Coordinates; events: EarthquakeEvent[] }) {
+  const summary = useMemo(() => summarise(events), [events]);
+  const years = useMemo(() => buildYears(events), [events]);
+
+  if (events.length === 0) {
+    return (
+      <div className="border border-good/40 bg-good/5 p-4">
+        <div className="text-[9px] font-mono uppercase tracking-widest text-good flex items-center gap-2">
+          <span>✓ SEISMICALLY QUIET</span>
+          <span className="flex-1 h-px bg-good/30" />
+        </div>
+        <div className="text-[10px] font-mono text-ink mt-1">
+          No M3.0+ events within 100 km in past 10 years.
+        </div>
+      </div>
+    );
+  }
+
+  const largest = summary.largest!;
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-2 grid-cols-2 md:grid-cols-3">
+        <StatReadout label="EVENTS · 10Y" value={summary.count} hint="M3.0+ · 100KM" tone={summary.count > 50 ? 'risk' : summary.count > 10 ? 'warn' : 'good'} compact />
+        <StatReadout label="LARGEST" value={`M${largest.magnitude.toFixed(1)}`} hint={`${largest.distanceKm.toFixed(0)}KM · ${largest.date.slice(0, 10)}`} tone={largest.magnitude >= 6 ? 'risk' : largest.magnitude >= 5 ? 'warn' : 'cyan'} compact />
+        <StatReadout label="CLOSEST" value={`${summary.closest!.toFixed(0)} KM`} hint="FROM PIN" compact />
+      </div>
+
+      <Section code="01" title="SEISMIC MAP" subtitle="RADIUS ∝ MAG · COLOR = DEPTH">
+        <div className="border border-edge h-[320px]">
+          <MapContainer center={[coords.lat, coords.lon]} zoom={7} scrollWheelZoom zoomControl={false} className="h-full w-full">
+            <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
+            {events.map((e) => (
+              <CircleMarker key={e.id} center={[e.lat, e.lon]} radius={Math.max(3, (e.magnitude - 2) * 4)} pathOptions={{ color: depthColor(e.depth), fillColor: depthColor(e.depth), fillOpacity: 0.5, weight: 1 }}>
+                <Popup>
+                  <div className="font-mono text-[10px]">
+                    <div><strong>M{e.magnitude.toFixed(1)}</strong> · {e.depth.toFixed(0)} KM DEEP</div>
+                    <div>{e.place}</div>
+                    <div>{e.date.slice(0, 10)}</div>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            ))}
+          </MapContainer>
+        </div>
+      </Section>
+
+      <Section code="02" title="FREQUENCY" subtitle="EVENTS PER YEAR · LAST DECADE">
+        <ResponsiveContainer width="100%" height={160}>
+          <BarChart data={years} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+            <CartesianGrid {...GRID_PROPS} />
+            <XAxis dataKey="label" {...AXIS_PROPS} />
+            <YAxis {...AXIS_PROPS} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Bar dataKey="count" fill="#ff4d5e" />
+          </BarChart>
+        </ResponsiveContainer>
+      </Section>
+    </div>
+  );
+}
+
+function CompareView({
+  coordsA,
+  coordsB,
+  eventsA,
+  eventsB,
+}: {
+  coordsA: Coordinates;
+  coordsB: Coordinates;
+  eventsA: EarthquakeEvent[];
+  eventsB: EarthquakeEvent[];
+}) {
+  const sumA = useMemo(() => summarise(eventsA), [eventsA]);
+  const sumB = useMemo(() => summarise(eventsB), [eventsB]);
+  const yearsA = useMemo(() => buildYears(eventsA), [eventsA]);
+  const yearsB = useMemo(() => buildYears(eventsB), [eventsB]);
+  const merged = useMemo(
+    () => yearsA.map((y, i) => ({ label: y.label, countA: y.count, countB: yearsB[i].count })),
+    [yearsA, yearsB],
+  );
+
+  const centerLat = (coordsA.lat + coordsB.lat) / 2;
+  const centerLon = (coordsA.lon + coordsB.lon) / 2;
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-2 md:grid-cols-2">
+        <DualReadout
+          label="EVENTS · 10Y · M3.0+"
+          valueA={sumA.count}
+          valueB={sumB.count}
+          delta={signedFixed(sumB.count - sumA.count, 0)}
+          deltaTone={deltaTone(sumB.count - sumA.count, 'higher-bad', 5)}
+        />
+        <DualReadout
+          label="LARGEST"
+          valueA={sumA.largest ? `M${sumA.largest.magnitude.toFixed(1)}` : '—'}
+          valueB={sumB.largest ? `M${sumB.largest.magnitude.toFixed(1)}` : '—'}
+          delta={
+            sumA.largest && sumB.largest
+              ? signedFixed(sumB.largest.magnitude - sumA.largest.magnitude, 1)
+              : undefined
+          }
+          deltaTone={
+            sumA.largest && sumB.largest
+              ? deltaTone(sumB.largest.magnitude - sumA.largest.magnitude, 'higher-bad', 0.3)
+              : 'neutral'
+          }
+        />
+      </div>
+
+      <Section code="01" title="SEISMIC MAP" subtitle="A (CYAN) ↔ B (AMBER) · M3.0+ · 100KM RADIUS">
+        <div className="border border-edge h-[360px]">
+          <MapContainer center={[centerLat, centerLon]} zoom={5} scrollWheelZoom zoomControl={false} className="h-full w-full">
+            <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
+            <CircleMarker center={[coordsA.lat, coordsA.lon]} radius={5} pathOptions={{ color: '#7eeaff', fillColor: '#7eeaff', fillOpacity: 0.9, weight: 2 }}>
+              <Popup>PIN A</Popup>
+            </CircleMarker>
+            <CircleMarker center={[coordsB.lat, coordsB.lon]} radius={5} pathOptions={{ color: '#ffb347', fillColor: '#ffb347', fillOpacity: 0.9, weight: 2 }}>
+              <Popup>PIN B</Popup>
+            </CircleMarker>
+            {eventsA.map((e) => (
+              <CircleMarker key={`a-${e.id}`} center={[e.lat, e.lon]} radius={Math.max(2, (e.magnitude - 2) * 3)} pathOptions={{ color: '#7eeaff', fillColor: '#7eeaff', fillOpacity: 0.35, weight: 0.8 }}>
+                <Popup>
+                  <div className="font-mono text-[10px]">A · M{e.magnitude.toFixed(1)} · {e.date.slice(0, 10)}</div>
+                </Popup>
+              </CircleMarker>
+            ))}
+            {eventsB.map((e) => (
+              <CircleMarker key={`b-${e.id}`} center={[e.lat, e.lon]} radius={Math.max(2, (e.magnitude - 2) * 3)} pathOptions={{ color: '#ffb347', fillColor: '#ffb347', fillOpacity: 0.35, weight: 0.8 }}>
+                <Popup>
+                  <div className="font-mono text-[10px]">B · M{e.magnitude.toFixed(1)} · {e.date.slice(0, 10)}</div>
+                </Popup>
+              </CircleMarker>
+            ))}
+          </MapContainer>
+        </div>
+      </Section>
+
+      <Section code="02" title="FREQUENCY" subtitle="EVENTS PER YEAR · A vs B">
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={merged} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+            <CartesianGrid {...GRID_PROPS} />
+            <XAxis dataKey="label" {...AXIS_PROPS} />
+            <YAxis {...AXIS_PROPS} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Bar dataKey="countA" name="A" fill="#7eeaff" />
+            <Bar dataKey="countB" name="B" fill="#ffb347" />
+          </BarChart>
+        </ResponsiveContainer>
+      </Section>
+    </div>
+  );
+}
+
+function Section({ code, title, subtitle, children }: { code: string; title: string; subtitle?: string; children: ReactNode }) {
+  return (
+    <div>
+      <SectionHeader code={code} title={title} subtitle={subtitle} />
+      <div className="border border-edge bg-bg/40 p-3">{children}</div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="border border-edge bg-bg/40 p-6 text-center">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-cyan/70 mb-1">▸ AWAITING TARGET</div>
+      <div className="text-[9px] font-mono uppercase tracking-wider text-muted">SET COORD TO QUERY USGS CATALOG</div>
+    </div>
+  );
+}
+
+function ErrorState({ error }: { error: string | null }) {
+  return (
+    <div className="border border-risk/50 bg-risk/5 p-4">
+      <div className="text-[10px] font-mono uppercase tracking-widest text-risk mb-1">✖ USGS FAULT</div>
+      {error && <div className="text-[10px] font-mono text-ink break-words">{error}</div>}
+    </div>
+  );
+}

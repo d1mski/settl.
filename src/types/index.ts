@@ -1,0 +1,147 @@
+export interface Coordinates {
+  lat: number;
+  lon: number;
+}
+
+export type ModuleStatus = 'idle' | 'loading' | 'success' | 'error';
+
+export interface ModuleState<T> {
+  status: ModuleStatus;
+  data: T | null;
+  error: string | null;
+}
+
+export const initialModuleState = <T>(): ModuleState<T> => ({
+  status: 'idle',
+  data: null,
+  error: null,
+});
+
+export interface ResolvedLocation {
+  requested: Coordinates;
+  resolved: Coordinates;
+  elevation: number;
+  distanceMeters: number;
+}
+
+export interface HourlyWeather {
+  time: string[];
+  windSpeed10m: number[];
+  windDirection10m: number[];
+  windGusts10m: number[];
+  temperature2m: number[];
+  relativeHumidity2m: number[];
+  precipitation: number[];
+  rain: number[];
+  snowfall: number[];
+  cloudCover: number[];
+  shortwaveRadiation: number[];
+}
+
+export interface DailyWeather {
+  time: string[];
+  temperatureMax: number[];
+  temperatureMin: number[];
+  temperatureMean: number[];
+  precipitationSum: number[];
+  rainSum: number[];
+  snowfallSum: number[];
+  precipitationHours: number[];
+  windSpeedMax: number[];
+  windGustsMax: number[];
+  windDirectionDominant: number[];
+  sunshineDuration: number[];
+  uvIndexMax: number[];
+}
+
+export interface ClimateData {
+  resolved: ResolvedLocation;
+  hourly: HourlyWeather;
+  daily: DailyWeather;
+}
+
+export type SpeedBucket = 0 | 1 | 2 | 3 | 4;
+
+export interface WindRoseMatrix {
+  directions: number;
+  buckets: SpeedBucket[];
+  counts: number[][];
+  total: number;
+  calmCount: number;
+}
+
+export interface BuildingFacade {
+  label: 'Front' | 'Right' | 'Rear' | 'Left';
+  bearing: number;
+  cardinal: string;
+}
+
+export interface BuildingData {
+  found: boolean;
+  polygon: Coordinates[];
+  areaSqm: number;
+  levels: number | null;
+  type: string | null;
+  longestEdgeBearing: number;
+  facades: BuildingFacade[];
+}
+
+export interface EarthquakeEvent {
+  id: string;
+  magnitude: number;
+  depth: number;
+  distanceKm: number;
+  date: string;
+  place: string;
+  lat: number;
+  lon: number;
+}
+
+export interface AqiSample {
+  time: string;
+  europeanAqi: number;
+  pm10: number;
+  pm25: number;
+  no2: number;
+  o3: number;
+}
+
+export interface WikiArticle {
+  pageid: number;
+  title: string;
+  lat: number;
+  lon: number;
+  distanceKm: number;
+  extract?: string;
+  language: string;
+  url: string;
+}
+
+export type TabId =
+  | 'climate'
+  | 'wind'
+  | 'sun'
+  | 'building'
+  | 'hazards'
+  | 'air'
+  | 'context';
+
+export const TAB_ORDER: TabId[] = [
+  'climate',
+  'wind',
+  'sun',
+  'building',
+  'hazards',
+  'air',
+  'context',
+];
+
+export const TAB_LABELS: Record<TabId, string> = {
+  climate: 'Climate',
+  wind: 'Wind',
+  sun: 'Sun',
+  building: 'Building',
+  hazards: 'Hazards',
+  air: 'Air',
+  context: 'Context',
+};
