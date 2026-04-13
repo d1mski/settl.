@@ -27,9 +27,37 @@ interface OverpassResponse {
 }
 
 const cache = new Map<string, BuildingData>();
+const inflight = new Map<string, Promise<BuildingData>>();
+
+const COORD_PRECISION = 5;
+
+function quantize(coords: Coordinates): Coordinates {
+  return {
+    lat: Number(coords.lat.toFixed(COORD_PRECISION)),
+    lon: Number(coords.lon.toFixed(COORD_PRECISION)),
+  };
+}
 
 function makeKey(coords: Coordinates): string {
-  return `${coords.lat.toFixed(5)}|${coords.lon.toFixed(5)}`;
+  return `${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
+}
+
+function sharedFetchBuilding(coords: Coordinates): Promise<BuildingData> {
+  const key = makeKey(coords);
+  const existing = inflight.get(key);
+  if (existing) return existing;
+  const ctrl = new AbortController();
+  const p = fetchBuilding(coords, ctrl.signal)
+    .then((data) => {
+      cache.set(key, data);
+      void cacheSet(key, data, TTL.overpassBuilding);
+      return data;
+    })
+    .finally(() => {
+      inflight.delete(key);
+    });
+  inflight.set(key, p);
+  return p;
 }
 
 async function fetchFromEndpoint(
@@ -146,12 +174,16 @@ export function useOverpassBuilding(
   );
   const controllerRef = useRef<AbortController | null>(null);
 
+  const qLat = coords ? Number(coords.lat.toFixed(COORD_PRECISION)) : null;
+  const qLon = coords ? Number(coords.lon.toFixed(COORD_PRECISION)) : null;
+
   useEffect(() => {
     if (!coords) {
       setState(initialModuleState<BuildingData>());
       return;
     }
-    const key = makeKey(coords);
+    const qCoords = quantize(coords);
+    const key = makeKey(qCoords);
     const cached = cache.get(key);
     if (cached) {
       setState({ status: 'success', data: cached, error: null });
@@ -172,10 +204,8 @@ export function useOverpassBuilding(
         return;
       }
       try {
-        const data = await fetchBuilding(coords, ctrl.signal);
+        const data = await sharedFetchBuilding(qCoords);
         if (ctrl.signal.aborted) return;
-        cache.set(key, data);
-        void cacheSet(key, data, TTL.overpassBuilding);
         setState({ status: 'success', data, error: null });
       } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
@@ -186,7 +216,7 @@ export function useOverpassBuilding(
     })();
 
     return () => ctrl.abort();
-  }, [coords?.lat, coords?.lon]);
+  }, [qLat, qLon]);
 
   return state;
 }

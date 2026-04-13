@@ -45,9 +45,19 @@ const DAILY_VARS = [
 ];
 
 const cache = new Map<string, ClimateData>();
+const inflight = new Map<string, Promise<ClimateData>>();
+
+const COORD_PRECISION = 3;
+
+function quantize(coords: Coordinates): Coordinates {
+  return {
+    lat: Number(coords.lat.toFixed(COORD_PRECISION)),
+    lon: Number(coords.lon.toFixed(COORD_PRECISION)),
+  };
+}
 
 function makeKey(coords: Coordinates, start: string, end: string, model: string): string {
-  return `${coords.lat.toFixed(4)}|${coords.lon.toFixed(4)}|${start}|${end}|${model}`;
+  return `${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}|${start}|${end}|${model}`;
 }
 
 interface ModelChoice {
@@ -202,20 +212,47 @@ async function fetchOpenMeteo(
   return { resolved: resolvedLoc, hourly, daily };
 }
 
+function sharedFetch(
+  coords: Coordinates,
+  start: string,
+  end: string,
+  model: ModelChoice,
+): Promise<ClimateData> {
+  const key = makeKey(coords, start, end, model.id);
+  const existing = inflight.get(key);
+  if (existing) return existing;
+  const ctrl = new AbortController();
+  const p = fetchOpenMeteo(coords, start, end, model, ctrl.signal)
+    .then((data) => {
+      cache.set(key, data);
+      void cacheSet(key, data, TTL.openMeteoArchive);
+      return data;
+    })
+    .finally(() => {
+      inflight.delete(key);
+    });
+  inflight.set(key, p);
+  return p;
+}
+
 export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateData> {
   const [state, setState] = useState<ModuleState<ClimateData>>(() =>
     initialModuleState<ClimateData>(),
   );
   const controllerRef = useRef<AbortController | null>(null);
 
+  const qLat = coords ? Number(coords.lat.toFixed(COORD_PRECISION)) : null;
+  const qLon = coords ? Number(coords.lon.toFixed(COORD_PRECISION)) : null;
+
   useEffect(() => {
     if (!coords) {
       setState(initialModuleState<ClimateData>());
       return;
     }
+    const qCoords = quantize(coords);
     const { start, end } = defaultDateRange();
-    const model = pickModel(coords);
-    const key = makeKey(coords, start, end, model.id);
+    const model = pickModel(qCoords);
+    const key = makeKey(qCoords, start, end, model.id);
     const cached = cache.get(key);
     if (cached) {
       setState({ status: 'success', data: cached, error: null });
@@ -236,10 +273,8 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
         return;
       }
       try {
-        const data = await fetchOpenMeteo(coords, start, end, model, ctrl.signal);
+        const data = await sharedFetch(qCoords, start, end, model);
         if (ctrl.signal.aborted) return;
-        cache.set(key, data);
-        void cacheSet(key, data, TTL.openMeteoArchive);
         setState({ status: 'success', data, error: null });
       } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
@@ -258,7 +293,7 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
     return () => {
       ctrl.abort();
     };
-  }, [coords?.lat, coords?.lon]);
+  }, [qLat, qLon]);
 
   return state;
 }

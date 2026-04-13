@@ -45,9 +45,19 @@ interface OverpassResponse {
 }
 
 const cache = new Map<string, NearbyFeature[]>();
+const inflight = new Map<string, Promise<NearbyFeature[]>>();
+
+const COORD_PRECISION = 3;
+
+function quantize(coords: Coordinates): Coordinates {
+  return {
+    lat: Number(coords.lat.toFixed(COORD_PRECISION)),
+    lon: Number(coords.lon.toFixed(COORD_PRECISION)),
+  };
+}
 
 function makeKey(coords: Coordinates): string {
-  return `${coords.lat.toFixed(4)}|${coords.lon.toFixed(4)}`;
+  return `${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
 }
 
 function buildQuery(lat: number, lon: number): string {
@@ -117,6 +127,24 @@ async function fetchFeatures(
   throw lastErr instanceof Error ? lastErr : new Error('Overpass unreachable');
 }
 
+function sharedFetchFeatures(coords: Coordinates): Promise<NearbyFeature[]> {
+  const key = makeKey(coords);
+  const existing = inflight.get(key);
+  if (existing) return existing;
+  const ctrl = new AbortController();
+  const p = fetchFeatures(coords, ctrl.signal)
+    .then((features) => {
+      cache.set(key, features);
+      void cacheSet(key, features, TTL.overpassFeatures);
+      return features;
+    })
+    .finally(() => {
+      inflight.delete(key);
+    });
+  inflight.set(key, p);
+  return p;
+}
+
 function interpret(coords: Coordinates, data: OverpassResponse): NearbyFeature[] {
   const out: NearbyFeature[] = [];
   for (const el of data.elements) {
@@ -150,12 +178,16 @@ export function useOverpassFeatures(
   );
   const controllerRef = useRef<AbortController | null>(null);
 
+  const qLat = coords ? Number(coords.lat.toFixed(COORD_PRECISION)) : null;
+  const qLon = coords ? Number(coords.lon.toFixed(COORD_PRECISION)) : null;
+
   useEffect(() => {
     if (!coords) {
       setState(initialModuleState<NearbyFeature[]>());
       return;
     }
-    const key = makeKey(coords);
+    const qCoords = quantize(coords);
+    const key = makeKey(qCoords);
     const cached = cache.get(key);
     if (cached) {
       setState({ status: 'success', data: cached, error: null });
@@ -176,10 +208,8 @@ export function useOverpassFeatures(
         return;
       }
       try {
-        const features = await fetchFeatures(coords, ctrl.signal);
+        const features = await sharedFetchFeatures(qCoords);
         if (ctrl.signal.aborted) return;
-        cache.set(key, features);
-        void cacheSet(key, features, TTL.overpassFeatures);
         setState({ status: 'success', data: features, error: null });
       } catch (err: unknown) {
         if (ctrl.signal.aborted) return;
@@ -190,7 +220,7 @@ export function useOverpassFeatures(
     })();
 
     return () => ctrl.abort();
-  }, [coords?.lat, coords?.lon]);
+  }, [qLat, qLon]);
 
   return state;
 }

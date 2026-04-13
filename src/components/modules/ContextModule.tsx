@@ -237,8 +237,8 @@ function FeatureCounts({ counts }: { counts: FeatureCountRow[] }) {
   const max = Math.max(...counts.map((c) => c.count));
   return (
     <div className="space-y-1">
-      {counts.map((row) => (
-        <div key={row.category} className="flex items-center gap-2">
+      {counts.map((row, i) => (
+        <div key={`${row.category}-${i}`} className="flex items-center gap-2">
           <div className="w-16 text-[9px] font-mono uppercase tracking-widest text-muted shrink-0">
             {row.category}
           </div>
