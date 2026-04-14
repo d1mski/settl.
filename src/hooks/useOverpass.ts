@@ -21,6 +21,15 @@ interface OverpassWay {
   tags?: Record<string, string>;
 }
 
+function bearingBetween(from: Coordinates, to: Coordinates): number {
+  const dLon = ((to.lon - from.lon) * Math.PI) / 180;
+  const lat1 = (from.lat * Math.PI) / 180;
+  const lat2 = (to.lat * Math.PI) / 180;
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
 interface OverpassElement {
   type: string;
 }
@@ -41,8 +50,10 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
+const KEY_VERSION = 'v2';
+
 function makeKey(coords: Coordinates): string {
-  return `${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
+  return `${KEY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
 }
 
 function sharedFetchBuilding(coords: Coordinates): Promise<BuildingData> {
@@ -81,12 +92,15 @@ async function fetchFromEndpoint(
 }
 
 const SEARCH_RADIUS_M = 400;
+const ROAD_RADIUS_M = 600;
+const ROAD_HIGHWAY_FILTER = '^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|pedestrian)$';
 
 function buildQuery(coords: Coordinates): string {
   return (
-    `[out:json][timeout:15];(` +
+    `[out:json][timeout:20];(` +
     `way["building"](around:${SEARCH_RADIUS_M},${coords.lat},${coords.lon});` +
     `way["building:part"](around:${SEARCH_RADIUS_M},${coords.lat},${coords.lon});` +
+    `way["highway"~"${ROAD_HIGHWAY_FILTER}"](around:${ROAD_RADIUS_M},${coords.lat},${coords.lon});` +
     `);out body geom qt;`
   );
 }
@@ -120,18 +134,25 @@ function interpretResponse(
   query: Coordinates,
   data: OverpassResponse,
 ): BuildingData {
-  const ways = data.elements.filter(
+  const allWays = data.elements.filter(
     (e): e is OverpassWay =>
       e.type === 'way' &&
       Array.isArray((e as OverpassWay).geometry) &&
-      ((e as OverpassWay).geometry?.length ?? 0) >= 3,
+      ((e as OverpassWay).geometry?.length ?? 0) >= 2,
   );
+  const buildings = allWays.filter((w) => {
+    if ((w.geometry?.length ?? 0) < 3) return false;
+    const t = w.tags ?? {};
+    return Boolean(t.building || t['building:part']);
+  });
+  const highways = allWays.filter((w) => Boolean(w.tags?.highway));
 
-  if (ways.length === 0) return emptyBuilding();
+  if (buildings.length === 0) return emptyBuilding();
 
   let best: OverpassWay | null = null;
   let bestDist = Infinity;
-  for (const way of ways) {
+  let bestCentroid: Coordinates | null = null;
+  for (const way of buildings) {
     const geom = way.geometry ?? [];
     let latSum = 0;
     let lonSum = 0;
@@ -144,16 +165,33 @@ function interpretResponse(
     if (d < bestDist) {
       bestDist = d;
       best = way;
+      bestCentroid = centroid;
     }
   }
 
-  if (!best || !best.geometry) return emptyBuilding();
+  if (!best || !best.geometry || !bestCentroid) return emptyBuilding();
+
+  let entranceBearing: number | null = null;
+  let nearestRoadDist = Infinity;
+  for (const road of highways) {
+    const geom = road.geometry ?? [];
+    for (const node of geom) {
+      const d = haversine(bestCentroid, { lat: node.lat, lon: node.lon });
+      if (d < nearestRoadDist) {
+        nearestRoadDist = d;
+        entranceBearing = bearingBetween(bestCentroid, {
+          lat: node.lat,
+          lon: node.lon,
+        });
+      }
+    }
+  }
 
   const polygon: Coordinates[] = best.geometry.map((g) => ({
     lat: g.lat,
     lon: g.lon,
   }));
-  const analysis = analyseBuildingPolygon(polygon);
+  const analysis = analyseBuildingPolygon(polygon, { entranceBearing });
 
   const levelsTag = best.tags?.['building:levels'];
   const parsedLevels = levelsTag ? parseInt(levelsTag, 10) : NaN;

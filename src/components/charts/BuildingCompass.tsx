@@ -1,8 +1,9 @@
-import type { BuildingData, Coordinates } from '../../types';
+import type { BuildingData, BuildingFacade, Coordinates } from '../../types';
 
 interface Props {
   building: BuildingData;
   size?: number;
+  onFacadeClick?: (label: BuildingFacade['label']) => void;
 }
 
 const FACADE_COLORS: Record<string, string> = {
@@ -24,7 +25,7 @@ function projectAll(polygon: Coordinates[]) {
   }));
 }
 
-export function BuildingCompass({ building, size = 280 }: Props) {
+export function BuildingCompass({ building, size = 280, onFacadeClick }: Props) {
   if (!building.found || building.polygon.length < 3) {
     return <div className="text-[10px] font-mono uppercase tracking-widest text-muted">NO POLYGON</div>;
   }
@@ -139,14 +140,29 @@ export function BuildingCompass({ building, size = 280 }: Props) {
         const y1 = cy - Math.cos(rad) * innerR;
         const x2 = cx + Math.sin(rad) * outerR;
         const y2 = cy - Math.cos(rad) * outerR;
+        const tx = cx + Math.sin(rad) * (outerR + 8);
+        const ty = cy - Math.cos(rad) * (outerR + 8) + 3;
         const color = FACADE_COLORS[facade.label] ?? '#7eeaff';
+        const clickable = Boolean(onFacadeClick);
         return (
-          <g key={facade.label}>
+          <g
+            key={facade.label}
+            style={clickable ? { cursor: 'pointer' } : undefined}
+            onClick={clickable ? () => onFacadeClick?.(facade.label) : undefined}
+          >
+            {clickable && (
+              <circle
+                cx={(x1 + tx) / 2}
+                cy={(y1 + ty) / 2}
+                r={18}
+                fill="transparent"
+              />
+            )}
             <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={2} />
             <circle cx={x2} cy={y2} r={2.5} fill={color} />
             <text
-              x={cx + Math.sin(rad) * (outerR + 8)}
-              y={cy - Math.cos(rad) * (outerR + 8) + 3}
+              x={tx}
+              y={ty}
               textAnchor="middle"
               fontSize={8}
               fontFamily="JetBrains Mono, monospace"

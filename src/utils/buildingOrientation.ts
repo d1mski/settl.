@@ -57,7 +57,19 @@ export interface PolygonAnalysis {
   facades: BuildingFacade[];
 }
 
-export function analyseBuildingPolygon(input: Coordinates[]): PolygonAnalysis {
+export interface AnalyseOptions {
+  entranceBearing?: number | null;
+}
+
+function angularDiff(a: number, b: number): number {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+export function analyseBuildingPolygon(
+  input: Coordinates[],
+  options: AnalyseOptions = {},
+): PolygonAnalysis {
   const polygon = dedupeRing(input);
   if (polygon.length < 3) {
     return { polygon, areaSqm: 0, longestEdgeBearing: 0, facades: [] };
@@ -81,9 +93,28 @@ export function analyseBuildingPolygon(input: Coordinates[]): PolygonAnalysis {
   }
 
   const normalBearing = normalizeDegrees(longestBearing + 90);
-  const facadeLabels: Array<BuildingFacade['label']> = ['Front', 'Right', 'Rear', 'Left'];
-  const facades: BuildingFacade[] = facadeLabels.map((label, i) => {
-    const bearing = normalizeDegrees(normalBearing + i * 90);
+  const candidateBearings = [0, 90, 180, 270].map((d) =>
+    normalizeDegrees(normalBearing + d),
+  );
+
+  let rotation = 0;
+  if (
+    options.entranceBearing !== undefined &&
+    options.entranceBearing !== null
+  ) {
+    let minDiff = 361;
+    for (let i = 0; i < 4; i++) {
+      const diff = angularDiff(candidateBearings[i], options.entranceBearing);
+      if (diff < minDiff) {
+        minDiff = diff;
+        rotation = i;
+      }
+    }
+  }
+
+  const labels: Array<BuildingFacade['label']> = ['Front', 'Right', 'Rear', 'Left'];
+  const facades: BuildingFacade[] = labels.map((label, i) => {
+    const bearing = candidateBearings[(rotation + i) % 4];
     return { label, bearing, cardinal: cardinal(bearing) };
   });
 
@@ -93,6 +124,20 @@ export function analyseBuildingPolygon(input: Coordinates[]): PolygonAnalysis {
     longestEdgeBearing: normalizeDegrees(longestBearing),
     facades,
   };
+}
+
+export function rotateFacades(
+  original: BuildingFacade[],
+  override: BuildingFacade['label'] | null,
+): BuildingFacade[] {
+  if (!override) return original;
+  const idx = original.findIndex((f) => f.label === override);
+  if (idx <= 0) return original;
+  const labels: Array<BuildingFacade['label']> = ['Front', 'Right', 'Rear', 'Left'];
+  return labels.map((label, i) => {
+    const src = original[(idx + i) % 4];
+    return { label, bearing: src.bearing, cardinal: src.cardinal };
+  });
 }
 
 export function emptyBuilding(): BuildingData {

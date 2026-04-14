@@ -13,6 +13,8 @@ import {
 import type { Coordinates } from '../../types';
 import { useSunData, hoursSunlitOnFacade, type SunData } from '../../hooks/useSunCalc';
 import { useOverpassBuilding } from '../../hooks/useOverpass';
+import { useFacadeOverride } from '../../hooks/useFacadeOverride';
+import { rotateFacades } from '../../utils/buildingOrientation';
 import { SunPathArc } from '../charts/SunPathArc';
 import { StatReadout } from '../hud/StatReadout';
 import { DualReadout } from '../hud/DualReadout';
@@ -47,6 +49,8 @@ export function SunModule({ coordsA, coordsB, compareMode }: Props) {
   const sunB = useSunData(coordsB);
   const buildingA = useOverpassBuilding(coordsA);
   const buildingB = useOverpassBuilding(coordsB);
+  const [overrideA] = useFacadeOverride(coordsA, 'A');
+  const [overrideB] = useFacadeOverride(coordsB, 'B');
 
   if (!coordsA) return <EmptyState />;
   if (!sunA) return <div className="text-[10px] font-mono uppercase tracking-widest text-cyan/70">▸ COMPUTING ...</div>;
@@ -56,8 +60,12 @@ export function SunModule({ coordsA, coordsB, compareMode }: Props) {
     return <div className="text-[10px] font-mono uppercase tracking-widest text-cyan/70">▸ COMPUTING ...</div>;
   }
 
-  const facadesA = buildingA.data?.found ? buildingA.data.facades : [];
-  const facadesB = buildingB.data?.found ? buildingB.data.facades : [];
+  const facadesA = buildingA.data?.found
+    ? rotateFacades(buildingA.data.facades, overrideA)
+    : [];
+  const facadesB = buildingB.data?.found
+    ? rotateFacades(buildingB.data.facades, overrideB)
+    : [];
 
   if (isCompare && sunB) {
     return <CompareView a={sunA} b={sunB} facadesA={facadesA} facadesB={facadesB} />;
