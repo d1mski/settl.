@@ -17,6 +17,7 @@ import { DualReadout } from '../hud/DualReadout';
 import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { signedFixed, deltaTone } from '../../utils/compareUtils';
+import { fmtTooltipNum } from '../../utils/chartFmt';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -172,7 +173,7 @@ function SingleView({
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="label" {...AXIS_PROPS} />
             <YAxis {...AXIS_PROPS} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('events', 0)} />
             <Bar dataKey="count" fill="#ff4d5e" />
           </BarChart>
         </ResponsiveContainer>
@@ -275,7 +276,7 @@ function CompareView({
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="label" {...AXIS_PROPS} />
             <YAxis {...AXIS_PROPS} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('events', 0)} />
             <Bar dataKey="countA" name="A" fill="#7eeaff" />
             <Bar dataKey="countB" name="B" fill="#ffb347" />
           </BarChart>

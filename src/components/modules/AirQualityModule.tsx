@@ -15,6 +15,7 @@ import { DualReadout } from '../hud/DualReadout';
 import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { signedFixed, deltaTone } from '../../utils/compareUtils';
+import { fmtTooltipNum } from '../../utils/chartFmt';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -128,7 +129,7 @@ function SingleView({ s }: { s: Stats }) {
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="date" {...AXIS_PROPS} interval={6} />
             <YAxis {...AXIS_PROPS} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('AQI', 0)} />
             <Line type="monotone" dataKey="aqi" stroke="#7eeaff" strokeWidth={1.6} dot={false} />
           </LineChart>
         </ResponsiveContainer>
@@ -211,7 +212,7 @@ function CompareView({ a, b }: { a: Stats; b: Stats }) {
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="date" {...AXIS_PROPS} interval={6} />
             <YAxis {...AXIS_PROPS} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('AQI', 0)} />
             <Line type="monotone" dataKey="aqiA" name="A" stroke="#7eeaff" strokeWidth={1.6} dot={false} connectNulls />
             <Line type="monotone" dataKey="aqiB" name="B" stroke="#ffb347" strokeWidth={1.6} dot={false} connectNulls />
           </LineChart>

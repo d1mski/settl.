@@ -29,6 +29,7 @@ import { DualReadout } from '../hud/DualReadout';
 import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { signedFixed, deltaTone } from '../../utils/compareUtils';
+import { fmtTooltipNum } from '../../utils/chartFmt';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -138,7 +139,7 @@ function SingleView({ d }: { d: Derived }) {
               <CartesianGrid {...GRID_PROPS} />
               <XAxis dataKey="label" {...AXIS_PROPS} />
               <YAxis {...AXIS_PROPS} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('mm')} />
               <Bar dataKey="rainSum" name="MM" fill="#7eeaff" />
             </BarChart>
           </ResponsiveContainer>
@@ -150,7 +151,7 @@ function SingleView({ d }: { d: Derived }) {
               <CartesianGrid {...GRID_PROPS} />
               <XAxis dataKey="label" {...AXIS_PROPS} />
               <YAxis {...AXIS_PROPS} domain={[0, 100]} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('%')} />
               <Line type="monotone" dataKey="humidityMean" stroke="#66ffa3" strokeWidth={1.8} dot={{ r: 2, fill: '#66ffa3' }} />
             </LineChart>
           </ResponsiveContainer>
@@ -162,7 +163,7 @@ function SingleView({ d }: { d: Derived }) {
               <CartesianGrid {...GRID_PROPS} />
               <XAxis dataKey="label" {...AXIS_PROPS} />
               <YAxis {...AXIS_PROPS} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('h')} />
               <Bar dataKey="sunshineHours" name="HRS" fill="#ffb347" />
             </BarChart>
           </ResponsiveContainer>
@@ -174,7 +175,7 @@ function SingleView({ d }: { d: Derived }) {
               <CartesianGrid {...GRID_PROPS} />
               <XAxis dataKey="label" {...AXIS_PROPS} />
               <YAxis {...AXIS_PROPS} domain={[0, 12]} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum()} />
               <Bar dataKey="uvMax" name="UV">
                 {d.monthly.map((entry, i) => {
                   const band = uvBand(entry.uvMax);
@@ -310,13 +311,13 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <SectionContainer code="03" title="PRECIPITATION" subtitle="MM · A vs B">
-          <DualBarChart data={merged} aKey="rainA" bKey="rainB" />
+          <DualBarChart data={merged} aKey="rainA" bKey="rainB" unit="mm" />
         </SectionContainer>
         <SectionContainer code="04" title="HUMIDITY" subtitle="MEAN % · A vs B">
-          <DualLineChart data={merged} aKey="humA" bKey="humB" yMax={100} />
+          <DualLineChart data={merged} aKey="humA" bKey="humB" yMax={100} unit="%" />
         </SectionContainer>
         <SectionContainer code="05" title="SUNSHINE" subtitle="HRS · A vs B">
-          <DualBarChart data={merged} aKey="sunA" bKey="sunB" />
+          <DualBarChart data={merged} aKey="sunA" bKey="sunB" unit="h" />
         </SectionContainer>
         <SectionContainer code="06" title="UV INDEX" subtitle="MAX · A vs B">
           <DualLineChart data={merged} aKey="uvA" bKey="uvB" yMax={12} />
@@ -364,14 +365,14 @@ interface MergedRow {
   [key: string]: string | number;
 }
 
-function DualBarChart({ data, aKey, bKey }: { data: MergedRow[]; aKey: string; bKey: string }) {
+function DualBarChart({ data, aKey, bKey, unit = '' }: { data: MergedRow[]; aKey: string; bKey: string; unit?: string }) {
   return (
     <ResponsiveContainer width="100%" height={170}>
       <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <CartesianGrid {...GRID_PROPS} />
         <XAxis dataKey="label" {...AXIS_PROPS} />
         <YAxis {...AXIS_PROPS} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum(unit)} />
         <Bar dataKey={aKey} name="A" fill="#7eeaff" />
         <Bar dataKey={bKey} name="B" fill="#ffb347" />
       </BarChart>
@@ -384,11 +385,13 @@ function DualLineChart({
   aKey,
   bKey,
   yMax,
+  unit = '',
 }: {
   data: MergedRow[];
   aKey: string;
   bKey: string;
   yMax?: number;
+  unit?: string;
 }) {
   return (
     <ResponsiveContainer width="100%" height={170}>
@@ -396,7 +399,7 @@ function DualLineChart({
         <CartesianGrid {...GRID_PROPS} />
         <XAxis dataKey="label" {...AXIS_PROPS} />
         <YAxis {...AXIS_PROPS} domain={yMax ? [0, yMax] : ['auto', 'auto']} />
-        <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} />
+        <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum(unit)} />
         <Line type="monotone" dataKey={aKey} name="A" stroke="#7eeaff" strokeWidth={1.8} dot={false} />
         <Line type="monotone" dataKey={bKey} name="B" stroke="#ffb347" strokeWidth={1.8} dot={false} />
       </LineChart>

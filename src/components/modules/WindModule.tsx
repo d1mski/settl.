@@ -25,6 +25,7 @@ import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { GridResolutionWarning } from '../GridResolutionWarning';
 import { signedFixed, deltaTone } from '../../utils/compareUtils';
+import { fmtTooltipNum } from '../../utils/chartFmt';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -127,7 +128,7 @@ function SingleView({ d }: { d: Derived }) {
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="label" {...AXIS_PROPS} />
             <YAxis {...AXIS_PROPS} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('km/h')} />
             <Bar dataKey="windMean" name="MEAN" fill="#7eeaff" />
             <Bar dataKey="gustMax" name="GUST" fill="#ffb347" />
           </BarChart>
@@ -207,7 +208,7 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="label" {...AXIS_PROPS} />
             <YAxis {...AXIS_PROPS} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('km/h')} />
             <Bar dataKey="meanA" name="A" fill="#7eeaff" />
             <Bar dataKey="meanB" name="B" fill="#ffb347" />
           </BarChart>

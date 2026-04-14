@@ -8,6 +8,7 @@ import { BuildingCard } from './components/shell/BuildingCard';
 import { ModuleRail } from './components/shell/ModuleRail';
 import { ModuleSheet } from './components/shell/ModuleSheet';
 import { BottomStrip } from './components/shell/BottomStrip';
+import { RiskPanel } from './components/hud/RiskPanel';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { useUrlState } from './hooks/useUrlState';
 import { useReverseGeocode } from './hooks/useNominatim';
@@ -128,6 +129,8 @@ export default function App() {
               compareMode={compareMode}
               onClose={closeSheet}
             />
+
+            <RiskPanel coords={state.coordsA} />
           </div>
 
           <ModuleRail

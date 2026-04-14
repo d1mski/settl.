@@ -18,6 +18,7 @@ import { StatReadout } from '../hud/StatReadout';
 import { DualReadout } from '../hud/DualReadout';
 import { SectionHeader } from '../hud/SectionHeader';
 import { signedFixed, deltaTone } from '../../utils/compareUtils';
+import { fmtTooltipNum } from '../../utils/chartFmt';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -93,7 +94,7 @@ function SingleView({
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="label" {...AXIS_PROPS} />
             <YAxis {...AXIS_PROPS} domain={[0, 24]} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('h')} />
             <Area type="monotone" dataKey="hours" stroke="#ffb347" strokeWidth={1.6} fill="#ffb347" fillOpacity={0.18} />
           </AreaChart>
         </ResponsiveContainer>
@@ -185,7 +186,7 @@ function CompareView({
             <CartesianGrid {...GRID_PROPS} />
             <XAxis dataKey="label" {...AXIS_PROPS} />
             <YAxis {...AXIS_PROPS} domain={[0, 24]} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#7eeaff', fontSize: 9, textTransform: 'uppercase' }} formatter={fmtTooltipNum('h')} />
             <Line type="monotone" dataKey="hoursA" name="A" stroke="#7eeaff" strokeWidth={1.8} dot={false} />
             <Line type="monotone" dataKey="hoursB" name="B" stroke="#ffb347" strokeWidth={1.8} dot={false} />
           </LineChart>
