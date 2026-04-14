@@ -11,6 +11,9 @@ import { initialModuleState } from '../types';
 import { fetchJson, FetchError } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
 import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
+import { Semaphore } from '../utils/semaphore';
+
+const openMeteoGate = new Semaphore(2);
 
 const BASE = 'https://archive-api.open-meteo.com/v1/archive';
 
@@ -47,7 +50,7 @@ const DAILY_VARS = [
 const cache = new Map<string, ClimateData>();
 const inflight = new Map<string, Promise<ClimateData>>();
 
-const COORD_PRECISION = 3;
+const COORD_PRECISION = 1;
 
 function quantize(coords: Coordinates): Coordinates {
   return {
@@ -56,8 +59,10 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
+const KEY_VERSION = 'v3';
+
 function makeKey(coords: Coordinates, start: string, end: string, model: string): string {
-  return `${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}|${start}|${end}|${model}`;
+  return `${KEY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}|${start}|${end}|${model}`;
 }
 
 interface ModelChoice {
@@ -72,10 +77,24 @@ const ERA5: ModelChoice = {
   resolutionKm: 9,
 };
 
+const CERRA: ModelChoice = {
+  id: 'cerra',
+  display: 'CERRA · 5.5KM',
+  resolutionKm: 5.5,
+};
+
+// CERRA (Copernicus European Regional ReAnalysis) covers Europe only.
+// Approximate bbox check — slightly generous so we still attempt near-edge.
+function cerraCovers(coords: Coordinates): boolean {
+  return (
+    coords.lat >= 20 &&
+    coords.lat <= 76 &&
+    coords.lon >= -58 &&
+    coords.lon <= 66
+  );
+}
+
 function pickModel(_coords: Coordinates): ModelChoice {
-  // CERRA (5.5km) was tried here but its archive schema doesn't expose
-  // `rain` / `cloud_cover` as separate vars, so the whole fetch 400s.
-  // Sticking with ERA5-seamless until a per-model var list is wired up.
   return ERA5;
 }
 
@@ -155,6 +174,52 @@ async function fetchWithBackoff(
   throw new Error('unreachable');
 }
 
+interface CerraWind {
+  latitude: number;
+  longitude: number;
+  elevation: number;
+  windSpeed10m: number[];
+  windDirection10m: number[];
+  windGusts10m: number[];
+}
+
+async function fetchCerraWind(
+  coords: Coordinates,
+  start: string,
+  end: string,
+  signal: AbortSignal,
+): Promise<CerraWind | null> {
+  if (!cerraCovers(coords)) return null;
+  const params = new URLSearchParams({
+    latitude: coords.lat.toString(),
+    longitude: coords.lon.toString(),
+    start_date: start,
+    end_date: end,
+    hourly: ['wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m'].join(','),
+    timezone: 'auto',
+    windspeed_unit: 'kmh',
+    temperature_unit: 'celsius',
+    precipitation_unit: 'mm',
+    models: 'cerra',
+  });
+  const url = `${BASE}?${params.toString()}`;
+  try {
+    const raw = await fetchJson<OpenMeteoResponse>(url, { signal, timeoutMs: 25000 });
+    const ws = arr(raw.hourly, 'wind_speed_10m');
+    if (ws.length === 0 || !ws.some((v) => Number.isFinite(v))) return null;
+    return {
+      latitude: raw.latitude,
+      longitude: raw.longitude,
+      elevation: raw.elevation,
+      windSpeed10m: ws,
+      windDirection10m: arr(raw.hourly, 'wind_direction_10m'),
+      windGusts10m: arr(raw.hourly, 'wind_gusts_10m'),
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchOpenMeteo(
   coords: Coordinates,
   start: string,
@@ -163,27 +228,38 @@ async function fetchOpenMeteo(
   signal: AbortSignal,
 ): Promise<ClimateData> {
   const url = buildUrl(coords, start, end, model);
-  const raw = await fetchWithBackoff(url, signal);
+  const [raw, cerra] = await Promise.all([
+    fetchWithBackoff(url, signal),
+    fetchCerraWind(coords, start, end, signal),
+  ]);
 
-  const resolved: Coordinates = { lat: raw.latitude, lon: raw.longitude };
+  const usingCerra = cerra !== null;
+  const resolved: Coordinates = usingCerra
+    ? { lat: cerra.latitude, lon: cerra.longitude }
+    : { lat: raw.latitude, lon: raw.longitude };
   const distanceMeters = haversine(coords, resolved);
+  const effectiveModel = usingCerra ? CERRA : model;
 
   const resolvedLoc: ResolvedLocation = {
     requested: coords,
     resolved,
-    elevation: raw.elevation,
+    elevation: usingCerra ? cerra.elevation : raw.elevation,
     distanceMeters,
-    model: model.display,
-    modelResolutionKm: model.resolutionKm,
+    model: effectiveModel.display,
+    modelResolutionKm: effectiveModel.resolutionKm,
   };
 
   const hourly: HourlyWeather = {
     time: strArr(raw.hourly, 'time'),
-    windSpeed10m: arr(raw.hourly, 'wind_speed_10m'),
-    windDirection10m: arr(raw.hourly, 'wind_direction_10m'),
+    windSpeed10m: usingCerra ? cerra.windSpeed10m : arr(raw.hourly, 'wind_speed_10m'),
+    windDirection10m: usingCerra
+      ? cerra.windDirection10m
+      : arr(raw.hourly, 'wind_direction_10m'),
     windSpeed100m: arr(raw.hourly, 'wind_speed_100m'),
     windDirection100m: arr(raw.hourly, 'wind_direction_100m'),
-    windGusts10m: arr(raw.hourly, 'wind_gusts_10m'),
+    windGusts10m: usingCerra
+      ? cerra.windGusts10m
+      : arr(raw.hourly, 'wind_gusts_10m'),
     temperature2m: arr(raw.hourly, 'temperature_2m'),
     relativeHumidity2m: arr(raw.hourly, 'relative_humidity_2m'),
     precipitation: arr(raw.hourly, 'precipitation'),
@@ -213,25 +289,26 @@ async function fetchOpenMeteo(
 }
 
 function sharedFetch(
-  coords: Coordinates,
+  preciseCoords: Coordinates,
+  bucketKey: string,
   start: string,
   end: string,
   model: ModelChoice,
 ): Promise<ClimateData> {
-  const key = makeKey(coords, start, end, model.id);
-  const existing = inflight.get(key);
+  const existing = inflight.get(bucketKey);
   if (existing) return existing;
   const ctrl = new AbortController();
-  const p = fetchOpenMeteo(coords, start, end, model, ctrl.signal)
+  const p = openMeteoGate
+    .run(() => fetchOpenMeteo(preciseCoords, start, end, model, ctrl.signal))
     .then((data) => {
-      cache.set(key, data);
-      void cacheSet(key, data, TTL.openMeteoArchive);
+      cache.set(bucketKey, data);
+      void cacheSet(bucketKey, data, TTL.openMeteoArchive);
       return data;
     })
     .finally(() => {
-      inflight.delete(key);
+      inflight.delete(bucketKey);
     });
-  inflight.set(key, p);
+  inflight.set(bucketKey, p);
   return p;
 }
 
@@ -251,7 +328,7 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
     }
     const qCoords = quantize(coords);
     const { start, end } = defaultDateRange();
-    const model = pickModel(qCoords);
+    const model = pickModel(coords);
     const key = makeKey(qCoords, start, end, model.id);
     const cached = cache.get(key);
     if (cached) {
@@ -273,7 +350,7 @@ export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateDat
         return;
       }
       try {
-        const data = await sharedFetch(qCoords, start, end, model);
+        const data = await sharedFetch(coords, key, start, end, model);
         if (ctrl.signal.aborted) return;
         setState({ status: 'success', data, error: null });
       } catch (err: unknown) {

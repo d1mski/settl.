@@ -97,7 +97,7 @@ function SingleView({
       </Section>
 
       {nearest.length > 0 && featuresStatus === 'success' && (
-        <Section code="03" title="DISTANCE TO NEAREST" subtitle="ESSENTIAL · ≤1.5KM">
+        <Section code="03" title="DISTANCE TO NEAREST" subtitle="ESSENTIAL SERVICES · ≤12KM">
           <NearestTable nearest={nearest} />
         </Section>
       )}
@@ -163,7 +163,7 @@ function CompareView({
         </div>
       </Section>
 
-      <Section code="03" title="DISTANCE TO NEAREST" subtitle="A vs B · ≤1.5KM">
+      <Section code="03" title="DISTANCE TO NEAREST" subtitle="A vs B · ≤12KM">
         <div className="overflow-x-auto">
           <table className="w-full text-[10px] font-mono">
             <thead>

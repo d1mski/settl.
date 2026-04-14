@@ -5,10 +5,13 @@ import { fetchJson } from '../utils/fetcher';
 import { analyseBuildingPolygon, emptyBuilding } from '../utils/buildingOrientation';
 import { haversine } from '../utils/coordinates';
 import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
+import { overpassGate } from './overpassGate';
 
 const ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://z.overpass-api.de/api/interpreter',
 ];
 
 interface OverpassWay {
@@ -47,7 +50,8 @@ function sharedFetchBuilding(coords: Coordinates): Promise<BuildingData> {
   const existing = inflight.get(key);
   if (existing) return existing;
   const ctrl = new AbortController();
-  const p = fetchBuilding(coords, ctrl.signal)
+  const p = overpassGate
+    .run(() => fetchBuilding(coords, ctrl.signal))
     .then((data) => {
       cache.set(key, data);
       void cacheSet(key, data, TTL.overpassBuilding);
@@ -94,15 +98,17 @@ async function fetchBuilding(
   const query = buildQuery(coords);
 
   let lastErr: unknown = null;
-  for (const endpoint of ENDPOINTS) {
+  for (let i = 0; i < ENDPOINTS.length; i++) {
     if (signal.aborted) throw new DOMException('aborted', 'AbortError');
+    const endpoint = ENDPOINTS[i];
     try {
       const data = await fetchFromEndpoint(endpoint, query, signal);
       return interpretResponse(coords, data);
     } catch (err) {
       if (signal.aborted) throw err;
       lastErr = err;
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      const backoff = 800 * (i + 1);
+      await new Promise((resolve) => setTimeout(resolve, backoff));
     }
   }
   throw lastErr instanceof Error

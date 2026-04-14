@@ -61,7 +61,7 @@ export async function cacheKeys(): Promise<IDBValidKey[]> {
 }
 
 export const TTL = {
-  openMeteoArchive: 7 * 24 * 60 * 60 * 1000,
+  openMeteoArchive: 30 * 24 * 60 * 60 * 1000,
   openMeteoAirQuality: 12 * 60 * 60 * 1000,
   earthquakes: 7 * 24 * 60 * 60 * 1000,
   overpassBuilding: 30 * 24 * 60 * 60 * 1000,
