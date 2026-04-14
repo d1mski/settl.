@@ -15,7 +15,7 @@ import { Semaphore } from '../utils/semaphore';
 
 const openMeteoGate = new Semaphore(2);
 
-const BASE = 'https://archive-api.open-meteo.com/v1/archive';
+const BASE = 'https://historical-forecast-api.open-meteo.com/v1/forecast';
 
 const HOURLY_VARS = [
   'wind_speed_10m',
@@ -50,7 +50,7 @@ const DAILY_VARS = [
 const cache = new Map<string, ClimateData>();
 const inflight = new Map<string, Promise<ClimateData>>();
 
-const COORD_PRECISION = 1;
+const COORD_PRECISION = 2;
 
 function quantize(coords: Coordinates): Coordinates {
   return {
@@ -59,7 +59,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const KEY_VERSION = 'v3';
+const KEY_VERSION = 'v6';
 
 function makeKey(coords: Coordinates, start: string, end: string, model: string): string {
   return `${KEY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}|${start}|${end}|${model}`;
@@ -71,31 +71,14 @@ interface ModelChoice {
   resolutionKm: number;
 }
 
-const ERA5: ModelChoice = {
-  id: 'era5_seamless',
-  display: 'ERA5-SEAMLESS',
-  resolutionKm: 9,
+const ICON: ModelChoice = {
+  id: 'icon_seamless',
+  display: 'DWD ICON-EU · ~6KM',
+  resolutionKm: 6,
 };
-
-const CERRA: ModelChoice = {
-  id: 'cerra',
-  display: 'CERRA · 5.5KM',
-  resolutionKm: 5.5,
-};
-
-// CERRA (Copernicus European Regional ReAnalysis) covers Europe only.
-// Approximate bbox check — slightly generous so we still attempt near-edge.
-function cerraCovers(coords: Coordinates): boolean {
-  return (
-    coords.lat >= 20 &&
-    coords.lat <= 76 &&
-    coords.lon >= -58 &&
-    coords.lon <= 66
-  );
-}
 
 function pickModel(_coords: Coordinates): ModelChoice {
-  return ERA5;
+  return ICON;
 }
 
 function defaultDateRange(): { start: string; end: string } {
@@ -174,52 +157,6 @@ async function fetchWithBackoff(
   throw new Error('unreachable');
 }
 
-interface CerraWind {
-  latitude: number;
-  longitude: number;
-  elevation: number;
-  windSpeed10m: number[];
-  windDirection10m: number[];
-  windGusts10m: number[];
-}
-
-async function fetchCerraWind(
-  coords: Coordinates,
-  start: string,
-  end: string,
-  signal: AbortSignal,
-): Promise<CerraWind | null> {
-  if (!cerraCovers(coords)) return null;
-  const params = new URLSearchParams({
-    latitude: coords.lat.toString(),
-    longitude: coords.lon.toString(),
-    start_date: start,
-    end_date: end,
-    hourly: ['wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m'].join(','),
-    timezone: 'auto',
-    windspeed_unit: 'kmh',
-    temperature_unit: 'celsius',
-    precipitation_unit: 'mm',
-    models: 'cerra',
-  });
-  const url = `${BASE}?${params.toString()}`;
-  try {
-    const raw = await fetchJson<OpenMeteoResponse>(url, { signal, timeoutMs: 25000 });
-    const ws = arr(raw.hourly, 'wind_speed_10m');
-    if (ws.length === 0 || !ws.some((v) => Number.isFinite(v))) return null;
-    return {
-      latitude: raw.latitude,
-      longitude: raw.longitude,
-      elevation: raw.elevation,
-      windSpeed10m: ws,
-      windDirection10m: arr(raw.hourly, 'wind_direction_10m'),
-      windGusts10m: arr(raw.hourly, 'wind_gusts_10m'),
-    };
-  } catch {
-    return null;
-  }
-}
-
 async function fetchOpenMeteo(
   coords: Coordinates,
   start: string,
@@ -228,38 +165,27 @@ async function fetchOpenMeteo(
   signal: AbortSignal,
 ): Promise<ClimateData> {
   const url = buildUrl(coords, start, end, model);
-  const [raw, cerra] = await Promise.all([
-    fetchWithBackoff(url, signal),
-    fetchCerraWind(coords, start, end, signal),
-  ]);
+  const raw = await fetchWithBackoff(url, signal);
 
-  const usingCerra = cerra !== null;
-  const resolved: Coordinates = usingCerra
-    ? { lat: cerra.latitude, lon: cerra.longitude }
-    : { lat: raw.latitude, lon: raw.longitude };
+  const resolved: Coordinates = { lat: raw.latitude, lon: raw.longitude };
   const distanceMeters = haversine(coords, resolved);
-  const effectiveModel = usingCerra ? CERRA : model;
 
   const resolvedLoc: ResolvedLocation = {
     requested: coords,
     resolved,
-    elevation: usingCerra ? cerra.elevation : raw.elevation,
+    elevation: raw.elevation,
     distanceMeters,
-    model: effectiveModel.display,
-    modelResolutionKm: effectiveModel.resolutionKm,
+    model: model.display,
+    modelResolutionKm: model.resolutionKm,
   };
 
   const hourly: HourlyWeather = {
     time: strArr(raw.hourly, 'time'),
-    windSpeed10m: usingCerra ? cerra.windSpeed10m : arr(raw.hourly, 'wind_speed_10m'),
-    windDirection10m: usingCerra
-      ? cerra.windDirection10m
-      : arr(raw.hourly, 'wind_direction_10m'),
+    windSpeed10m: arr(raw.hourly, 'wind_speed_10m'),
+    windDirection10m: arr(raw.hourly, 'wind_direction_10m'),
     windSpeed100m: arr(raw.hourly, 'wind_speed_100m'),
     windDirection100m: arr(raw.hourly, 'wind_direction_100m'),
-    windGusts10m: usingCerra
-      ? cerra.windGusts10m
-      : arr(raw.hourly, 'wind_gusts_10m'),
+    windGusts10m: arr(raw.hourly, 'wind_gusts_10m'),
     temperature2m: arr(raw.hourly, 'temperature_2m'),
     relativeHumidity2m: arr(raw.hourly, 'relative_humidity_2m'),
     precipitation: arr(raw.hourly, 'precipitation'),

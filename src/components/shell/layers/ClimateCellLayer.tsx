@@ -14,18 +14,10 @@ export function ClimateCellLayer({ coordsA, coordsB }: Props) {
   return (
     <>
       {stateA.data && (
-        <CellRectangle
-          resolved={stateA.data.resolved}
-          color="#7eeaff"
-          slot="A"
-        />
+        <CellRectangle resolved={stateA.data.resolved} color="#7eeaff" slot="A" />
       )}
       {stateB.data && (
-        <CellRectangle
-          resolved={stateB.data.resolved}
-          color="#ffb347"
-          slot="B"
-        />
+        <CellRectangle resolved={stateB.data.resolved} color="#ffb347" slot="B" />
       )}
     </>
   );
@@ -40,13 +32,13 @@ function CellRectangle({
   color: string;
   slot: 'A' | 'B';
 }) {
-  const { lat, lon } = resolved.resolved;
-  const halfKm = resolved.modelResolutionKm / 2;
+  const { requested, modelResolutionKm, model } = resolved;
+  const halfKm = modelResolutionKm / 2;
   const dLat = halfKm / 111;
-  const dLon = halfKm / (111 * Math.cos((lat * Math.PI) / 180));
+  const dLon = halfKm / (111 * Math.cos((requested.lat * Math.PI) / 180));
   const bounds: [[number, number], [number, number]] = [
-    [lat - dLat, lon - dLon],
-    [lat + dLat, lon + dLon],
+    [requested.lat - dLat, requested.lon - dLon],
+    [requested.lat + dLat, requested.lon + dLon],
   ];
 
   return (
@@ -63,9 +55,10 @@ function CellRectangle({
     >
       <Tooltip direction="top" offset={[0, -6]} opacity={0.9} sticky>
         <span className="font-mono text-[10px]">
-          TGT·{slot} · {resolved.model} · {resolved.modelResolutionKm} KM CELL
+          TGT·{slot} · {model}
         </span>
       </Tooltip>
     </Rectangle>
   );
 }
+
