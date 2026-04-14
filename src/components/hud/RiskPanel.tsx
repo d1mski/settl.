@@ -91,7 +91,7 @@ export function RiskPanel({ coords }: Props) {
   if (!coords) return null;
 
   return (
-    <div className="absolute bottom-14 left-6 z-30 pointer-events-auto w-[340px] max-h-[42vh] flex flex-col border border-edge bg-bg/85 backdrop-blur-sm">
+    <div className="flex flex-col border border-edge bg-bg/85 backdrop-blur-sm shrink-0 max-h-[40vh]">
       <div className="px-3 py-2 border-b border-edge flex items-center gap-2 shrink-0">
         <span className="inline-block w-1.5 h-1.5 bg-cyan" />
         <span className="text-[10px] font-mono uppercase tracking-widest text-cyan">

@@ -44,9 +44,9 @@ export function MapHud({
         </div>
       )}
 
-      {/* Active slot indicator (when compare mode is on) — below the layer toggle */}
+      {/* Active slot indicator (when compare mode is on) — centered at top, clear of left column */}
       {compareMode && (
-        <div className="absolute top-6 left-[372px] border border-edge bg-void/85 backdrop-blur-sm px-2 py-1 flex items-center gap-1.5">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 border border-edge bg-void/85 backdrop-blur-sm px-2 py-1 flex items-center gap-1.5">
           <span className="text-[8px] font-mono uppercase tracking-widest text-muted">CLICK SETS</span>
           <span
             className={`text-[10px] font-mono font-semibold ${activeSlot === 'b' ? 'text-amber' : 'text-cyan'}`}

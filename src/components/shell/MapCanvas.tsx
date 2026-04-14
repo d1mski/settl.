@@ -56,22 +56,23 @@ function FitToCoords({
   coordsB: Coordinates | null;
 }) {
   const map = useMap();
+  const prevA = useRef<Coordinates | null>(null);
+  const prevB = useRef<Coordinates | null>(null);
   useEffect(() => {
-    if (coordsA && coordsB) {
-      const bounds: [[number, number], [number, number]] = [
-        [coordsA.lat, coordsA.lon],
-        [coordsB.lat, coordsB.lon],
-      ];
-      map.fitBounds(bounds, { padding: [120, 120], maxZoom: 13, animate: true });
-    } else if (coordsA) {
-      map.setView([coordsA.lat, coordsA.lon], Math.max(map.getZoom(), CITY_ZOOM), {
-        animate: true,
-      });
-    } else if (coordsB) {
-      map.setView([coordsB.lat, coordsB.lon], Math.max(map.getZoom(), CITY_ZOOM), {
-        animate: true,
-      });
+    const aChanged =
+      (coordsA?.lat !== prevA.current?.lat || coordsA?.lon !== prevA.current?.lon) &&
+      coordsA !== null;
+    const bChanged =
+      (coordsB?.lat !== prevB.current?.lat || coordsB?.lon !== prevB.current?.lon) &&
+      coordsB !== null;
+    const justAdded =
+      (aChanged && prevA.current === null) || (bChanged && prevB.current === null);
+    const target = bChanged ? coordsB : aChanged ? coordsA : null;
+    if (target && justAdded && !map.getBounds().contains([target.lat, target.lon])) {
+      map.panTo([target.lat, target.lon], { animate: true });
     }
+    prevA.current = coordsA;
+    prevB.current = coordsB;
   }, [coordsA?.lat, coordsA?.lon, coordsB?.lat, coordsB?.lon, map]);
   return null;
 }

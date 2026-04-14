@@ -97,29 +97,33 @@ export default function App() {
               activeSlot={state.slot}
             />
 
-            <div className="absolute top-6 left-6 z-30 pointer-events-auto flex flex-col gap-3 max-h-[calc(100vh-96px)] overflow-y-auto overflow-x-hidden pr-1">
-              <LocationIntelCard
-                coordsA={state.coordsA}
-                coordsB={state.coordsB}
-                resolvedA={geocodedA?.cleanAddress ?? null}
-                countryA={geocodedA?.countryCode ?? null}
-                resolvingA={resolvingA}
-                resolvedB={geocodedB?.cleanAddress ?? null}
-                countryB={geocodedB?.countryCode ?? null}
-                resolvingB={resolvingB}
-                activeSlot={state.slot}
-                compareMode={compareMode}
-                baseMap={baseMap}
-                onBaseMapChange={setBaseMap}
-                onSetSlot={setSlot}
-                onChangeA={setCoordsA}
-                onChangeB={setCoordsB}
-                onEnableCompare={enableCompare}
-                onDisableCompare={disableCompare}
-              />
+            <div className="absolute top-6 bottom-14 left-6 z-30 pointer-events-auto w-[360px] flex flex-col justify-between gap-3">
+              <div className="flex flex-col gap-3">
+                <LocationIntelCard
+                  coordsA={state.coordsA}
+                  coordsB={state.coordsB}
+                  resolvedA={geocodedA?.cleanAddress ?? null}
+                  countryA={geocodedA?.countryCode ?? null}
+                  resolvingA={resolvingA}
+                  resolvedB={geocodedB?.cleanAddress ?? null}
+                  countryB={geocodedB?.countryCode ?? null}
+                  resolvingB={resolvingB}
+                  activeSlot={state.slot}
+                  compareMode={compareMode}
+                  baseMap={baseMap}
+                  onBaseMapChange={setBaseMap}
+                  onSetSlot={setSlot}
+                  onChangeA={setCoordsA}
+                  onChangeB={setCoordsB}
+                  onEnableCompare={enableCompare}
+                  onDisableCompare={disableCompare}
+                />
 
-              <BuildingCard coords={state.coordsA} slot="A" />
-              {compareMode && <BuildingCard coords={state.coordsB} slot="B" />}
+                <BuildingCard coords={state.coordsA} slot="A" />
+                {compareMode && <BuildingCard coords={state.coordsB} slot="B" />}
+              </div>
+
+              <RiskPanel coords={state.coordsA} />
             </div>
 
             <ModuleSheet
@@ -129,8 +133,6 @@ export default function App() {
               compareMode={compareMode}
               onClose={closeSheet}
             />
-
-            <RiskPanel coords={state.coordsA} />
           </div>
 
           <ModuleRail
