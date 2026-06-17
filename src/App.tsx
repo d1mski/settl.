@@ -18,6 +18,7 @@ export default function App() {
   const { result: geocodedA, loading: resolvingA } = useReverseGeocode(state.coordsA);
   const { result: geocodedB, loading: resolvingB } = useReverseGeocode(state.coordsB);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'overview' | 'advanced'>('overview');
 
   const compareMode = state.coordsB !== null;
 
@@ -63,6 +64,7 @@ export default function App() {
   );
 
   const closeSheet = useCallback(() => setSheetOpen(false), []);
+  const toggleView = useCallback(() => setViewMode(v => v === 'overview' ? 'advanced' : 'overview'), []);
   const activeTab = sheetOpen ? state.tab : null;
 
   return (
@@ -117,6 +119,7 @@ export default function App() {
               coordsB={state.coordsB}
               compareMode={compareMode}
               onClose={closeSheet}
+              view={viewMode}
             />
           </div>
 
@@ -124,6 +127,8 @@ export default function App() {
             active={activeTab}
             onSelect={handleSelect}
             coordsReady={state.coordsA !== null}
+            view={viewMode}
+            onToggleView={toggleView}
           />
         </div>
 

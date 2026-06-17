@@ -117,5 +117,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. App Shell State | 1/2 | In Progress | - |
 | 3. LocationIntelCard Enhancements | 0/? | Not started | - |
 | 4. Saved Locations | 0/1 | Planned | - |
-| 5. ModuleRail + Lucide Icons | 0/2 | Planned | - |
+| 5. ModuleRail + Lucide Icons | 0/2 | Planned    |  |
 | 6. ReportPanel (Overview Mode) | 0/? | Not started | - |

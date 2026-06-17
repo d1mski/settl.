@@ -1,0 +1,12 @@
+wing: blindspot_reloc
+rooms:
+- name: public
+  description: Files from public/
+- name: scripts
+  description: Files from scripts/
+- name: src
+  description: Files from src/
+- name: frontend
+  description: Files from components/
+- name: general
+  description: Files that don't fit other rooms

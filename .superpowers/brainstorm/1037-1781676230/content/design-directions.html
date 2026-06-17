@@ -1,0 +1,157 @@
+<h2>Which design direction feels right for BlindSpot?</h2>
+<p class="subtitle">Three approaches — all designed for families relocating. Click the one that resonates most.</p>
+
+<div class="cards">
+
+  <!-- Direction A: Warm Minimal -->
+  <div class="card" data-choice="warm-minimal" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;overflow:hidden;">
+      <div style="background:#FAFAF8;padding:24px;min-height:320px;font-family:'Segoe UI',system-ui,sans-serif;">
+        <!-- Nav -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+          <div style="font-size:18px;font-weight:700;color:#1A1A1A;letter-spacing:-0.3px;">blind<span style="color:#E07A5F;">spot</span></div>
+          <div style="display:flex;gap:16px;font-size:12px;color:#6B7280;">
+            <span>Explore</span><span>Compare</span><span>Saved</span>
+          </div>
+        </div>
+        <!-- Search bar -->
+        <div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+          <span style="color:#9CA3AF;font-size:14px;">&#128269;</span>
+          <span style="color:#9CA3AF;font-size:14px;">Search neighborhoods, cities...</span>
+        </div>
+        <!-- Map placeholder -->
+        <div style="background:#E8F0E8;border-radius:12px;height:100px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#E8F0E8 0%,#D4E4D4 50%,#C8DCC8 100%);"></div>
+          <span style="color:#6B8068;font-size:12px;position:relative;z-index:1;">Interactive Map</span>
+        </div>
+        <!-- Cards -->
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;background:#fff;border-radius:10px;padding:14px;border:1px solid #F0F0ED;">
+            <div style="font-size:11px;color:#E07A5F;font-weight:600;margin-bottom:4px;">Safety Score</div>
+            <div style="font-size:22px;font-weight:700;color:#1A1A1A;">8.4</div>
+            <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">Above average</div>
+          </div>
+          <div style="flex:1;background:#fff;border-radius:10px;padding:14px;border:1px solid #F0F0ED;">
+            <div style="font-size:11px;color:#5B8A72;font-weight:600;margin-bottom:4px;">Schools</div>
+            <div style="font-size:22px;font-weight:700;color:#1A1A1A;">12</div>
+            <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">Within 2km</div>
+          </div>
+          <div style="flex:1;background:#fff;border-radius:10px;padding:14px;border:1px solid #F0F0ED;">
+            <div style="font-size:11px;color:#8B7355;font-weight:600;margin-bottom:4px;">Air Quality</div>
+            <div style="font-size:22px;font-weight:700;color:#1A1A1A;">Good</div>
+            <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">AQI 42</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Warm Minimal</h3>
+      <p>Airbnb meets Notion. Soft whites, warm accents, generous whitespace, rounded cards. Feels like a trusted travel companion. Clean and unintimidating.</p>
+      <div class="pros-cons" style="margin-top:12px;">
+        <div class="pros"><h4>Strengths</h4><ul><li>Most approachable for families</li><li>Feels premium and trustworthy</li><li>Easy on the eyes for long research sessions</li></ul></div>
+        <div class="cons"><h4>Trade-offs</h4><ul><li>Light mode only (may need dark option later)</li><li>Could feel generic if not carefully branded</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction B: Modern Professional -->
+  <div class="card" data-choice="modern-professional" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;overflow:hidden;">
+      <div style="background:#F8FAFC;padding:24px;min-height:320px;font-family:'Segoe UI',system-ui,sans-serif;">
+        <!-- Nav -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+          <div style="font-size:18px;font-weight:700;color:#0F172A;letter-spacing:-0.3px;">blind<span style="color:#6366F1;">spot</span></div>
+          <div style="display:flex;gap:16px;font-size:12px;color:#64748B;">
+            <span>Explore</span><span>Compare</span><span>Saved</span>
+          </div>
+        </div>
+        <!-- Search bar -->
+        <div style="background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+          <span style="color:#94A3B8;font-size:14px;">&#128269;</span>
+          <span style="color:#94A3B8;font-size:14px;">Where are you thinking of moving?</span>
+        </div>
+        <!-- Map placeholder -->
+        <div style="background:linear-gradient(135deg,#DBEAFE 0%,#C7D2FE 50%,#DDD6FE 100%);border-radius:10px;height:100px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;">
+          <span style="color:#6366F1;font-size:12px;font-weight:500;">Interactive Map</span>
+        </div>
+        <!-- Cards -->
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;background:#fff;border-radius:8px;padding:14px;border:1px solid #E2E8F0;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+            <div style="font-size:11px;color:#6366F1;font-weight:600;margin-bottom:4px;">Safety Score</div>
+            <div style="font-size:22px;font-weight:700;color:#0F172A;">8.4</div>
+            <div style="height:4px;background:#E2E8F0;border-radius:2px;margin-top:6px;"><div style="height:100%;width:84%;background:linear-gradient(90deg,#6366F1,#818CF8);border-radius:2px;"></div></div>
+          </div>
+          <div style="flex:1;background:#fff;border-radius:8px;padding:14px;border:1px solid #E2E8F0;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+            <div style="font-size:11px;color:#10B981;font-weight:600;margin-bottom:4px;">Schools</div>
+            <div style="font-size:22px;font-weight:700;color:#0F172A;">12</div>
+            <div style="height:4px;background:#E2E8F0;border-radius:2px;margin-top:6px;"><div style="height:100%;width:70%;background:linear-gradient(90deg,#10B981,#34D399);border-radius:2px;"></div></div>
+          </div>
+          <div style="flex:1;background:#fff;border-radius:8px;padding:14px;border:1px solid #E2E8F0;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+            <div style="font-size:11px;color:#F59E0B;font-weight:600;margin-bottom:4px;">Air Quality</div>
+            <div style="font-size:22px;font-weight:700;color:#0F172A;">Good</div>
+            <div style="height:4px;background:#E2E8F0;border-radius:2px;margin-top:6px;"><div style="height:100%;width:58%;background:linear-gradient(90deg,#F59E0B,#FBBF24);border-radius:2px;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Modern Professional</h3>
+      <p>Wise meets Linear. Cooler tones, indigo accent, subtle progress bars, light shadows. Feels data-confident without being intimidating. Agents would love presenting this.</p>
+      <div class="pros-cons" style="margin-top:12px;">
+        <div class="pros"><h4>Strengths</h4><ul><li>Balances warmth with credibility</li><li>Progress bars make data scannable</li><li>Works well for both families and agents</li></ul></div>
+        <div class="cons"><h4>Trade-offs</h4><ul><li>Slightly cooler — less "cozy" than A</li><li>Indigo is common in SaaS — needs strong branding</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction C: Earthy Explorer -->
+  <div class="card" data-choice="earthy-explorer" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;overflow:hidden;">
+      <div style="background:#FAF9F6;padding:24px;min-height:320px;font-family:Georgia,'Times New Roman',serif;">
+        <!-- Nav -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+          <div style="font-size:18px;font-weight:700;color:#2D3A2D;letter-spacing:-0.3px;font-family:'Segoe UI',system-ui,sans-serif;">blind<span style="color:#7C956B;">spot</span></div>
+          <div style="display:flex;gap:16px;font-size:12px;color:#8B8778;font-family:'Segoe UI',sans-serif;">
+            <span>Explore</span><span>Compare</span><span>Saved</span>
+          </div>
+        </div>
+        <!-- Search bar -->
+        <div style="background:#fff;border:1px solid #DDD8CE;border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:8px;font-family:'Segoe UI',sans-serif;">
+          <span style="color:#B8B0A0;font-size:14px;">&#128269;</span>
+          <span style="color:#B8B0A0;font-size:14px;">Discover your next home...</span>
+        </div>
+        <!-- Map placeholder -->
+        <div style="background:linear-gradient(135deg,#DDE8D0 0%,#D4DCCA 50%,#C8D4B8 100%);border-radius:8px;height:100px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;">
+          <span style="color:#5C6B4F;font-size:12px;font-style:italic;">Interactive Map</span>
+        </div>
+        <!-- Cards -->
+        <div style="display:flex;gap:12px;font-family:'Segoe UI',sans-serif;">
+          <div style="flex:1;background:#fff;border-radius:8px;padding:14px;border:1px solid #E8E4DB;">
+            <div style="font-size:11px;color:#7C956B;font-weight:600;margin-bottom:4px;">Safety</div>
+            <div style="font-size:22px;font-weight:700;color:#2D3A2D;">8.4<span style="font-size:12px;color:#8B8778;font-weight:400;">/10</span></div>
+            <div style="font-size:10px;color:#A09888;margin-top:2px;">Very safe area</div>
+          </div>
+          <div style="flex:1;background:#fff;border-radius:8px;padding:14px;border:1px solid #E8E4DB;">
+            <div style="font-size:11px;color:#9B7B4D;font-weight:600;margin-bottom:4px;">Schools</div>
+            <div style="font-size:22px;font-weight:700;color:#2D3A2D;">12</div>
+            <div style="font-size:10px;color:#A09888;margin-top:2px;">Nearby options</div>
+          </div>
+          <div style="flex:1;background:#fff;border-radius:8px;padding:14px;border:1px solid #E8E4DB;">
+            <div style="font-size:11px;color:#6B8A8A;font-weight:600;margin-bottom:4px;">Air Quality</div>
+            <div style="font-size:22px;font-weight:700;color:#2D3A2D;">Good</div>
+            <div style="font-size:10px;color:#A09888;margin-top:2px;">Clean & fresh</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Earthy Explorer</h3>
+      <p>Kinfolk meets Google Maps. Sage greens, warm tans, grounded and organic. Feels connected to place and nature. Communicates "this is about your life, not just data."</p>
+      <div class="pros-cons" style="margin-top:12px;">
+        <div class="pros"><h4>Strengths</h4><ul><li>Most emotionally resonant for relocation</li><li>Unique — doesn't look like every other SaaS</li><li>Earthy tones pair naturally with map content</li></ul></div>
+        <div class="cons"><h4>Trade-offs</h4><ul><li>Serif touches could feel less "techy"</li><li>Needs careful execution to avoid looking dated</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
