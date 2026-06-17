@@ -91,8 +91,6 @@ export default function App() {
               activeTab={activeTab}
             />
             <MapHud
-              coordsA={state.coordsA}
-              coordsB={state.coordsB}
               compareMode={compareMode}
               activeSlot={state.slot}
             />
