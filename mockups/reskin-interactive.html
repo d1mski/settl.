@@ -47,7 +47,7 @@
     overflow:hidden}
 
   /* ═══ LAYOUT: map | right-panel + strip ═══ */
-  .app{height:100vh;display:grid;grid-template-columns:1fr 520px;grid-template-rows:1fr 28px;overflow:hidden}
+  .app{height:100vh;display:grid;grid-template-columns:1fr 560px;grid-template-rows:1fr 28px;overflow:hidden}
 
   /* ═══ LEFT FLOATING PANELS (over map) ═══ */
   .left{position:absolute;top:var(--s-base);left:var(--s-base);z-index:6;width:320px;
@@ -108,7 +108,7 @@
   .coord-val{color:var(--cyan);font-weight:600}
   .coord-val.loc-text{color:var(--tx2);font-size:.65rem;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  .loc-hint{font-size:.55rem;color:var(--tx3);font-style:italic}
+  .loc-hint{font-size:.65rem;color:var(--tx3);font-style:italic}
 
   /* Building card */
   .bld{background:var(--srf);padding:var(--s-base);display:flex;flex-direction:column;gap:var(--s-md);
@@ -119,14 +119,14 @@
   .bld-badge{font-size:.55rem;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
 
   .bld-body{display:flex;gap:var(--s-md);align-items:center}
-  .footprint{width:110px;height:110px;flex-shrink:0}
+  .footprint{width:150px;height:150px;flex-shrink:0}
   .footprint svg{width:100%;height:100%}
   .bld-stats{display:flex;flex-direction:column;gap:var(--s-xs);font-family:var(--mono);font-size:.65rem}
   .bld-stat{display:flex;gap:var(--s-sm)}
   .bld-stat .k{color:var(--tx3);min-width:36px}
   .bld-stat .v{font-weight:600}
 
-  .bld-hint{font-size:.5rem;color:var(--tx3);font-style:italic}
+  .bld-hint{font-size:.65rem;color:var(--tx3);font-style:italic}
 
   /* Risk panel */
   .risk{background:var(--srf);padding:var(--s-base);display:flex;flex-direction:column;gap:var(--s-md);flex:1;
@@ -250,7 +250,7 @@
     line-height:1.45;display:flex;gap:var(--s-sm);align-items:flex-start}
   .callout.warn{background:var(--warn-s)}
   .callout i{width:14px;height:14px;flex-shrink:0;margin-top:1px}
-  .src{font-size:.48rem;color:var(--tx3);font-style:italic;margin-top:var(--s-xs);display:block;opacity:.7}
+  .src{font-size:.62rem;color:var(--tx3);font-style:italic;margin-top:var(--s-sm);display:block}
 
   .adv-cta{margin:var(--s-md) var(--s-base);padding:var(--s-md);background:var(--el);
     border:1px solid var(--bdr);border-radius:var(--r-lg);display:flex;align-items:center;gap:var(--s-md);
@@ -392,12 +392,12 @@
             <polygon points="52,38 88,42 84,98 48,94"
               fill="var(--cyan)" fill-opacity="0.15" stroke="var(--cyan)" stroke-width="1.5"/>
             <!-- Facade labels -->
-            <text x="30" y="68" fill="var(--cyan)" font-size="7" font-weight="600" font-family="var(--mono)">FRONT</text>
-            <text x="70" y="30" text-anchor="middle" fill="var(--amber)" font-size="6.5" font-weight="600" font-family="var(--mono)">RIGHT</text>
-            <text x="100" y="72" fill="var(--tx3)" font-size="6.5" font-weight="600" font-family="var(--mono)">REAR</text>
-            <text x="64" y="115" text-anchor="middle" fill="var(--tx3)" font-size="6.5" font-weight="600" font-family="var(--mono)">LEFT</text>
+            <text x="24" y="68" fill="var(--cyan)" font-size="10" font-weight="700" font-family="var(--mono)">FRONT</text>
+            <text x="70" y="27" text-anchor="middle" fill="var(--amber)" font-size="10" font-weight="700" font-family="var(--mono)">RIGHT</text>
+            <text x="100" y="72" fill="var(--tx3)" font-size="10" font-weight="700" font-family="var(--mono)">REAR</text>
+            <text x="64" y="118" text-anchor="middle" fill="var(--tx3)" font-size="10" font-weight="700" font-family="var(--mono)">LEFT</text>
             <!-- N marker -->
-            <text x="70" y="8" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" font-family="var(--mono)">N</text>
+            <text x="70" y="8" text-anchor="middle" fill="var(--tx3)" font-size="9" font-weight="700" font-family="var(--mono)">N</text>
             <text x="70" y="138" text-anchor="middle" fill="var(--tx3)" font-size="6" font-family="var(--mono)">S</text>
           </svg>
         </div>
