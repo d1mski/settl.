@@ -50,9 +50,11 @@ interface Props {
   coordsB: Coordinates | null;
   compareMode: boolean;
   onClose: () => void;
+  view: 'overview' | 'advanced';
 }
 
-export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose }: Props) {
+export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, view }: Props) {
+  // view prop consumed by Phase 6 for ReportPanel switching
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
