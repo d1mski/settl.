@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -113,7 +114,10 @@ function SingleView({ d }: { d: Derived }) {
       {seasonal.windChillFlag && (
         <div className="border border-warn/50 bg-warn/5 px-3 py-2">
           <div className="text-[9px] font-mono uppercase tracking-widest text-warn flex items-center gap-2">
-            <span>⚠ WIND CHILL FLAG</span>
+            <span className="flex items-center gap-1">
+              <TriangleAlert size={12} strokeWidth={1.4} className="shrink-0" />
+              WIND CHILL FLAG
+            </span>
             <span className="flex-1 h-px bg-warn/30" />
           </div>
           <div className="text-[10px] font-mono text-ink mt-1">
