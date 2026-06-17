@@ -32,32 +32,24 @@ export default {
       letterSpacing: {
         'widest-plus': '0.2em',
       },
+      borderRadius: {
+        DEFAULT: '8px',
+        'md': '10px',
+        'lg': '12px',
+        'xl': '14px',
+      },
       boxShadow: {
-        hud: '0 0 0 1px rgb(var(--c-cyan) / 0.12), 0 8px 32px rgb(var(--c-void) / 0.6)',
-        'hud-strong': '0 0 0 1px rgb(var(--c-cyan) / 0.25), 0 12px 48px rgb(var(--c-void) / 0.8)',
-      },
-      backgroundImage: {
-        'grid-faint':
-          'linear-gradient(to right, rgb(var(--c-cyan) / 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgb(var(--c-cyan) / 0.04) 1px, transparent 1px)',
-        'scan-line':
-          'repeating-linear-gradient(0deg, rgb(var(--c-cyan) / 0.02) 0px, rgb(var(--c-cyan) / 0.02) 1px, transparent 1px, transparent 3px)',
-      },
-      backgroundSize: {
-        'grid-sm': '24px 24px',
+        panel: '0 0 0 1px rgb(var(--c-cyan) / 0.12), 0 8px 32px rgb(var(--c-void) / 0.6)',
+        'panel-strong': '0 0 0 1px rgb(var(--c-cyan) / 0.25), 0 12px 48px rgb(var(--c-void) / 0.8)',
       },
       animation: {
         'pulse-dot': 'pulse-dot 2s ease-in-out infinite',
-        'scan': 'scan 6s linear infinite',
         'reveal': 'reveal 0.4s ease-out forwards',
       },
       keyframes: {
         'pulse-dot': {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.4', transform: 'scale(0.85)' },
-        },
-        'scan': {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100%)' },
         },
         'reveal': {
           '0%': { opacity: '0', transform: 'translateY(4px)' },
