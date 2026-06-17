@@ -69,28 +69,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow: hidden;
-  background-image:
-    radial-gradient(ellipse at 20% 10%, rgb(var(--c-backdrop-a) / 0.04), transparent 60%),
-    radial-gradient(ellipse at 80% 90%, rgb(var(--c-backdrop-b) / 0.035), transparent 60%),
-    linear-gradient(180deg, rgb(var(--c-bg)) 0%, rgb(var(--c-void)) 100%);
   transition: background-color 300ms ease;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.55 0 0 0 0 0.65 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.55;
-  mix-blend-mode: overlay;
-  transition: opacity 300ms ease;
-}
-
-.theme-light body::before {
-  opacity: 0.28;
-  mix-blend-mode: multiply;
 }
 
 ::selection {
@@ -142,7 +121,7 @@ input[type='text']::placeholder {
 }
 
 .leaflet-control-zoom {
-  border: 1px solid rgb(var(--c-cyan) / 0.25) !important;
+  border: 1px solid rgb(var(--c-edge)) !important;
   background: rgb(var(--c-void) / 0.85) !important;
 }
 
@@ -160,17 +139,17 @@ input[type='text']::placeholder {
 }
 
 .leaflet-popup-content-wrapper {
-  background: rgb(var(--c-void) / 0.95) !important;
+  background: rgb(var(--c-panel) / 0.95) !important;
   color: rgb(var(--c-ink)) !important;
-  border: 1px solid rgb(var(--c-cyan) / 0.3) !important;
-  border-radius: 0 !important;
+  border: 1px solid rgb(var(--c-edge)) !important;
+  border-radius: 8px !important;
   box-shadow: 0 8px 32px rgb(var(--c-void) / 0.6) !important;
   font-family: 'JetBrains Mono', monospace !important;
 }
 
 .leaflet-popup-tip {
-  background: rgb(var(--c-void) / 0.95) !important;
-  border: 1px solid rgb(var(--c-cyan) / 0.3) !important;
+  background: rgb(var(--c-panel) / 0.95) !important;
+  border: 1px solid rgb(var(--c-edge)) !important;
 }
 
 .leaflet-popup-close-button {
@@ -178,16 +157,16 @@ input[type='text']::placeholder {
 }
 
 .leaflet-tooltip {
-  background: rgb(var(--c-void) / 0.95) !important;
+  background: rgb(var(--c-panel) / 0.95) !important;
   color: rgb(var(--c-ink)) !important;
-  border: 1px solid rgb(var(--c-cyan) / 0.35) !important;
-  border-radius: 0 !important;
-  box-shadow: 0 6px 20px rgb(var(--c-void) / 0.5) !important;
+  border: 1px solid rgb(var(--c-edge)) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgb(var(--c-void) / 0.4) !important;
 }
-
-.leaflet-tooltip:before {
-  border-top-color: rgb(var(--c-cyan) / 0.35) !important;
-}
+.leaflet-tooltip-top::before    { border-top-color: rgb(var(--c-edge)) !important; }
+.leaflet-tooltip-bottom::before { border-bottom-color: rgb(var(--c-edge)) !important; }
+.leaflet-tooltip-left::before   { border-left-color: rgb(var(--c-edge)) !important; }
+.leaflet-tooltip-right::before  { border-right-color: rgb(var(--c-edge)) !important; }
 
 .leaflet-bar {
   box-shadow: none !important;
@@ -208,7 +187,7 @@ input[type='text']::placeholder {
 
 ::-webkit-scrollbar-thumb {
   background: rgb(var(--c-cyan) / 0.15);
-  border-radius: 0;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -249,86 +228,6 @@ input[type='text']::placeholder {
 @keyframes reveal {
   0% { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: translateY(0); }
-}
-
-/* ============================================================
-   HUD panel corner brackets
-   ============================================================ */
-
-.hud-brackets {
-  position: relative;
-}
-
-.hud-brackets::before,
-.hud-brackets::after {
-  content: '';
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-color: rgb(var(--c-cyan) / 0.55);
-  border-style: solid;
-  border-width: 0;
-  pointer-events: none;
-}
-
-.hud-brackets::before {
-  top: -1px;
-  left: -1px;
-  border-top-width: 1px;
-  border-left-width: 1px;
-}
-
-.hud-brackets::after {
-  bottom: -1px;
-  right: -1px;
-  border-bottom-width: 1px;
-  border-right-width: 1px;
-}
-
-.hud-brackets-full {
-  position: relative;
-}
-
-.hud-brackets-full > .bracket {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-color: rgb(var(--c-cyan) / 0.5);
-  border-style: solid;
-  border-width: 0;
-  pointer-events: none;
-}
-
-.hud-brackets-full > .bracket.tl {
-  top: -1px;
-  left: -1px;
-  border-top-width: 1px;
-  border-left-width: 1px;
-}
-
-.hud-brackets-full > .bracket.tr {
-  top: -1px;
-  right: -1px;
-  border-top-width: 1px;
-  border-right-width: 1px;
-}
-
-.hud-brackets-full > .bracket.bl {
-  bottom: -1px;
-  left: -1px;
-  border-bottom-width: 1px;
-  border-left-width: 1px;
-}
-
-.hud-brackets-full > .bracket.br {
-  bottom: -1px;
-  right: -1px;
-  border-bottom-width: 1px;
-  border-right-width: 1px;
-}
-
-.text-shadow-hud {
-  text-shadow: 0 0 12px rgb(var(--c-cyan) / 0.4);
 }
 
 /* ============================================================
