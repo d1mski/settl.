@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react';
 import type { ResolvedLocation } from '../types';
 import { formatDistanceKm } from '../utils/coordinates';
 import { useElevation } from '../hooks/useElevation';
@@ -59,7 +60,10 @@ export function GridResolutionWarning({ resolved }: Props) {
   return (
     <div className="border border-warn/60 bg-warn/5 text-warn px-3 py-2 mb-3">
       <div className="flex items-center gap-2">
-        <span className="text-[9px] font-mono uppercase tracking-widest">⚠ MODEL BIAS WARNING</span>
+        <span className="text-[9px] font-mono uppercase tracking-widest flex items-center gap-1">
+            <TriangleAlert size={12} strokeWidth={1.4} className="shrink-0" />
+            MODEL BIAS WARNING
+          </span>
         <span className="flex-1 h-px bg-warn/30" />
       </div>
       <div className="text-[10px] font-mono mt-1 leading-relaxed text-ink space-y-1">
