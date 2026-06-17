@@ -8,9 +8,15 @@ import 'leaflet/dist/leaflet.css';
 import './utils/leafletIconFix';
 import './index.css';
 import App from './App';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { FontScaleProvider } from './contexts/FontScaleContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <FontScaleProvider>
+        <App />
+      </FontScaleProvider>
+    </ThemeProvider>
   </React.StrictMode>,
 );

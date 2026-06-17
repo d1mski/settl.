@@ -6,6 +6,18 @@
     <meta name="theme-color" content="#0B1120" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>settl. — Location Intelligence</title>
+    <script>
+      (function() {
+        var theme = localStorage.getItem('settl-theme') || 'system';
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+        if (!isDark) document.documentElement.classList.add('theme-light');
+        var scale = parseFloat(localStorage.getItem('settl-font-scale') || '1');
+        if (isFinite(scale) && scale !== 1) {
+          document.documentElement.style.fontSize = (scale * 100) + '%';
+        }
+      })();
+    </script>
   </head>
   <body class="bg-bg text-ink">
     <div id="root"></div>
