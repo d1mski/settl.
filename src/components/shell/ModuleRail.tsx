@@ -1,4 +1,4 @@
-import { Sun, Sunrise, Wind, TriangleAlert, Gauge, Globe } from 'lucide-react';
+import { Sun, Sunrise, Wind, TriangleAlert, Gauge, Globe, LayoutDashboard, List } from 'lucide-react';
 import type { TabId } from '../../types';
 import { TAB_ORDER } from '../../types';
 
@@ -33,9 +33,11 @@ interface Props {
   active: TabId | null;
   onSelect: (tab: TabId) => void;
   coordsReady: boolean;
+  view: 'overview' | 'advanced';
+  onToggleView: () => void;
 }
 
-export function ModuleRail({ active, onSelect, coordsReady }: Props) {
+export function ModuleRail({ active, onSelect, coordsReady, view, onToggleView }: Props) {
   return (
     <div className="h-full w-[72px] border-l border-edge bg-rail/90 backdrop-blur-sm flex flex-col">
       <div className="border-b border-edge py-2 text-center">
@@ -67,6 +69,24 @@ export function ModuleRail({ active, onSelect, coordsReady }: Props) {
           );
         })}
       </div>
+
+      <div className="border-t border-edge mt-auto" />
+      <button
+        onClick={onToggleView}
+        title={view === 'overview' ? 'Advanced view' : 'Overview'}
+        aria-label={view === 'overview' ? 'Switch to Advanced view' : 'Switch to Overview'}
+        className="flex flex-col items-center justify-center gap-1 py-3 text-muted hover:text-ink hover:bg-edge/40 transition-colors"
+      >
+        <span className="w-5 h-5">
+          {view === 'overview'
+            ? <List className="w-full h-full" strokeWidth={1.4} />
+            : <LayoutDashboard className="w-full h-full" strokeWidth={1.4} />
+          }
+        </span>
+        <span className="text-[8px] font-mono tracking-widest">
+          {view === 'overview' ? 'ADV' : 'OVW'}
+        </span>
+      </button>
 
       <div className="border-t border-edge py-2 text-center">
         <div className="text-[8px] font-mono uppercase tracking-widest text-dim">v0.1</div>
