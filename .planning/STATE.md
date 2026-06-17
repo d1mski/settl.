@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to plan
-stopped_at: Completed 01-css-foundations-reskin-01-01-PLAN.md
-last_updated: "2026-06-17T18:10:34.393Z"
+stopped_at: Completed 02-app-shell-state-02-02-PLAN.md (checkpoint:human-verify)
+last_updated: "2026-06-17T18:30:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 1
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-17)
 
 **Core value:** Instant, trustworthy, data-backed insight into what it's really like to live somewhere — before you commit
-**Current focus:** Phase 01 — css-foundations-reskin
+**Current focus:** Phase 02 — app-shell-state
 
 ## Current Position
 
 Phase: 2
-Plan: Not started
+Plan: 02 (awaiting human-verify checkpoint)
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Plan: Not started
 - [Research] Nominatim debounce locked at 400ms (rate limit policy)
 - [Research] ReportPanel renders INSIDE ModuleSheet — no new z-index context
 - [Phase 01-css-foundations-reskin]: 4-direction tooltip arrows replace single :before for correct Leaflet arrow color on all orientations
+- [Phase 02-app-shell-state]: ThemeToggle and FontScaleControl are zero-prop components — all state from context; BaseMap type fully removed
 
 ### Pending Todos
 
