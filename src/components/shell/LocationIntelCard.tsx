@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Coordinates } from '../../types';
 import type { Slot } from '../../hooks/useUrlState';
-import type { BaseMap } from './MapCanvas';
 import { formatCoordinate, parseCoordinates } from '../../utils/coordinates';
 import { forwardGeocode, type GeocodeResult } from '../../hooks/useNominatim';
 import { Panel } from '../hud/Panel';
+import { useTheme } from '../../contexts/ThemeContext';
+import type { ThemeMode } from '../../contexts/ThemeContext';
+import { useFontScale } from '../../contexts/FontScaleContext';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -17,8 +19,6 @@ interface Props {
   resolvingB: boolean;
   activeSlot: Slot;
   compareMode: boolean;
-  baseMap?: BaseMap;
-  onBaseMapChange?: (base: BaseMap) => void;
   onSetSlot: (slot: Slot) => void;
   onChangeA: (coords: Coordinates | null) => void;
   onChangeB: (coords: Coordinates | null) => void;
@@ -37,8 +37,6 @@ export function LocationIntelCard({
   resolvingB,
   activeSlot,
   compareMode,
-  baseMap,
-  onBaseMapChange,
   onSetSlot,
   onChangeA,
   onChangeB,
@@ -158,9 +156,10 @@ export function LocationIntelCard({
             >
               {searching ? '...' : 'EXEC'}
             </button>
-            {baseMap !== undefined && onBaseMapChange !== undefined && (
-              <ThemeToggle baseMap={baseMap} onBaseMapChange={onBaseMapChange} />
-            )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <FontScaleControl />
+            </div>
           </div>
 
           {error && (
@@ -220,43 +219,88 @@ export function LocationIntelCard({
   );
 }
 
-function ThemeToggle({
-  baseMap,
-  onBaseMapChange,
-}: {
-  baseMap: BaseMap;
-  onBaseMapChange: (base: BaseMap) => void;
-}) {
-  return (
-    <div className="shrink-0 flex border border-edge">
-      <button
-        onClick={() => onBaseMapChange('dark')}
-        title="Dark basemap"
-        aria-label="Dark basemap"
-        className={`w-7 flex items-center justify-center transition-colors ${
-          baseMap === 'dark'
-            ? 'bg-cyan/15 text-cyan'
-            : 'bg-void text-muted hover:text-ink'
-        }`}
-      >
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" />
-        </svg>
-      </button>
-      <button
-        onClick={() => onBaseMapChange('light')}
-        title="Light basemap"
-        aria-label="Light basemap"
-        className={`w-7 flex items-center justify-center transition-colors border-l border-edge ${
-          baseMap === 'light'
-            ? 'bg-cyan/15 text-cyan'
-            : 'bg-void text-muted hover:text-ink'
-        }`}
-      >
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const modes: { mode: ThemeMode; label: string; icon: React.ReactNode }[] = [
+    {
+      mode: 'light',
+      label: 'Light theme',
+      icon: (
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
         </svg>
+      ),
+    },
+    {
+      mode: 'system',
+      label: 'System theme',
+      icon: (
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <path d="M8 21h8M12 17v4" />
+        </svg>
+      ),
+    },
+    {
+      mode: 'dark',
+      label: 'Dark theme',
+      icon: (
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div className="shrink-0 flex border border-edge rounded-md overflow-hidden">
+      {modes.map(({ mode, label, icon }, i) => (
+        <button
+          key={mode}
+          onClick={() => setTheme(mode)}
+          title={label}
+          aria-label={label}
+          className={`w-7 h-7 flex items-center justify-center transition-colors ${
+            i > 0 ? 'border-l border-edge' : ''
+          } ${
+            theme === mode
+              ? 'bg-cyan/15 text-cyan'
+              : 'bg-void text-muted hover:text-ink'
+          }`}
+        >
+          {icon}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FontScaleControl() {
+  const { scale, increase, decrease } = useFontScale();
+
+  return (
+    <div className="shrink-0 flex items-center border border-edge rounded-md overflow-hidden">
+      <button
+        onClick={decrease}
+        disabled={scale <= 0.8}
+        aria-label="Decrease font size"
+        title="Decrease font size"
+        className="w-7 h-7 flex items-center justify-center transition-colors bg-void text-muted hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        <span className="text-[10px] font-bold leading-none">A-</span>
+      </button>
+      <span className="px-1.5 text-[9px] text-muted tabular-nums min-w-[32px] text-center border-x border-edge bg-void/50">
+        {Math.round(scale * 100)}%
+      </span>
+      <button
+        onClick={increase}
+        disabled={scale >= 1.4}
+        aria-label="Increase font size"
+        title="Increase font size"
+        className="w-7 h-7 flex items-center justify-center transition-colors bg-void text-muted hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        <span className="text-[10px] font-bold leading-none">A+</span>
       </button>
     </div>
   );

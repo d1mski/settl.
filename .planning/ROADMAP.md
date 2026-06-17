@@ -50,7 +50,7 @@ Plans:
 **Plans:** 0/2 plans executed
 Plans:
 - [ ] 02-01-PLAN.md — Context providers (ThemeContext + FontScaleContext), FOUC prevention, App.tsx/MapCanvas refactor
-- [ ] 02-02-PLAN.md — 3-state theme toggle UI, A-/A+ font scale controls, BaseMap cleanup
+- [x] 02-02-PLAN.md — 3-state theme toggle UI, A-/A+ font scale controls, BaseMap cleanup
 **UI hint**: yes
 
 ### Phase 3: LocationIntelCard Enhancements
@@ -109,7 +109,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. CSS Foundations + Reskin | 0/3 | Planned    |  |
-| 2. App Shell State | 0/2 | Planned | - |
+| 2. App Shell State | 1/2 | In Progress | - |
 | 3. LocationIntelCard Enhancements | 0/? | Not started | - |
 | 4. Saved Locations | 0/? | Not started | - |
 | 5. ModuleRail + Lucide Icons | 0/? | Not started | - |

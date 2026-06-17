@@ -17,8 +17,6 @@ import { useTheme } from '../../contexts/ThemeContext';
 const DEFAULT_CENTER: [number, number] = [30, 20];
 const CITY_ZOOM = 13;
 
-export type BaseMap = 'dark' | 'light';
-
 interface Props {
   coordsA: Coordinates | null;
   coordsB: Coordinates | null;
