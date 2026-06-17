@@ -85,7 +85,10 @@ Plans:
   1. Module rail, section headers, and service rows display Lucide SVG icons — no emoji or HUD glyphs visible anywhere
   2. An overview/advanced toggle control appears in the rail and is visually distinct from module nav icons
   3. Icons render at consistent size and color on both dark and light themes
-**Plans**: TBD
+**Plans:** 0/2 plans executed
+Plans:
+- [ ] 05-01-PLAN.md — Install lucide-react, replace ModuleRail inline SVGs and Unicode warning glyphs with Lucide components
+- [ ] 05-02-PLAN.md — Add overview/advanced toggle button to rail, lift viewMode state to App.tsx
 **UI hint**: yes
 
 ### Phase 6: ReportPanel (Overview Mode)
@@ -112,5 +115,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. App Shell State | 1/2 | In Progress | - |
 | 3. LocationIntelCard Enhancements | 0/? | Not started | - |
 | 4. Saved Locations | 0/? | Not started | - |
-| 5. ModuleRail + Lucide Icons | 0/? | Not started | - |
+| 5. ModuleRail + Lucide Icons | 0/2 | Planned | - |
 | 6. ReportPanel (Overview Mode) | 0/? | Not started | - |
