@@ -4,7 +4,7 @@ import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
 const MIN_INTERVAL_MS = 1100;
 const BASE = 'https://nominatim.openstreetmap.org';
-const CONTACT = 'blindspot-dev';
+const CONTACT = 'settl-dev';
 
 let lastRequestAt = 0;
 const pending: Array<() => void> = [];
