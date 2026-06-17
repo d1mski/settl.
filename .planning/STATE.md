@@ -1,3 +1,17 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: Ready to plan
+stopped_at: Completed 01-css-foundations-reskin-01-01-PLAN.md
+last_updated: "2026-06-17T18:10:34.393Z"
+progress:
+  total_phases: 6
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
+---
+
 # Project State
 
 ## Project Reference
@@ -5,31 +19,29 @@
 See: .planning/PROJECT.md (updated 2026-06-17)
 
 **Core value:** Instant, trustworthy, data-backed insight into what it's really like to live somewhere — before you commit
-**Current focus:** Phase 1 — CSS Foundations + Reskin
+**Current focus:** Phase 01 — css-foundations-reskin
 
 ## Current Position
 
-Phase: 1 of 6 (CSS Foundations + Reskin)
-Plan: 2 of 2 in current phase (01-01, 01-02 complete)
-Status: In progress
-Last activity: 2026-06-17 — 01-02 complete: HUD removal + rounded corners applied
-
-Progress: [██░░░░░░░░] 20%
+Phase: 2
+Plan: Not started
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: ~10min
-- Total execution time: ~20min
+
+- Total plans completed: 0
+- Average duration: —
+- Total execution time: —
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 — CSS Foundations + Reskin | 2 | ~20min | ~10min |
+| - | - | - | - |
 
 *Updated after each plan completion*
+| Phase 01-css-foundations-reskin P01 | 6m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -40,8 +52,7 @@ Progress: [██░░░░░░░░] 20%
 - [Research] CSS zoom prohibited on any Leaflet ancestor — font scale uses font-size on html + rem only
 - [Research] Nominatim debounce locked at 400ms (rate limit policy)
 - [Research] ReportPanel renders INSIDE ModuleSheet — no new z-index context
-- [01-02] Removed brackets prop entirely from Panel API — no callers needed it after reskin
-- [01-02] MapHud simplified to compareMode+activeSlot only — coordsA/coordsB were unused inside component
+- [Phase 01-css-foundations-reskin]: 4-direction tooltip arrows replace single :before for correct Leaflet arrow color on all orientations
 
 ### Pending Todos
 
@@ -53,6 +64,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-17
-Stopped at: Completed 01-02-PLAN.md — HUD removal + rounded corners on all panels
+Last session: 2026-06-17T16:59:50.727Z
+Stopped at: Completed 01-css-foundations-reskin-01-01-PLAN.md
 Resume file: None
