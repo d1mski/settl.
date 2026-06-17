@@ -37,15 +37,15 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SKIN-01 | — | Pending |
-| SKIN-02 | — | Pending |
-| SKIN-03 | — | Pending |
-| SKIN-04 | — | Pending |
-| UX-01 | — | Pending |
-| UX-02 | — | Pending |
-| UX-03 | — | Pending |
-| UX-04 | — | Pending |
-| UX-05 | — | Pending |
-| FEAT-01 | — | Pending |
-| FEAT-02 | — | Pending |
-| FEAT-03 | — | Pending |
+| SKIN-01 | Phase 1 | Pending |
+| SKIN-02 | Phase 1 | Pending |
+| SKIN-03 | Phase 1 | Pending |
+| SKIN-04 | Phase 5 | Pending |
+| UX-01 | Phase 3 | Pending |
+| UX-02 | Phase 6 | Pending |
+| UX-03 | Phase 5 + 6 | Pending |
+| UX-04 | Phase 2 | Pending |
+| UX-05 | Phase 2 | Pending |
+| FEAT-01 | Phase 3 | Pending |
+| FEAT-02 | Phase 3 | Pending |
+| FEAT-03 | Phase 4 | Pending |
