@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlindSpot — Direction B: Clean & Confident</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --s-xs: 4px; --s-sm: 8px; --s-md: 12px; --s-base: 16px;
+    --s-lg: 24px; --s-xl: 32px; --s-2xl: 48px; --s-3xl: 64px;
+    --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px;
+    --font-display: 'Gabarito', system-ui, sans-serif;
+    --font-body: 'Karla', system-ui, sans-serif;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ─── Light Theme ─── */
+  [data-theme="light"] {
+    --bg-base: oklch(0.975 0.005 220);
+    --bg-surface: oklch(0.995 0.002 220);
+    --bg-elevated: oklch(1 0.001 220);
+    --bg-map: oklch(0.95 0.012 200);
+
+    --border-subtle: oklch(0.91 0.006 220);
+    --border-default: oklch(0.86 0.008 220);
+
+    --text-primary: oklch(0.2 0.02 250);
+    --text-secondary: oklch(0.46 0.015 250);
+    --text-tertiary: oklch(0.6 0.01 250);
+
+    --accent-primary: oklch(0.52 0.14 195);
+    --accent-primary-soft: oklch(0.93 0.035 195);
+    --accent-primary-muted: oklch(0.72 0.08 195);
+    --accent-warm: oklch(0.6 0.15 30);
+    --accent-warm-soft: oklch(0.94 0.035 30);
+    --accent-success: oklch(0.58 0.12 160);
+    --accent-success-soft: oklch(0.94 0.03 160);
+    --accent-caution: oklch(0.68 0.14 80);
+    --accent-caution-soft: oklch(0.95 0.03 80);
+
+    --shadow-sm: 0 1px 2px oklch(0.3 0.02 250 / 0.04);
+    --shadow-md: 0 4px 16px oklch(0.3 0.02 250 / 0.06);
+    --shadow-lg: 0 12px 40px oklch(0.3 0.02 250 / 0.08);
+    --shadow-focus: 0 0 0 3px oklch(0.52 0.14 195 / 0.15);
+  }
+
+  /* ─── Dark Theme ─── */
+  [data-theme="dark"] {
+    --bg-base: oklch(0.16 0.015 250);
+    --bg-surface: oklch(0.20 0.015 250);
+    --bg-elevated: oklch(0.24 0.018 250);
+    --bg-map: oklch(0.14 0.012 200);
+
+    --border-subtle: oklch(0.28 0.015 250);
+    --border-default: oklch(0.34 0.018 250);
+
+    --text-primary: oklch(0.93 0.006 220);
+    --text-secondary: oklch(0.66 0.01 220);
+    --text-tertiary: oklch(0.48 0.008 220);
+
+    --accent-primary: oklch(0.65 0.12 195);
+    --accent-primary-soft: oklch(0.25 0.04 195);
+    --accent-primary-muted: oklch(0.45 0.06 195);
+    --accent-warm: oklch(0.7 0.13 30);
+    --accent-warm-soft: oklch(0.25 0.04 30);
+    --accent-success: oklch(0.65 0.1 160);
+    --accent-success-soft: oklch(0.24 0.03 160);
+    --accent-caution: oklch(0.72 0.11 80);
+    --accent-caution-soft: oklch(0.25 0.03 80);
+
+    --shadow-sm: 0 1px 2px oklch(0.05 0 0 / 0.3);
+    --shadow-md: 0 4px 16px oklch(0.05 0 0 / 0.4);
+    --shadow-lg: 0 12px 40px oklch(0.05 0 0 / 0.5);
+    --shadow-focus: 0 0 0 3px oklch(0.65 0.12 195 / 0.2);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font-body);
+    background: var(--bg-base);
+    color: var(--text-primary);
+    transition: background 0.4s var(--ease-out), color 0.3s var(--ease-out);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ─── Top Nav ─── */
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: var(--s-xl);
+    padding: var(--s-md) var(--s-lg);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-subtle);
+    z-index: 10;
+    transition: background 0.4s var(--ease-out);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--text-primary);
+  }
+  .logo .spot { color: var(--accent-primary); }
+
+  .search-bar {
+    flex: 1;
+    max-width: 440px;
+    display: flex;
+    align-items: center;
+    gap: var(--s-sm);
+    background: var(--bg-base);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-xl);
+    padding: 10px var(--s-base);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-bar:focus-within {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-focus);
+  }
+  .search-bar svg { flex-shrink: 0; color: var(--text-tertiary); }
+  .search-bar input {
+    border: none; background: none; outline: none; width: 100%;
+    font-family: var(--font-body); font-size: 0.875rem; color: var(--text-primary);
+  }
+  .search-bar input::placeholder { color: var(--text-tertiary); }
+
+  .nav-links {
+    display: flex; gap: 2px; list-style: none;
+    background: var(--bg-base);
+    border-radius: var(--r-md);
+    padding: 3px;
+  }
+  .nav-links a {
+    font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+    text-decoration: none; padding: var(--s-sm) var(--s-md);
+    border-radius: var(--r-sm); transition: all 0.2s;
+  }
+  .nav-links a:hover { color: var(--text-primary); }
+  .nav-links a.active {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .nav-right {
+    margin-left: auto;
+    display: flex; align-items: center; gap: var(--s-md);
+  }
+
+  .theme-toggle {
+    width: 36px; height: 36px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-base);
+    cursor: pointer;
+    display: grid; place-items: center;
+    font-size: 15px;
+    transition: background 0.2s, transform 0.15s var(--ease-out);
+  }
+  .theme-toggle:hover { transform: scale(1.06); }
+
+  /* ─── Main ─── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ─── Map ─── */
+  .map-area {
+    position: relative;
+    background: var(--bg-map);
+    overflow: hidden;
+    transition: background 0.4s var(--ease-out);
+  }
+  .map-texture {
+    position: absolute; inset: 0; opacity: 0.3;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, var(--border-subtle) 60px, var(--border-subtle) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, var(--border-subtle) 60px, var(--border-subtle) 61px);
+  }
+  .map-roads {
+    position: absolute; inset: 0;
+  }
+  .map-roads svg { width: 100%; height: 100%; }
+  .map-roads path { fill: none; stroke: var(--border-default); stroke-width: 2; opacity: 0.45; }
+  .map-roads .major { stroke-width: 3.5; opacity: 0.55; }
+
+  /* Pins */
+  .map-pin {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transform: translate(-50%, -100%);
+    cursor: pointer;
+    transition: transform 0.2s var(--ease-out);
+  }
+  .map-pin:hover { transform: translate(-50%, -100%) scale(1.06); }
+  .pin-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent-warm);
+    border: 2px solid var(--bg-surface);
+    box-shadow: var(--shadow-md);
+  }
+  .pin-dot.primary { width: 16px; height: 16px; background: var(--accent-primary); }
+  .pin-label {
+    background: var(--bg-elevated);
+    padding: 3px 8px;
+    border-radius: var(--r-sm);
+    font-size: 0.68rem; font-weight: 600;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+  }
+
+  /* ─── Floating Panel (overlaid on map) ─── */
+  .floating-panel {
+    position: absolute;
+    left: var(--s-lg);
+    top: var(--s-lg);
+    bottom: var(--s-lg);
+    width: 360px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    overflow-y: auto;
+    padding: var(--s-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-lg);
+    transition: background 0.4s var(--ease-out), border-color 0.3s;
+    z-index: 5;
+  }
+  .floating-panel::-webkit-scrollbar { width: 5px; }
+  .floating-panel::-webkit-scrollbar-track { background: transparent; }
+  .floating-panel::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 3px; }
+
+  .location-header { display: flex; flex-direction: column; gap: var(--s-sm); }
+  .location-eyebrow {
+    display: inline-flex; align-items: center; gap: var(--s-sm);
+    font-size: 0.72rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--accent-primary);
+  }
+  .location-eyebrow::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+  }
+  .location-name {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  .location-region { font-size: 0.85rem; color: var(--text-secondary); }
+
+  /* Score banner */
+  .score-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--s-base);
+    padding: var(--s-base) var(--s-lg);
+    background: var(--accent-primary-soft);
+    border-radius: var(--r-lg);
+    transition: background 0.3s;
+  }
+  .score-big {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .score-big sub {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    vertical-align: baseline;
+    margin-left: 2px;
+  }
+  .score-text { display: flex; flex-direction: column; gap: 2px; }
+  .score-label { font-weight: 600; font-size: 0.9rem; }
+  .score-sublabel { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.35; }
+
+  /* Metric rows */
+  .metrics-section {
+    display: flex; flex-direction: column; gap: var(--s-md);
+  }
+  .metrics-heading {
+    font-size: 0.72rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-tertiary);
+  }
+
+  .metric-row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-md);
+    padding: var(--s-md) var(--s-base);
+    border-radius: var(--r-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    transition: border-color 0.2s, background 0.3s;
+    cursor: default;
+  }
+  .metric-row:hover { border-color: var(--border-default); }
+
+  .metric-emoji {
+    font-size: 1.15rem;
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    border-radius: var(--r-sm);
+    flex-shrink: 0;
+  }
+  .metric-emoji.teal { background: var(--accent-primary-soft); }
+  .metric-emoji.warm { background: var(--accent-warm-soft); }
+  .metric-emoji.green { background: var(--accent-success-soft); }
+  .metric-emoji.gold { background: var(--accent-caution-soft); }
+
+  .metric-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .metric-name { font-size: 0.85rem; font-weight: 600; }
+  .metric-detail { font-size: 0.75rem; color: var(--text-secondary); }
+
+  .metric-value-col {
+    text-align: right;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  }
+  .metric-val {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .metric-bar {
+    width: 48px; height: 4px;
+    border-radius: 2px;
+    background: var(--border-subtle);
+    overflow: hidden;
+  }
+  .metric-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.8s var(--ease-out);
+  }
+  .fill-teal { background: var(--accent-primary); }
+  .fill-green { background: var(--accent-success); }
+  .fill-warm { background: var(--accent-warm); }
+  .fill-gold { background: var(--accent-caution); }
+
+  /* Map controls */
+  .map-controls {
+    position: absolute;
+    bottom: var(--s-lg); right: var(--s-lg);
+    display: flex; flex-direction: column; gap: var(--s-sm);
+  }
+  .map-btn {
+    width: 40px; height: 40px;
+    border-radius: var(--r-sm);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    display: grid; place-items: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    color: var(--text-secondary);
+    font-size: 18px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .map-btn:hover { background: var(--bg-surface); color: var(--text-primary); }
+
+  /* Direction badge */
+  .direction-badge {
+    position: fixed;
+    top: var(--s-base); right: var(--s-base);
+    z-index: 100;
+    background: var(--accent-primary);
+    color: oklch(0.99 0 0);
+    font-family: var(--font-display);
+    font-size: 0.72rem; font-weight: 700;
+    padding: var(--s-sm) var(--s-md);
+    border-radius: var(--r-sm);
+    letter-spacing: 0.03em;
+  }
+
+  /* ─── Entrance animation ─── */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .floating-panel {
+    animation: slideIn 0.5s var(--ease-out) both;
+    animation-delay: 0.1s;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .floating-panel > * {
+    animation: fadeUp 0.45s var(--ease-out) both;
+  }
+  .floating-panel > *:nth-child(1) { animation-delay: 0.15s; }
+  .floating-panel > *:nth-child(2) { animation-delay: 0.22s; }
+  .floating-panel > *:nth-child(3) { animation-delay: 0.29s; }
+
+  .metric-row {
+    animation: fadeUp 0.4s var(--ease-out) both;
+  }
+  .metrics-section .metric-row:nth-child(2) { animation-delay: 0.32s; }
+  .metrics-section .metric-row:nth-child(3) { animation-delay: 0.38s; }
+  .metrics-section .metric-row:nth-child(4) { animation-delay: 0.44s; }
+  .metrics-section .metric-row:nth-child(5) { animation-delay: 0.50s; }
+  .metrics-section .metric-row:nth-child(6) { animation-delay: 0.56s; }
+  .metrics-section .metric-row:nth-child(7) { animation-delay: 0.62s; }
+</style>
+</head>
+<body>
+
+<div class="direction-badge">Direction B — Clean & Confident</div>
+
+<div class="app">
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="logo">blind<span class="spot">spot</span></div>
+
+    <div class="search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Where are you thinking of moving?" value="Kifissia, Athens">
+    </div>
+
+    <ul class="nav-links">
+      <li><a href="#" class="active">Explore</a></li>
+      <li><a href="#">Compare</a></li>
+      <li><a href="#">Saved</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme"></button>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="map-area">
+      <div class="map-texture"></div>
+      <div class="map-roads">
+        <svg viewBox="0 0 800 600" preserveAspectRatio="none">
+          <path class="major" d="M0,280 Q200,260 400,300 Q600,340 800,290"/>
+          <path class="major" d="M350,0 Q360,200 380,400 Q390,500 400,600"/>
+          <path d="M0,150 Q250,140 500,170 Q700,190 800,160"/>
+          <path d="M0,420 Q200,440 500,410 Q650,400 800,430"/>
+          <path d="M150,0 Q160,150 180,300 Q190,450 200,600"/>
+          <path d="M600,0 Q590,200 610,400 Q620,500 630,600"/>
+          <path d="M250,350 Q350,320 450,360"/>
+          <path d="M100,200 Q200,230 300,195"/>
+          <path d="M500,100 Q550,130 650,110"/>
+          <path d="M450,450 Q550,470 700,440"/>
+        </svg>
+      </div>
+
+      <!-- Pins -->
+      <div class="map-pin" style="left:55%;top:42%;">
+        <div class="pin-label">Kifissia</div>
+        <div class="pin-dot primary"></div>
+      </div>
+      <div class="map-pin" style="left:45%;top:58%;">
+        <div class="pin-label">Marousi</div>
+        <div class="pin-dot"></div>
+      </div>
+      <div class="map-pin" style="left:68%;top:32%;">
+        <div class="pin-label">Ekali</div>
+        <div class="pin-dot"></div>
+      </div>
+      <div class="map-pin" style="left:42%;top:72%;">
+        <div class="pin-label">Chalandri</div>
+        <div class="pin-dot"></div>
+      </div>
+      <div class="map-pin" style="left:75%;top:55%;">
+        <div class="pin-label">Penteli</div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <!-- Floating Panel -->
+      <aside class="floating-panel">
+        <div class="location-header">
+          <span class="location-eyebrow">Neighborhood</span>
+          <h1 class="location-name">Kifissia</h1>
+          <p class="location-region">Northern Athens, Attica, Greece</p>
+        </div>
+
+        <div class="score-banner">
+          <div class="score-big">8.4<sub>/10</sub></div>
+          <div class="score-text">
+            <span class="score-label">Excellent for families</span>
+            <span class="score-sublabel">Top 12% of Athens neighborhoods</span>
+          </div>
+        </div>
+
+        <div class="metrics-section">
+          <span class="metrics-heading">Key indicators</span>
+
+          <div class="metric-row">
+            <div class="metric-emoji green">🛡️</div>
+            <div class="metric-info">
+              <div class="metric-name">Safety</div>
+              <div class="metric-detail">Very low crime. Well-lit streets.</div>
+            </div>
+            <div class="metric-value-col">
+              <div class="metric-val">9.1</div>
+              <div class="metric-bar"><div class="metric-bar-fill fill-green" style="width:91%"></div></div>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-emoji teal">📚</div>
+            <div class="metric-info">
+              <div class="metric-name">Schools</div>
+              <div class="metric-detail">3 intl, 5 public, 4 private</div>
+            </div>
+            <div class="metric-value-col">
+              <div class="metric-val">12</div>
+              <div class="metric-bar"><div class="metric-bar-fill fill-teal" style="width:72%"></div></div>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-emoji green">🌿</div>
+            <div class="metric-info">
+              <div class="metric-name">Air Quality</div>
+              <div class="metric-detail">AQI 38 avg — cleanest in Athens</div>
+            </div>
+            <div class="metric-value-col">
+              <div class="metric-val">Good</div>
+              <div class="metric-bar"><div class="metric-bar-fill fill-green" style="width:84%"></div></div>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-emoji warm">🚇</div>
+            <div class="metric-info">
+              <div class="metric-name">Transit Access</div>
+              <div class="metric-detail">Metro Line 1 — 28 min to center</div>
+            </div>
+            <div class="metric-value-col">
+              <div class="metric-val">7.2</div>
+              <div class="metric-bar"><div class="metric-bar-fill fill-warm" style="width:72%"></div></div>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-emoji green">🌳</div>
+            <div class="metric-info">
+              <div class="metric-name">Green Space</div>
+              <div class="metric-detail">Kifissia Park. 34% canopy.</div>
+            </div>
+            <div class="metric-value-col">
+              <div class="metric-val">8.8</div>
+              <div class="metric-bar"><div class="metric-bar-fill fill-green" style="width:88%"></div></div>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <div class="metric-emoji teal">🔇</div>
+            <div class="metric-info">
+              <div class="metric-name">Noise Level</div>
+              <div class="metric-detail">Residential quiet — 42dB evenings</div>
+            </div>
+            <div class="metric-value-col">
+              <div class="metric-val">Low</div>
+              <div class="metric-bar"><div class="metric-bar-fill fill-teal" style="width:80%"></div></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Controls -->
+      <div class="map-controls">
+        <button class="map-btn">+</button>
+        <button class="map-btn">−</button>
+        <button class="map-btn">◎</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const next = html.dataset.theme === 'light' ? 'dark' : 'light';
+    html.dataset.theme = next;
+    document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
+  }
+  document.getElementById('themeBtn').textContent = '☀️';
+</script>
+</body>
+</html>

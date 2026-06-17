@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlindSpot — UX-A: One Thing at a Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --s-xs:4px;--s-sm:8px;--s-md:12px;--s-base:16px;--s-lg:24px;--s-xl:32px;--s-2xl:48px;
+    --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:24px;--r-full:9999px;
+    --font-d:'Gabarito',system-ui,sans-serif;
+    --font-b:'Karla',system-ui,sans-serif;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  [data-theme="light"]{
+    --bg:oklch(0.975 0.005 220);--srf:oklch(0.995 0.002 220);--el:oklch(1 0.001 220);
+    --map-bg:oklch(0.95 0.012 200);
+    --bdr:oklch(0.91 0.006 220);--bdr-d:oklch(0.86 0.008 220);
+    --tx:oklch(0.2 0.02 250);--tx2:oklch(0.46 0.015 250);--tx3:oklch(0.6 0.01 250);
+    --acc:oklch(0.52 0.14 195);--acc-s:oklch(0.93 0.035 195);
+    --warm:oklch(0.6 0.15 30);--warm-s:oklch(0.94 0.035 30);
+    --good:oklch(0.5 0.12 160);--good-s:oklch(0.94 0.03 160);
+    --risk:oklch(0.55 0.16 25);--risk-s:oklch(0.94 0.04 25);
+    --caution:oklch(0.6 0.14 80);--caution-s:oklch(0.95 0.03 80);
+    --sh:0 -4px 32px oklch(0.3 0.02 250/0.1);
+    --sh-card:0 2px 8px oklch(0.3 0.02 250/0.06);
+    --pill-active-bg:var(--tx);--pill-active-tx:var(--el);
+  }
+  [data-theme="dark"]{
+    --bg:oklch(0.16 0.015 250);--srf:oklch(0.20 0.015 250);--el:oklch(0.24 0.018 250);
+    --map-bg:oklch(0.14 0.012 200);
+    --bdr:oklch(0.28 0.015 250);--bdr-d:oklch(0.34 0.018 250);
+    --tx:oklch(0.93 0.006 220);--tx2:oklch(0.66 0.01 220);--tx3:oklch(0.48 0.008 220);
+    --acc:oklch(0.65 0.12 195);--acc-s:oklch(0.25 0.04 195);
+    --warm:oklch(0.7 0.13 30);--warm-s:oklch(0.25 0.04 30);
+    --good:oklch(0.6 0.1 160);--good-s:oklch(0.24 0.03 160);
+    --risk:oklch(0.65 0.14 25);--risk-s:oklch(0.24 0.04 25);
+    --caution:oklch(0.72 0.11 80);--caution-s:oklch(0.25 0.03 80);
+    --sh:0 -4px 32px oklch(0.05 0 0/0.4);
+    --sh-card:0 2px 8px oklch(0.05 0 0/0.3);
+    --pill-active-bg:var(--el);--pill-active-tx:var(--tx);
+  }
+
+  html,body{height:100%;font-family:var(--font-b);background:var(--bg);color:var(--tx);
+    transition:background 0.4s var(--ease),color 0.3s var(--ease);-webkit-font-smoothing:antialiased}
+  .app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+  /* ─── Top bar: minimal ─── */
+  .topbar{display:flex;align-items:center;padding:var(--s-md) var(--s-lg);gap:var(--s-md);
+    background:var(--srf);border-bottom:1px solid var(--bdr);z-index:20;transition:background 0.4s var(--ease)}
+  .logo{font-family:var(--font-d);font-size:1.3rem;font-weight:700;letter-spacing:-0.3px}
+  .logo .s{color:var(--acc)}
+  .search{flex:1;max-width:480px;display:flex;align-items:center;gap:var(--s-sm);
+    background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r-full);padding:10px 20px}
+  .search svg{color:var(--tx3);flex-shrink:0}
+  .search input{border:none;background:none;outline:none;width:100%;font-family:var(--font-b);
+    font-size:.9rem;color:var(--tx)}
+  .search input::placeholder{color:var(--tx3)}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:var(--s-sm)}
+  .icon-btn{width:36px;height:36px;border-radius:var(--r-sm);border:1px solid var(--bdr);
+    background:var(--bg);cursor:pointer;display:grid;place-items:center;font-size:15px;
+    transition:all 0.15s}
+  .icon-btn:hover{border-color:var(--bdr-d)}
+
+  /* ─── Map (full bleed) ─── */
+  .map{flex:1;position:relative;background:var(--map-bg);overflow:hidden;transition:background 0.4s var(--ease)}
+  .map-grid{position:absolute;inset:0;opacity:.2;
+    background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--bdr) 60px,var(--bdr) 61px),
+    repeating-linear-gradient(90deg,transparent,transparent 60px,var(--bdr) 60px,var(--bdr) 61px)}
+  .pin{position:absolute;left:42%;top:38%;transform:translate(-50%,-100%);display:flex;
+    flex-direction:column;align-items:center;gap:4px;z-index:2}
+  .pin-dot{width:18px;height:18px;border-radius:50%;background:var(--acc);
+    border:3px solid var(--srf);box-shadow:0 2px 12px oklch(0.52 0.14 195/0.3)}
+  .pin-pulse{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--acc);
+    animation:pulse 2s ease-out infinite;opacity:0.3}
+  @keyframes pulse{0%{transform:scale(1);opacity:0.3}100%{transform:scale(3);opacity:0}}
+  .pin-label{background:var(--el);padding:4px 12px;border-radius:var(--r-full);
+    font-size:.78rem;font-weight:600;box-shadow:var(--sh-card);white-space:nowrap}
+
+  /* ─── Bottom sheet ─── */
+  .sheet{position:absolute;bottom:0;left:0;right:0;z-index:10;
+    background:var(--srf);border-top:1px solid var(--bdr);border-radius:var(--r-xl) var(--r-xl) 0 0;
+    box-shadow:var(--sh);transition:background 0.4s var(--ease),transform 0.5s var(--ease);
+    max-height:65vh;display:flex;flex-direction:column}
+  .sheet.collapsed{transform:translateY(calc(100% - 140px))}
+
+  /* Drag handle */
+  .sheet-handle{padding:var(--s-md) 0 var(--s-sm);display:flex;justify-content:center;cursor:grab;flex-shrink:0}
+  .sheet-handle span{width:36px;height:4px;border-radius:2px;background:var(--bdr-d)}
+
+  /* Location header in sheet */
+  .sheet-location{padding:0 var(--s-lg) var(--s-base);display:flex;align-items:center;
+    justify-content:space-between;flex-shrink:0}
+  .loc-info{display:flex;flex-direction:column;gap:2px}
+  .loc-name{font-family:var(--font-d);font-size:1.4rem;font-weight:700;letter-spacing:-0.3px}
+  .loc-region{font-size:.82rem;color:var(--tx2)}
+  .loc-score{display:flex;align-items:center;gap:var(--s-sm);padding:var(--s-sm) var(--s-md);
+    background:var(--acc-s);border-radius:var(--r-md)}
+  .loc-score .num{font-family:var(--font-d);font-size:1.5rem;font-weight:700;color:var(--acc)}
+  .loc-score .out{font-size:.75rem;color:var(--tx3)}
+  .loc-score .label{font-size:.72rem;color:var(--tx2);max-width:80px;line-height:1.3}
+
+  /* ─── Topic pills (horizontal scroll) ─── */
+  .topics{padding:0 var(--s-lg);display:flex;gap:var(--s-sm);overflow-x:auto;flex-shrink:0;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:var(--s-base)}
+  .topics::-webkit-scrollbar{display:none}
+  .topic{display:flex;align-items:center;gap:var(--s-sm);padding:var(--s-sm) var(--s-base);
+    border-radius:var(--r-full);border:1px solid var(--bdr);background:var(--el);
+    font-size:.82rem;font-weight:500;color:var(--tx2);cursor:pointer;white-space:nowrap;
+    transition:all 0.2s var(--ease);flex-shrink:0}
+  .topic:hover{border-color:var(--bdr-d);color:var(--tx)}
+  .topic.active{background:var(--pill-active-bg);color:var(--pill-active-tx);border-color:transparent}
+  .topic .emoji{font-size:1rem}
+
+  /* ─── Topic content ─── */
+  .topic-content{flex:1;overflow-y:auto;padding:var(--s-lg);display:flex;flex-direction:column;gap:var(--s-lg)}
+  .topic-content::-webkit-scrollbar{width:4px}
+  .topic-content::-webkit-scrollbar-thumb{background:var(--bdr-d);border-radius:2px}
+
+  /* Topic header */
+  .topic-header{display:flex;flex-direction:column;gap:var(--s-xs)}
+  .topic-question{font-family:var(--font-d);font-size:1.15rem;font-weight:700;letter-spacing:-0.2px}
+  .topic-answer{font-size:.88rem;color:var(--tx2);line-height:1.5;max-width:65ch}
+
+  /* Insight cards */
+  .insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s-md)}
+  .insight{padding:var(--s-base);background:var(--el);border-radius:var(--r-lg);
+    border:1px solid var(--bdr);display:flex;flex-direction:column;gap:var(--s-sm);
+    transition:border-color 0.2s,box-shadow 0.2s}
+  .insight:hover{border-color:var(--bdr-d);box-shadow:var(--sh-card)}
+  .insight-icon{font-size:1.3rem}
+  .insight-val{font-family:var(--font-d);font-size:1.3rem;font-weight:700;letter-spacing:-0.3px}
+  .insight-name{font-size:.8rem;font-weight:500;color:var(--tx2)}
+  .insight-detail{font-size:.72rem;color:var(--tx3);line-height:1.4}
+
+  /* Status chips */
+  .chip{display:inline-flex;align-items:center;gap:var(--s-xs);padding:3px var(--s-sm);
+    border-radius:var(--r-full);font-size:.7rem;font-weight:600}
+  .chip.good{background:var(--good-s);color:var(--good)}
+  .chip.warn{background:var(--caution-s);color:var(--caution)}
+  .chip.risk{background:var(--risk-s);color:var(--risk)}
+  .chip .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+  /* Detail expand hint */
+  .expand-hint{display:flex;align-items:center;gap:var(--s-sm);padding:var(--s-md);
+    background:var(--bg);border-radius:var(--r-md);font-size:.8rem;color:var(--tx2);
+    cursor:pointer;transition:background 0.2s}
+  .expand-hint:hover{background:var(--bdr)}
+  .expand-hint .arrow{margin-left:auto;color:var(--tx3);font-size:1rem}
+
+  /* ─── Progress dots ─── */
+  .progress{position:absolute;right:var(--s-lg);top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:var(--s-sm);z-index:3}
+  .progress .dot{width:8px;height:8px;border-radius:50%;background:var(--bdr-d);
+    cursor:pointer;transition:all 0.2s}
+  .progress .dot:hover{background:var(--tx3)}
+  .progress .dot.active{background:var(--acc);width:8px;height:20px;border-radius:4px}
+
+  /* Compare floating button */
+  .compare-fab{position:absolute;bottom:calc(65vh + 16px);right:var(--s-lg);z-index:11;
+    display:flex;align-items:center;gap:var(--s-sm);padding:var(--s-sm) var(--s-base);
+    background:var(--el);border:1px solid var(--bdr);border-radius:var(--r-full);
+    font-size:.8rem;font-weight:600;color:var(--tx2);cursor:pointer;box-shadow:var(--sh-card);
+    transition:all 0.2s}
+  .compare-fab:hover{border-color:var(--warm);color:var(--warm);background:var(--warm-s)}
+
+  .badge{position:fixed;top:var(--s-base);left:50%;transform:translateX(-50%);z-index:100;
+    background:var(--acc);color:oklch(0.99 0 0);font-family:var(--font-d);font-size:.72rem;
+    font-weight:700;padding:var(--s-sm) var(--s-md);border-radius:var(--r-sm)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .insight{animation:fadeUp 0.4s var(--ease) both}
+  .insights .insight:nth-child(1){animation-delay:.1s}
+  .insights .insight:nth-child(2){animation-delay:.16s}
+  .insights .insight:nth-child(3){animation-delay:.22s}
+  .insights .insight:nth-child(4){animation-delay:.28s}
+</style>
+</head>
+<body>
+<div class="badge">UX-A — One Thing at a Time (Guided Bottom Sheet)</div>
+<div class="app">
+
+  <div class="topbar">
+    <div class="logo">blind<span class="s">spot</span></div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Where are you thinking of moving?" value="Kifissia, Athens">
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" title="Saved">♡</button>
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">☀️</button>
+    </div>
+  </div>
+
+  <div class="map">
+    <div class="map-grid"></div>
+    <div class="pin">
+      <div class="pin-label">Kifissia</div>
+      <div style="position:relative;display:flex;align-items:center;justify-content:center">
+        <div class="pin-pulse"></div>
+        <div class="pin-dot"></div>
+      </div>
+    </div>
+
+    <!-- Progress dots on map edge -->
+    <div class="progress">
+      <div class="dot" title="Overview"></div>
+      <div class="dot active" title="Safety"></div>
+      <div class="dot" title="Climate"></div>
+      <div class="dot" title="Air"></div>
+      <div class="dot" title="Getting around"></div>
+      <div class="dot" title="Nearby"></div>
+    </div>
+
+    <!-- Compare FAB -->
+    <div class="compare-fab">+ Compare with another place</div>
+
+    <!-- ─── Bottom Sheet ─── -->
+    <div class="sheet" id="sheet">
+      <div class="sheet-handle" onclick="toggleSheet()"><span></span></div>
+
+      <div class="sheet-location">
+        <div class="loc-info">
+          <h1 class="loc-name">Kifissia</h1>
+          <span class="loc-region">Northern Athens, Greece</span>
+        </div>
+        <div class="loc-score">
+          <div>
+            <span class="num">8.4</span><span class="out">/10</span>
+          </div>
+          <span class="label">Excellent for families</span>
+        </div>
+      </div>
+
+      <!-- Topic pills -->
+      <div class="topics">
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">✨</span> Overview</div>
+        <div class="topic active" onclick="setTopic(this)"><span class="emoji">🛡️</span> Safety</div>
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">🌡️</span> Climate</div>
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">🌿</span> Air quality</div>
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">🚇</span> Getting around</div>
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">📍</span> What's nearby</div>
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">☀️</span> Sunlight</div>
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">⚠️</span> Hazards</div>
+        <div class="topic" onclick="setTopic(this)"><span class="emoji">💨</span> Wind</div>
+      </div>
+
+      <!-- Active topic content -->
+      <div class="topic-content">
+        <div class="topic-header">
+          <h2 class="topic-question">Is Kifissia safe for a family?</h2>
+          <p class="topic-answer">Yes — Kifissia is one of the safest neighborhoods in Athens. Low crime rates, well-lit residential streets, and a strong local police presence make it very family-friendly.</p>
+        </div>
+
+        <div class="insights">
+          <div class="insight">
+            <span class="insight-icon">🛡️</span>
+            <span class="insight-val">9.1<span style="font-size:.75rem;color:var(--tx3);font-weight:400">/10</span></span>
+            <span class="insight-name">Safety score</span>
+            <span class="chip good"><span class="dot"></span> Very safe</span>
+          </div>
+          <div class="insight">
+            <span class="insight-icon">🚔</span>
+            <span class="insight-val">0.4 km</span>
+            <span class="insight-name">Nearest police station</span>
+            <span class="insight-detail">Kifissia A.T. — within walking distance</span>
+          </div>
+          <div class="insight">
+            <span class="insight-icon">🚒</span>
+            <span class="insight-val">0.6 km</span>
+            <span class="insight-name">Nearest fire station</span>
+            <span class="insight-detail">Kifissia P.Y. — fast response coverage</span>
+          </div>
+          <div class="insight">
+            <span class="insight-icon">🏥</span>
+            <span class="insight-val">1.1 km</span>
+            <span class="insight-name">Nearest hospital</span>
+            <span class="insight-detail">KAT Hospital — major trauma center</span>
+          </div>
+        </div>
+
+        <div class="expand-hint">
+          <span>🔇</span>
+          <span>Noise levels are low — 42dB average in evenings. Residential quiet.</span>
+          <span class="arrow">›</span>
+        </div>
+
+        <div class="expand-hint">
+          <span>🌙</span>
+          <span>Streets are well-lit. Good walkability after dark.</span>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement,n=h.dataset.theme==='light'?'dark':'light';
+  h.dataset.theme=n;document.getElementById('themeBtn').textContent=n==='dark'?'🌙':'☀️';
+}
+function toggleSheet(){
+  document.getElementById('sheet').classList.toggle('collapsed');
+}
+function setTopic(el){
+  document.querySelectorAll('.topic').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

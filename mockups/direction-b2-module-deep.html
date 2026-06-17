@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlindSpot — B2: Module Deep Dive (Climate + Compare)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --s-xs:4px;--s-sm:8px;--s-md:12px;--s-base:16px;--s-lg:24px;--s-xl:32px;--s-2xl:48px;
+    --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:24px;
+    --font-d:'Gabarito',system-ui,sans-serif;
+    --font-b:'Karla',system-ui,sans-serif;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+
+  [data-theme="light"]{
+    --bg-base:oklch(0.975 0.005 220);--bg-srf:oklch(0.995 0.002 220);--bg-el:oklch(1 0.001 220);
+    --bg-map:oklch(0.95 0.012 200);--bg-inset:oklch(0.965 0.006 220);
+    --bdr-s:oklch(0.91 0.006 220);--bdr-d:oklch(0.86 0.008 220);
+    --tx-1:oklch(0.2 0.02 250);--tx-2:oklch(0.46 0.015 250);--tx-3:oklch(0.6 0.01 250);
+    --acc:oklch(0.52 0.14 195);--acc-s:oklch(0.93 0.035 195);--acc-m:oklch(0.72 0.08 195);
+    --warm:oklch(0.6 0.15 30);--warm-s:oklch(0.94 0.035 30);
+    --good:oklch(0.58 0.12 160);--good-s:oklch(0.94 0.03 160);
+    --risk:oklch(0.55 0.16 25);--risk-s:oklch(0.94 0.04 25);
+    --caution:oklch(0.68 0.14 80);--caution-s:oklch(0.95 0.03 80);
+    --sh-sm:0 1px 2px oklch(0.3 0.02 250/0.04);--sh-md:0 4px 16px oklch(0.3 0.02 250/0.06);
+    --sh-lg:0 12px 40px oklch(0.3 0.02 250/0.1);
+    --sh-focus:0 0 0 3px oklch(0.52 0.14 195/0.15);
+    --heat-cold:oklch(0.65 0.1 240);--heat-cool:oklch(0.55 0.1 220);
+    --heat-mid:oklch(0.4 0.05 260);--heat-warm:oklch(0.6 0.14 60);--heat-hot:oklch(0.55 0.18 30);
+  }
+  [data-theme="dark"]{
+    --bg-base:oklch(0.16 0.015 250);--bg-srf:oklch(0.20 0.015 250);--bg-el:oklch(0.24 0.018 250);
+    --bg-map:oklch(0.14 0.012 200);--bg-inset:oklch(0.18 0.012 250);
+    --bdr-s:oklch(0.28 0.015 250);--bdr-d:oklch(0.34 0.018 250);
+    --tx-1:oklch(0.93 0.006 220);--tx-2:oklch(0.66 0.01 220);--tx-3:oklch(0.48 0.008 220);
+    --acc:oklch(0.65 0.12 195);--acc-s:oklch(0.25 0.04 195);--acc-m:oklch(0.45 0.06 195);
+    --warm:oklch(0.7 0.13 30);--warm-s:oklch(0.25 0.04 30);
+    --good:oklch(0.65 0.1 160);--good-s:oklch(0.24 0.03 160);
+    --risk:oklch(0.65 0.14 25);--risk-s:oklch(0.24 0.04 25);
+    --caution:oklch(0.72 0.11 80);--caution-s:oklch(0.25 0.03 80);
+    --sh-sm:0 1px 2px oklch(0.05 0 0/0.3);--sh-md:0 4px 16px oklch(0.05 0 0/0.4);
+    --sh-lg:0 12px 40px oklch(0.05 0 0/0.5);
+    --sh-focus:0 0 0 3px oklch(0.65 0.12 195/0.2);
+    --heat-cold:oklch(0.55 0.08 240);--heat-cool:oklch(0.45 0.08 220);
+    --heat-mid:oklch(0.3 0.04 260);--heat-warm:oklch(0.5 0.12 60);--heat-hot:oklch(0.45 0.16 30);
+  }
+
+  html,body{height:100%;font-family:var(--font-b);background:var(--bg-base);color:var(--tx-1);
+    transition:background 0.4s var(--ease),color 0.3s var(--ease);-webkit-font-smoothing:antialiased}
+
+  .app{display:grid;grid-template-rows:auto 1fr;height:100vh;overflow:hidden}
+
+  /* ─── NAV ─── */
+  .nav{display:flex;align-items:center;gap:var(--s-xl);padding:var(--s-md) var(--s-lg);
+    background:var(--bg-srf);border-bottom:1px solid var(--bdr-s);z-index:10;transition:background 0.4s var(--ease)}
+  .logo{font-family:var(--font-d);font-size:1.4rem;font-weight:700;letter-spacing:-0.3px;color:var(--tx-1)}
+  .logo .s{color:var(--acc)}
+  .search-bar{flex:1;max-width:400px;display:flex;align-items:center;gap:var(--s-sm);
+    background:var(--bg-base);border:1px solid var(--bdr-s);border-radius:var(--r-xl);padding:10px var(--s-base);
+    transition:border-color 0.2s,box-shadow 0.2s}
+  .search-bar:focus-within{border-color:var(--acc);box-shadow:var(--sh-focus)}
+  .search-bar svg{flex-shrink:0;color:var(--tx-3)}
+  .search-bar input{border:none;background:none;outline:none;width:100%;font-family:var(--font-b);font-size:.875rem;color:var(--tx-1)}
+  .search-bar input::placeholder{color:var(--tx-3)}
+  .pill-tabs{display:flex;gap:2px;list-style:none;background:var(--bg-base);border-radius:var(--r-md);padding:3px}
+  .pill-tabs a{font-size:.82rem;font-weight:500;color:var(--tx-2);text-decoration:none;padding:var(--s-sm) var(--s-md);
+    border-radius:var(--r-sm);transition:all 0.2s}
+  .pill-tabs a:hover{color:var(--tx-1)}
+  .pill-tabs a.active{color:var(--tx-1);background:var(--bg-el);box-shadow:var(--sh-sm)}
+  .nav-right{margin-left:auto;display:flex;align-items:center;gap:var(--s-md)}
+  .compare-btn{font-family:var(--font-b);font-size:.78rem;font-weight:600;
+    padding:var(--s-sm) var(--s-md);border-radius:var(--r-sm);border:1px solid var(--warm);
+    background:var(--warm-s);color:var(--warm);cursor:pointer;transition:all 0.2s}
+  .compare-btn:hover{background:var(--warm);color:var(--bg-el)}
+  .theme-toggle{width:36px;height:36px;border-radius:var(--r-sm);border:1px solid var(--bdr-s);
+    background:var(--bg-base);cursor:pointer;display:grid;place-items:center;font-size:15px;
+    transition:background 0.2s,transform 0.15s var(--ease)}
+  .theme-toggle:hover{transform:scale(1.06)}
+
+  /* ─── MAIN ─── */
+  .main{display:grid;grid-template-columns:1fr;overflow:hidden;position:relative}
+  .map-area{position:relative;background:var(--bg-map);overflow:hidden;transition:background 0.4s var(--ease)}
+  .map-texture{position:absolute;inset:0;opacity:.25;
+    background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--bdr-s) 60px,var(--bdr-s) 61px),
+    repeating-linear-gradient(90deg,transparent,transparent 60px,var(--bdr-s) 60px,var(--bdr-s) 61px)}
+  .map-roads{position:absolute;inset:0}
+  .map-roads svg{width:100%;height:100%}
+  .map-roads path{fill:none;stroke:var(--bdr-d);stroke-width:2;opacity:.4}
+  .map-roads .major{stroke-width:3.5;opacity:.5}
+
+  /* Pins */
+  .pin{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;
+    transform:translate(-50%,-100%);cursor:pointer;transition:transform 0.2s var(--ease)}
+  .pin:hover{transform:translate(-50%,-100%) scale(1.06)}
+  .pin-d{width:12px;height:12px;border-radius:50%;border:2px solid var(--bg-srf);box-shadow:var(--sh-md)}
+  .pin-d.a{background:var(--acc);width:16px;height:16px}
+  .pin-d.b{background:var(--warm);width:16px;height:16px}
+  .pin-lbl{background:var(--bg-el);padding:3px 8px;border-radius:6px;font-size:.68rem;font-weight:600;
+    color:var(--tx-1);box-shadow:var(--sh-sm);white-space:nowrap}
+
+  /* Compare line */
+  .compare-line{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+  .compare-line line{stroke:var(--tx-3);stroke-width:1.5;stroke-dasharray:6 4;opacity:0.5}
+
+  /* ─── MODULE RAIL ─── */
+  .module-rail{position:absolute;left:var(--s-lg);top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;gap:var(--s-xs);z-index:5}
+  .rail-tab{width:44px;height:44px;border-radius:var(--r-sm);background:var(--bg-el);
+    border:1px solid var(--bdr-s);display:grid;place-items:center;cursor:pointer;
+    font-size:14px;box-shadow:var(--sh-sm);transition:all 0.2s}
+  .rail-tab:hover{border-color:var(--bdr-d);box-shadow:var(--sh-md)}
+  .rail-tab.active{border-color:var(--acc);background:var(--acc-s);box-shadow:0 0 0 2px var(--acc-s)}
+  .rail-tab .code{font-size:.55rem;font-weight:700;color:var(--tx-3);margin-top:1px;font-family:var(--font-b)}
+  .rail-tab.active .code{color:var(--acc)}
+
+  /* ─── MODULE SHEET (right panel) ─── */
+  .module-sheet{position:absolute;right:var(--s-lg);top:var(--s-lg);bottom:var(--s-lg);
+    width:min(640px,calc(100vw - 120px));background:var(--bg-srf);border:1px solid var(--bdr-s);
+    border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow-y:auto;
+    display:flex;flex-direction:column;z-index:5;
+    transition:background 0.4s var(--ease),border-color 0.3s}
+  .module-sheet::-webkit-scrollbar{width:5px}
+  .module-sheet::-webkit-scrollbar-thumb{background:var(--bdr-d);border-radius:3px}
+
+  .sheet-header{padding:var(--s-lg) var(--s-lg) var(--s-base);border-bottom:1px solid var(--bdr-s);
+    display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;
+    background:var(--bg-srf);z-index:2;transition:background 0.4s var(--ease)}
+  .sheet-title-area{display:flex;flex-direction:column;gap:var(--s-xs)}
+  .sheet-code{font-size:.7rem;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:0.08em}
+  .sheet-title{font-family:var(--font-d);font-size:1.3rem;font-weight:700;letter-spacing:-0.3px}
+  .sheet-sub{font-size:.78rem;color:var(--tx-2)}
+  .compare-badge{display:inline-flex;align-items:center;gap:var(--s-sm);padding:var(--s-xs) var(--s-sm);
+    border-radius:var(--r-sm);background:var(--warm-s);font-size:.7rem;font-weight:600;color:var(--warm)}
+
+  .sheet-body{padding:var(--s-lg);display:flex;flex-direction:column;gap:var(--s-xl);flex:1}
+
+  /* ─── SECTION ─── */
+  .section{display:flex;flex-direction:column;gap:var(--s-md)}
+  .section-head{display:flex;align-items:center;gap:var(--s-sm)}
+  .section-code{font-size:.65rem;font-weight:700;color:var(--acc);letter-spacing:0.08em}
+  .section-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--tx-3)}
+
+  /* ─── COMPARE READOUT ─── */
+  .compare-row{display:grid;grid-template-columns:1fr auto 1fr;gap:var(--s-md);align-items:center}
+  .readout{padding:var(--s-md) var(--s-base);background:var(--bg-el);border-radius:var(--r-md);
+    border:1px solid var(--bdr-s);display:flex;flex-direction:column;gap:var(--s-xs);transition:background 0.3s}
+  .readout.a{border-color:oklch(from var(--acc) l c h / 0.3)}
+  .readout.b{border-color:oklch(from var(--warm) l c h / 0.3)}
+  .readout-slot{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em}
+  .readout-slot.a{color:var(--acc)}
+  .readout-slot.b{color:var(--warm)}
+  .readout-val{font-family:var(--font-d);font-size:1.5rem;font-weight:700;letter-spacing:-0.5px}
+  .readout-label{font-size:.75rem;color:var(--tx-2)}
+  .delta{text-align:center;padding:var(--s-sm) var(--s-md);border-radius:var(--r-sm);
+    font-family:var(--font-d);font-size:.85rem;font-weight:700}
+  .delta.good{background:var(--good-s);color:var(--good)}
+  .delta.warn{background:var(--caution-s);color:var(--caution)}
+  .delta.risk{background:var(--risk-s);color:var(--risk)}
+  .delta.neutral{background:var(--bg-inset);color:var(--tx-2)}
+
+  /* Annual readout grid */
+  .annual-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-md)}
+  .annual-card{padding:var(--s-md);background:var(--bg-el);border-radius:var(--r-md);
+    border:1px solid var(--bdr-s);display:flex;flex-direction:column;gap:var(--s-xs)}
+  .annual-card .label{font-size:.7rem;font-weight:600;color:var(--tx-3);text-transform:uppercase;letter-spacing:0.05em}
+  .annual-card .val{font-family:var(--font-d);font-size:1.25rem;font-weight:700}
+  .annual-card .hint{font-size:.7rem;color:var(--tx-3)}
+
+  /* ─── HEATMAP ─── */
+  .heatmap{display:flex;flex-direction:column;gap:var(--s-xs)}
+  .heatmap-legend{display:flex;align-items:center;gap:var(--s-sm);font-size:.65rem;color:var(--tx-3);margin-bottom:var(--s-xs)}
+  .heatmap-legend .grad{height:8px;width:120px;border-radius:4px;
+    background:linear-gradient(90deg,var(--heat-cold),var(--heat-cool),var(--heat-mid),var(--heat-warm),var(--heat-hot))}
+  .heatmap-row{display:flex;align-items:center;gap:2px}
+  .heatmap-month{width:32px;font-size:.6rem;font-weight:600;color:var(--tx-3);text-align:right;padding-right:4px;flex-shrink:0}
+  .heatmap-cells{display:flex;gap:1px;flex:1}
+  .hm-cell{flex:1;height:18px;border-radius:2px;transition:transform 0.15s;cursor:default;position:relative}
+  .hm-cell:hover{transform:scaleY(1.3);z-index:1}
+  .hour-labels{display:flex;gap:1px;margin-left:34px}
+  .hour-labels span{flex:1;font-size:.55rem;color:var(--tx-3);text-align:center}
+
+  /* ─── BAR CHART ─── */
+  .bar-chart{display:flex;align-items:flex-end;gap:3px;height:120px;padding-top:var(--s-sm)}
+  .bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%}
+  .bar-pair{flex:1;display:flex;align-items:flex-end;gap:2px;width:100%}
+  .bar{border-radius:3px 3px 0 0;min-height:2px;transition:height 0.5s var(--ease);width:100%}
+  .bar.a{background:var(--acc)}
+  .bar.b{background:var(--warm)}
+  .bar-label{font-size:.6rem;color:var(--tx-3);font-weight:500}
+
+  /* ─── EXTREMES ─── */
+  .extremes-row{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s-sm)}
+  .extreme-card{padding:var(--s-md);background:var(--bg-el);border-radius:var(--r-md);
+    border:1px solid var(--bdr-s);text-align:center;display:flex;flex-direction:column;gap:var(--s-xs)}
+  .extreme-card .val{font-family:var(--font-d);font-size:1.1rem;font-weight:700}
+  .extreme-card .label{font-size:.65rem;color:var(--tx-3)}
+  .extreme-card.hot .val{color:var(--risk)}
+  .extreme-card.cold .val{color:var(--heat-cold)}
+
+  /* ─── FOOTER ─── */
+  .sheet-footer{padding:var(--s-md) var(--s-lg);border-top:1px solid var(--bdr-s);
+    font-size:.7rem;color:var(--tx-3);display:flex;justify-content:space-between;
+    background:var(--bg-srf);position:sticky;bottom:0;transition:background 0.4s var(--ease)}
+
+  /* ─── BOTTOM STRIP ─── */
+  .bottom-strip{position:absolute;bottom:0;left:0;right:0;height:28px;
+    background:var(--bg-srf);border-top:1px solid var(--bdr-s);display:flex;
+    align-items:center;padding:0 var(--s-lg);gap:var(--s-xl);z-index:8;
+    font-size:.68rem;color:var(--tx-3);transition:background 0.4s var(--ease)}
+  .strip-item{display:flex;align-items:center;gap:var(--s-sm)}
+  .strip-dot{width:6px;height:6px;border-radius:50%}
+  .strip-dot.a{background:var(--acc)}
+  .strip-dot.b{background:var(--warm)}
+  .strip-sep{color:var(--bdr-d)}
+
+  /* Badge */
+  .badge{position:fixed;top:var(--s-base);left:50%;transform:translateX(-50%);z-index:100;
+    background:var(--acc);color:oklch(0.99 0 0);font-family:var(--font-d);font-size:.72rem;
+    font-weight:700;padding:var(--s-sm) var(--s-md);border-radius:var(--r-sm);letter-spacing:0.03em}
+
+  /* Animations */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .section{animation:fadeUp 0.45s var(--ease) both}
+  .section:nth-child(1){animation-delay:.1s}
+  .section:nth-child(2){animation-delay:.18s}
+  .section:nth-child(3){animation-delay:.26s}
+  .section:nth-child(4){animation-delay:.34s}
+  .section:nth-child(5){animation-delay:.42s}
+</style>
+</head>
+<body>
+<div class="badge">B2 — Climate Module + Compare Mode</div>
+<div class="app">
+  <nav class="nav">
+    <div class="logo">blind<span class="s">spot</span></div>
+    <div class="search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" value="Kifissia, Athens">
+    </div>
+    <ul class="pill-tabs">
+      <li><a href="#" class="active">Explore</a></li>
+      <li><a href="#">Compare</a></li>
+      <li><a href="#">Saved</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="compare-btn">COMPARING A ↔ B</button>
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme"></button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="map-area">
+      <div class="map-texture"></div>
+      <div class="map-roads">
+        <svg viewBox="0 0 800 600" preserveAspectRatio="none">
+          <path class="major" d="M0,280 Q200,260 400,300 Q600,340 800,290"/>
+          <path class="major" d="M350,0 Q360,200 380,400 Q390,500 400,600"/>
+          <path d="M0,150 Q250,140 500,170 Q700,190 800,160"/>
+          <path d="M0,420 Q200,440 500,410 Q650,400 800,430"/>
+          <path d="M150,0 Q160,150 180,300 Q190,450 200,600"/>
+          <path d="M600,0 Q590,200 610,400 Q620,500 630,600"/>
+        </svg>
+      </div>
+
+      <!-- Compare line -->
+      <svg class="compare-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <line x1="30" y1="45" x2="55" y2="62"/>
+      </svg>
+
+      <!-- Pins -->
+      <div class="pin" style="left:30%;top:45%"><div class="pin-lbl">Kifissia</div><div class="pin-d a"></div></div>
+      <div class="pin" style="left:55%;top:62%"><div class="pin-lbl">Glyfada</div><div class="pin-d b"></div></div>
+
+      <!-- Module Rail -->
+      <div class="module-rail">
+        <div class="rail-tab active"><span>🌡️</span><span class="code">§03</span></div>
+        <div class="rail-tab"><span>💨</span><span class="code">§04</span></div>
+        <div class="rail-tab"><span>☀️</span><span class="code">§05</span></div>
+        <div class="rail-tab"><span>⚠️</span><span class="code">§06</span></div>
+        <div class="rail-tab"><span>🌿</span><span class="code">§07</span></div>
+        <div class="rail-tab"><span>📍</span><span class="code">§08</span></div>
+      </div>
+
+      <!-- Module Sheet -->
+      <div class="module-sheet">
+        <div class="sheet-header">
+          <div class="sheet-title-area">
+            <span class="sheet-code">§03 · Climate</span>
+            <h2 class="sheet-title">Thermal, Precipitation & UV</h2>
+            <span class="sheet-sub">Annual climate profile with monthly breakdown</span>
+          </div>
+          <div class="compare-badge">⬤ A ↔ B</div>
+        </div>
+
+        <div class="sheet-body">
+          <!-- §01 Annual Readout Compare -->
+          <div class="section">
+            <div class="section-head">
+              <span class="section-code">§01</span>
+              <span class="section-label">Annual Readout</span>
+            </div>
+            <div class="compare-row">
+              <div class="readout a">
+                <span class="readout-slot a">Target A · Kifissia</span>
+                <span class="readout-val">17.8°C</span>
+                <span class="readout-label">Mean temperature</span>
+              </div>
+              <div class="delta good">−1.2°</div>
+              <div class="readout b">
+                <span class="readout-slot b">Target B · Glyfada</span>
+                <span class="readout-val">19.0°C</span>
+                <span class="readout-label">Mean temperature</span>
+              </div>
+            </div>
+            <div class="annual-grid">
+              <div class="annual-card">
+                <span class="label">Total Precip</span>
+                <span class="val">412 mm</span>
+                <span class="hint">A: 412 · B: 385 · Δ +27</span>
+              </div>
+              <div class="annual-card">
+                <span class="label">Sun Hours</span>
+                <span class="val">2,840 h</span>
+                <span class="hint">A: 2840 · B: 2920 · Δ −80</span>
+              </div>
+              <div class="annual-card">
+                <span class="label">Peak UV Index</span>
+                <span class="val">9.2</span>
+                <span class="hint">A: 9.2 · B: 9.5 · Δ −0.3</span>
+              </div>
+              <div class="annual-card">
+                <span class="label">Frost Days</span>
+                <span class="val">8</span>
+                <span class="hint">A: 8 · B: 2 · Δ +6</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- §02 Thermal Heatmap -->
+          <div class="section">
+            <div class="section-head">
+              <span class="section-code">§02</span>
+              <span class="section-label">Thermal Matrix · Target A</span>
+            </div>
+            <div class="heatmap-legend">
+              <span>5°C</span><div class="grad"></div><span>38°C</span>
+              <span style="margin-left:auto">Month × Hour</span>
+            </div>
+            <div class="heatmap" id="heatmap"></div>
+          </div>
+
+          <!-- §03 Precipitation Compare -->
+          <div class="section">
+            <div class="section-head">
+              <span class="section-code">§03</span>
+              <span class="section-label">Precipitation · A vs B</span>
+            </div>
+            <div class="bar-chart" id="precipChart"></div>
+            <div style="display:flex;gap:var(--s-lg);margin-top:var(--s-sm);">
+              <span style="display:flex;align-items:center;gap:var(--s-sm);font-size:.7rem;color:var(--tx-3)">
+                <span style="width:10px;height:10px;border-radius:2px;background:var(--acc)"></span> Kifissia
+              </span>
+              <span style="display:flex;align-items:center;gap:var(--s-sm);font-size:.7rem;color:var(--tx-3)">
+                <span style="width:10px;height:10px;border-radius:2px;background:var(--warm)"></span> Glyfada
+              </span>
+            </div>
+          </div>
+
+          <!-- §04 Humidity -->
+          <div class="section">
+            <div class="section-head">
+              <span class="section-code">§04</span>
+              <span class="section-label">Relative Humidity</span>
+            </div>
+            <div style="display:flex;gap:var(--s-md);">
+              <div class="readout a" style="flex:1">
+                <span class="readout-slot a">Kifissia</span>
+                <span class="readout-val">58%</span>
+                <span class="readout-label">Annual mean RH</span>
+              </div>
+              <div class="readout b" style="flex:1">
+                <span class="readout-slot b">Glyfada</span>
+                <span class="readout-val">64%</span>
+                <span class="readout-label">Annual mean RH</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- §05 Temp Extremes -->
+          <div class="section">
+            <div class="section-head">
+              <span class="section-code">§05</span>
+              <span class="section-label">Temperature Extremes · Kifissia</span>
+            </div>
+            <div class="extremes-row">
+              <div class="extreme-card hot"><span class="val">82</span><span class="label">Days >25°C</span></div>
+              <div class="extreme-card hot"><span class="val">34</span><span class="label">Days >30°C</span></div>
+              <div class="extreme-card cold"><span class="val">8</span><span class="label">Days <0°C</span></div>
+              <div class="extreme-card cold"><span class="val">0</span><span class="label">Days <-5°C</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-footer">
+          <span>Data: Open-Meteo · Grid: 0.1° ≈ 11km</span>
+          <span>ESC to close · §03 CLIMATE</span>
+        </div>
+      </div>
+
+      <!-- Bottom Strip -->
+      <div class="bottom-strip">
+        <span style="font-weight:600">BLINDSPOT/0.1.0</span>
+        <span class="strip-sep">|</span>
+        <div class="strip-item"><span class="strip-dot a"></span> 38.0742°N 23.8103°E · Kifissia</div>
+        <span class="strip-sep">|</span>
+        <div class="strip-item"><span class="strip-dot b"></span> 37.8625°N 23.7525°E · Glyfada</div>
+        <span class="strip-sep">|</span>
+        <span>Δ 23.8 km · 194° SSW</span>
+        <span style="margin-left:auto">17:42:08 EEST</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  const n=h.dataset.theme==='light'?'dark':'light';
+  h.dataset.theme=n;
+  document.getElementById('themeBtn').textContent=n==='dark'?'🌙':'☀️';
+  buildHeatmap();
+}
+document.getElementById('themeBtn').textContent='☀️';
+
+// Generate heatmap
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const temps=[[7,6,6,6,7,8,10,12,14,15,16,15,14,14,15,15,14,13,12,11,10,9,8,7],
+[8,7,7,7,8,9,11,13,15,17,18,17,16,16,17,16,15,14,13,12,11,10,9,8],
+[10,9,9,9,10,12,14,16,18,20,21,20,19,19,20,19,18,17,16,14,13,12,11,10],
+[13,12,12,12,13,15,17,20,22,24,25,24,23,23,24,23,22,20,19,17,16,15,14,13],
+[18,17,17,17,18,20,23,26,28,30,31,30,29,29,30,29,28,26,24,22,21,20,19,18],
+[23,22,22,22,23,26,28,31,33,35,36,35,34,34,35,34,33,31,29,27,26,25,24,23],
+[26,25,25,25,26,28,31,34,36,38,38,37,36,36,37,36,35,33,31,29,28,27,26,26],
+[25,24,24,24,25,28,30,33,35,37,38,37,36,36,37,36,34,32,30,28,27,26,25,25],
+[22,21,21,21,22,24,27,29,31,33,34,33,32,32,33,32,31,29,27,25,24,23,22,22],
+[17,16,16,16,17,19,21,24,26,28,29,28,27,27,28,27,26,24,22,20,19,18,17,17],
+[13,12,12,12,13,14,16,18,20,22,23,22,21,21,22,21,20,19,17,16,15,14,13,13],
+[9,8,8,8,9,10,12,14,16,18,18,17,16,16,17,17,16,15,13,12,11,10,9,9]];
+
+function tempColor(t){
+  const min=5,max=38,r=(t-min)/(max-min);
+  if(r<0.25) return `oklch(${0.65-r*0.4} ${0.08+r*0.08} 240)`;
+  if(r<0.5) return `oklch(${0.45+(r-0.25)*0.6} ${0.05} 260)`;
+  if(r<0.75) return `oklch(${0.4+(r-0.5)*0.8} ${0.1+(r-0.5)*0.16} 60)`;
+  return `oklch(${0.55-(r-0.75)*0.2} ${0.14+(r-0.75)*0.16} 30)`;
+}
+
+function buildHeatmap(){
+  const c=document.getElementById('heatmap');
+  c.innerHTML='';
+  // Hour labels
+  const hl=document.createElement('div');hl.className='hour-labels';
+  for(let h=0;h<24;h++){const s=document.createElement('span');s.textContent=h%3===0?h+'h':'';hl.appendChild(s)}
+  c.appendChild(hl);
+  // Rows
+  months.forEach((m,mi)=>{
+    const row=document.createElement('div');row.className='heatmap-row';
+    const ml=document.createElement('span');ml.className='heatmap-month';ml.textContent=m;
+    row.appendChild(ml);
+    const cells=document.createElement('div');cells.className='heatmap-cells';
+    temps[mi].forEach(t=>{
+      const cell=document.createElement('div');cell.className='hm-cell';
+      cell.style.background=tempColor(t);cell.title=`${m} · ${t}°C`;
+      cells.appendChild(cell);
+    });
+    row.appendChild(cells);
+    c.appendChild(row);
+  });
+}
+buildHeatmap();
+
+// Generate precip chart
+const precipA=[48,42,38,28,18,8,5,6,14,32,52,58];
+const precipB=[44,38,35,24,15,6,3,5,12,28,48,54];
+const pc=document.getElementById('precipChart');
+const maxP=Math.max(...precipA,...precipB);
+months.forEach((m,i)=>{
+  const g=document.createElement('div');g.className='bar-group';
+  const pair=document.createElement('div');pair.className='bar-pair';
+  const bA=document.createElement('div');bA.className='bar a';bA.style.height=(precipA[i]/maxP*100)+'%';
+  const bB=document.createElement('div');bB.className='bar b';bB.style.height=(precipB[i]/maxP*100)+'%';
+  pair.appendChild(bA);pair.appendChild(bB);
+  const lbl=document.createElement('span');lbl.className='bar-label';lbl.textContent=m.substring(0,1);
+  g.appendChild(pair);g.appendChild(lbl);
+  pc.appendChild(g);
+});
+</script>
+</body>
+</html>

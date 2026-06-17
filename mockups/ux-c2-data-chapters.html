@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlindSpot — C2: Data Chapters (Climate, Wind, Sun, Air)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --s-xs:4px;--s-sm:8px;--s-md:12px;--s-base:16px;--s-lg:24px;--s-xl:32px;--s-2xl:48px;--s-3xl:64px;
+    --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:24px;--r-full:9999px;
+    --font-d:'Gabarito',system-ui,sans-serif;
+    --font-b:'Karla',system-ui,sans-serif;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  [data-theme="light"]{
+    --bg:oklch(0.975 0.006 280);--srf:oklch(0.995 0.003 280);--el:oklch(1 0.001 280);
+    --map-bg:oklch(0.95 0.01 260);--inset:oklch(0.965 0.005 280);
+    --bdr:oklch(0.91 0.006 280);--bdr-d:oklch(0.85 0.008 280);
+    --tx:oklch(0.2 0.02 280);--tx2:oklch(0.46 0.015 280);--tx3:oklch(0.6 0.01 280);
+    --acc:oklch(0.48 0.14 280);--acc-s:oklch(0.93 0.03 280);--acc-m:oklch(0.68 0.08 280);
+    --warm:oklch(0.6 0.15 45);--warm-s:oklch(0.94 0.035 45);
+    --good:oklch(0.5 0.12 160);--good-s:oklch(0.94 0.03 160);
+    --risk:oklch(0.55 0.16 25);--risk-s:oklch(0.94 0.04 25);
+    --caution:oklch(0.6 0.14 80);--caution-s:oklch(0.95 0.03 80);
+    --sh:0 2px 12px oklch(0.3 0.02 280/0.06);--sh-md:0 4px 20px oklch(0.3 0.02 280/0.08);
+    --heat-cold:oklch(0.6 0.08 250);--heat-cool:oklch(0.5 0.06 240);
+    --heat-mid:oklch(0.45 0.04 280);--heat-warm:oklch(0.58 0.14 65);--heat-hot:oklch(0.52 0.18 30);
+  }
+  [data-theme="dark"]{
+    --bg:oklch(0.15 0.015 280);--srf:oklch(0.19 0.015 280);--el:oklch(0.23 0.018 280);
+    --map-bg:oklch(0.13 0.012 260);--inset:oklch(0.17 0.012 280);
+    --bdr:oklch(0.27 0.015 280);--bdr-d:oklch(0.33 0.018 280);
+    --tx:oklch(0.93 0.006 280);--tx2:oklch(0.66 0.01 280);--tx3:oklch(0.48 0.008 280);
+    --acc:oklch(0.7 0.12 280);--acc-s:oklch(0.24 0.04 280);--acc-m:oklch(0.5 0.06 280);
+    --warm:oklch(0.7 0.13 45);--warm-s:oklch(0.25 0.04 45);
+    --good:oklch(0.6 0.1 160);--good-s:oklch(0.24 0.03 160);
+    --risk:oklch(0.65 0.14 25);--risk-s:oklch(0.24 0.04 25);
+    --caution:oklch(0.72 0.11 80);--caution-s:oklch(0.25 0.03 80);
+    --sh:0 2px 12px oklch(0.05 0 0/0.3);--sh-md:0 4px 20px oklch(0.05 0 0/0.4);
+    --heat-cold:oklch(0.5 0.06 250);--heat-cool:oklch(0.4 0.05 240);
+    --heat-mid:oklch(0.3 0.03 280);--heat-warm:oklch(0.48 0.12 65);--heat-hot:oklch(0.42 0.16 30);
+  }
+
+  html,body{height:100%;font-family:var(--font-b);background:var(--bg);color:var(--tx);
+    transition:background 0.4s var(--ease),color 0.3s var(--ease);-webkit-font-smoothing:antialiased}
+  .app{height:100vh;display:grid;grid-template-columns:1fr 500px;grid-template-rows:auto 1fr;overflow:hidden}
+
+  /* ─ TOPBAR ─ */
+  .topbar{grid-column:1/-1;display:flex;align-items:center;padding:var(--s-md) var(--s-lg);gap:var(--s-md);
+    background:var(--srf);border-bottom:1px solid var(--bdr);z-index:20;transition:background 0.4s var(--ease)}
+  .logo{font-family:var(--font-d);font-size:1.3rem;font-weight:700;letter-spacing:-0.3px}
+  .logo .s{color:var(--acc)}
+  .search{flex:1;max-width:400px;display:flex;align-items:center;gap:var(--s-sm);
+    background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r-full);padding:10px 20px}
+  .search svg{color:var(--tx3);flex-shrink:0}
+  .search input{border:none;background:none;outline:none;width:100%;font-family:var(--font-b);
+    font-size:.9rem;color:var(--tx)}
+  .search input::placeholder{color:var(--tx3)}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:var(--s-sm)}
+  .ibtn{width:36px;height:36px;border-radius:var(--r-sm);border:1px solid var(--bdr);
+    background:var(--bg);cursor:pointer;display:grid;place-items:center;font-size:15px;transition:all .15s}
+  .cbtn{font-family:var(--font-b);font-size:.8rem;font-weight:600;padding:var(--s-sm) var(--s-base);
+    border-radius:var(--r-full);border:1px solid var(--warm);background:var(--warm-s);color:var(--warm);cursor:pointer}
+
+  /* ─ MAP ─ */
+  .map{position:relative;background:var(--map-bg);overflow:hidden;transition:background 0.4s var(--ease)}
+  .map-grid{position:absolute;inset:0;opacity:.18;
+    background:repeating-linear-gradient(0deg,transparent,transparent 60px,var(--bdr) 60px,var(--bdr) 61px),
+    repeating-linear-gradient(90deg,transparent,transparent 60px,var(--bdr) 60px,var(--bdr) 61px)}
+  .pin{position:absolute;left:50%;top:45%;transform:translate(-50%,-100%);display:flex;
+    flex-direction:column;align-items:center;gap:4px;z-index:2}
+  .pin-dot{width:18px;height:18px;border-radius:50%;background:var(--acc);
+    border:3px solid var(--srf);box-shadow:0 2px 12px oklch(0.48 0.14 280/0.3)}
+  .pin-label{background:var(--el);padding:4px 12px;border-radius:var(--r-full);
+    font-size:.78rem;font-weight:600;box-shadow:var(--sh)}
+  .map-ch{position:absolute;top:var(--s-lg);left:var(--s-lg);z-index:3;
+    background:var(--el);border:1px solid var(--bdr);border-radius:var(--r-md);
+    padding:var(--s-sm) var(--s-md);font-size:.72rem;font-weight:600;color:var(--tx2);
+    box-shadow:var(--sh);display:flex;align-items:center;gap:var(--s-sm)}
+  .map-ch .lbl{color:var(--acc)}
+
+  /* ─ STORY PANEL ─ */
+  .story{overflow-y:auto;background:var(--srf);border-left:1px solid var(--bdr);
+    transition:background 0.4s var(--ease);scroll-behavior:smooth}
+  .story::-webkit-scrollbar{width:4px}
+  .story::-webkit-scrollbar-thumb{background:var(--bdr-d);border-radius:2px}
+
+  .story-hero{padding:var(--s-2xl) var(--s-xl) var(--s-xl);border-bottom:1px solid var(--bdr)}
+  .hero-ey{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--acc)}
+  .hero-t{font-family:var(--font-d);font-size:2rem;font-weight:700;letter-spacing:-0.5px;line-height:1.1;margin-top:var(--s-sm)}
+  .hero-r{font-size:.9rem;color:var(--tx2);margin-top:var(--s-xs)}
+  .hero-score{display:flex;align-items:center;gap:var(--s-md);margin-top:var(--s-base)}
+  .sc-n{font-family:var(--font-d);font-size:2.5rem;font-weight:700;color:var(--acc);line-height:1}
+  .sc-d{display:flex;flex-direction:column;gap:2px}
+  .sc-l{font-size:.85rem;font-weight:600}
+  .sc-s{font-size:.75rem;color:var(--tx2)}
+
+  /* Sticky nav */
+  .ch-nav{position:sticky;top:0;z-index:5;background:var(--srf);border-bottom:1px solid var(--bdr);
+    padding:var(--s-sm) var(--s-xl);display:flex;gap:var(--s-sm);overflow-x:auto;scrollbar-width:none;
+    transition:background 0.4s var(--ease)}
+  .ch-nav::-webkit-scrollbar{display:none}
+  .ch-nav a{font-size:.72rem;font-weight:600;color:var(--tx3);text-decoration:none;
+    padding:var(--s-xs) var(--s-sm);border-radius:var(--r-full);white-space:nowrap;transition:all 0.2s;flex-shrink:0}
+  .ch-nav a:hover{color:var(--tx2);background:var(--bg)}
+  .ch-nav a.active{color:var(--acc);background:var(--acc-s)}
+
+  /* ─ CHAPTER ─ */
+  .ch{padding:var(--s-xl);border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:var(--s-lg)}
+  .ch:last-child{border-bottom:none;padding-bottom:var(--s-3xl)}
+  .ch-hd{display:flex;flex-direction:column;gap:var(--s-xs)}
+  .ch-n{font-size:.68rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:0.1em}
+  .ch-q{font-family:var(--font-d);font-size:1.2rem;font-weight:700;letter-spacing:-0.3px}
+  .ch-a{font-size:.86rem;color:var(--tx2);line-height:1.55;max-width:58ch}
+
+  /* Metric cards */
+  .mrow{display:flex;gap:var(--s-md);flex-wrap:wrap}
+  .mc{padding:var(--s-md);background:var(--el);border-radius:var(--r-md);border:1px solid var(--bdr);
+    display:flex;flex-direction:column;gap:var(--s-xs);flex:1;min-width:130px;transition:border-color .2s}
+  .mc:hover{border-color:var(--bdr-d)}
+  .mc .v{font-family:var(--font-d);font-size:1.25rem;font-weight:700;letter-spacing:-0.3px}
+  .mc .n{font-size:.75rem;color:var(--tx2)}
+  .mc .h{font-size:.68rem;color:var(--tx3);line-height:1.35}
+  .chip{display:inline-flex;align-items:center;gap:var(--s-xs);padding:3px var(--s-sm);
+    border-radius:var(--r-full);font-size:.68rem;font-weight:600;width:fit-content}
+  .chip.good{background:var(--good-s);color:var(--good)}
+  .chip.warn{background:var(--caution-s);color:var(--caution)}
+  .chip.risk{background:var(--risk-s);color:var(--risk)}
+  .chip .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+  .callout{padding:var(--s-md);border-radius:var(--r-md);font-size:.82rem;color:var(--tx2);
+    line-height:1.5;display:flex;gap:var(--s-sm)}
+  .callout.warn{background:var(--caution-s)}
+  .callout.info{background:var(--acc-s)}
+  .callout .ic{font-size:1rem;flex-shrink:0}
+
+  /* Section label within chapter */
+  .sec-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--tx3);margin-top:var(--s-sm)}
+
+  /* ─ HEATMAP ─ */
+  .heatmap{display:flex;flex-direction:column;gap:1px}
+  .hm-legend{display:flex;align-items:center;gap:var(--s-sm);font-size:.62rem;color:var(--tx3);margin-bottom:var(--s-xs)}
+  .hm-legend .grad{height:6px;width:100px;border-radius:3px;
+    background:linear-gradient(90deg,var(--heat-cold),var(--heat-cool),var(--heat-mid),var(--heat-warm),var(--heat-hot))}
+  .hm-row{display:flex;align-items:center;gap:1px}
+  .hm-mo{width:28px;font-size:.58rem;font-weight:600;color:var(--tx3);text-align:right;padding-right:3px;flex-shrink:0}
+  .hm-cells{display:flex;gap:1px;flex:1}
+  .hm-c{flex:1;height:16px;border-radius:2px;cursor:default;transition:transform .1s}
+  .hm-c:hover{transform:scaleY(1.4);z-index:1}
+  .hr-labels{display:flex;gap:1px;margin-left:30px}
+  .hr-labels span{flex:1;font-size:.5rem;color:var(--tx3);text-align:center}
+
+  /* ─ BAR CHART ─ */
+  .bars{display:flex;align-items:flex-end;gap:3px;height:100px}
+  .bar-g{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%}
+  .bar-col{flex:1;display:flex;align-items:flex-end;width:100%}
+  .bar{border-radius:3px 3px 0 0;min-height:2px;width:100%;transition:height .5s var(--ease)}
+  .bar.acc{background:var(--acc)}
+  .bar.warm{background:var(--warm)}
+  .bar-l{font-size:.55rem;color:var(--tx3);font-weight:500}
+
+  /* ─ WIND ROSE ─ */
+  .wind-rose{width:220px;height:220px;margin:0 auto}
+  .wind-rose svg{width:100%;height:100%}
+
+  /* ─ SUN PATH ─ */
+  .sun-path{width:100%;height:160px;position:relative;background:var(--inset);border-radius:var(--r-md);overflow:hidden}
+  .sun-path svg{width:100%;height:100%}
+
+  /* ─ BUILDING ─ */
+  .bld-section{display:grid;grid-template-columns:180px 1fr;gap:var(--s-lg);align-items:start}
+  .compass{width:160px;height:160px;margin:0 auto}
+  .compass svg{width:100%;height:100%}
+  .facade-tbl{width:100%;border-collapse:collapse;font-size:.78rem}
+  .facade-tbl th{text-align:left;font-weight:600;color:var(--tx3);text-transform:uppercase;
+    letter-spacing:.05em;padding:var(--s-xs) var(--s-sm);font-size:.62rem;border-bottom:1px solid var(--bdr-d)}
+  .facade-tbl td{padding:var(--s-sm);border-bottom:1px solid var(--bdr)}
+  .facade-tbl .hrs{font-family:var(--font-d);font-weight:600}
+  .bld-stats{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-sm);margin-top:var(--s-sm)}
+  .bld-s{text-align:center;padding:var(--s-sm);background:var(--el);border-radius:var(--r-sm);border:1px solid var(--bdr)}
+  .bld-s .v{font-family:var(--font-d);font-size:.9rem;font-weight:700}
+  .bld-s .l{font-size:.58rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em}
+
+  /* ─ POLLUTANT GRID ─ */
+  .poll-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-md)}
+  .poll{padding:var(--s-md);background:var(--el);border-radius:var(--r-md);border:1px solid var(--bdr);
+    display:flex;flex-direction:column;gap:var(--s-xs)}
+  .poll .name{font-size:.72rem;font-weight:600;color:var(--tx2)}
+  .poll .val{font-family:var(--font-d);font-size:1.1rem;font-weight:700}
+  .poll .limit{font-size:.62rem;color:var(--tx3)}
+  .poll .bar-bg{height:4px;border-radius:2px;background:var(--inset);overflow:hidden}
+  .poll .bar-fill{height:100%;border-radius:2px}
+
+  .badge{position:fixed;top:var(--s-base);left:50%;transform:translateX(-50%);z-index:100;
+    background:var(--acc);color:oklch(0.99 0 0);font-family:var(--font-d);font-size:.72rem;
+    font-weight:700;padding:var(--s-sm) var(--s-md);border-radius:var(--r-sm)}
+
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .ch{animation:fadeIn 0.3s var(--ease)}
+</style>
+</head>
+<body>
+<div class="badge">C2 — Data Chapters: Climate + Wind + Sun + Air (Indigo accent)</div>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">blind<span class="s">spot</span></div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" value="Kifissia, Athens">
+    </div>
+    <div class="topbar-right">
+      <button class="cbtn">+ Compare</button>
+      <button class="ibtn">♡</button>
+      <button class="ibtn" onclick="toggleTheme()" id="themeBtn">☀️</button>
+    </div>
+  </div>
+
+  <div class="map">
+    <div class="map-grid"></div>
+    <div class="pin"><div class="pin-label">Kifissia</div><div class="pin-dot"></div></div>
+    <div class="map-ch"><span>🌡️</span> Showing: <span class="lbl">Climate</span></div>
+  </div>
+
+  <div class="story" id="story">
+    <div class="story-hero">
+      <span class="hero-ey">Location Report</span>
+      <h1 class="hero-t">Kifissia</h1>
+      <span class="hero-r">Northern Athens, Attica, Greece</span>
+      <div class="hero-score">
+        <span class="sc-n">8.4</span>
+        <div class="sc-d"><span class="sc-l">Excellent for families</span><span class="sc-s">Top 12% of Athens neighborhoods</span></div>
+      </div>
+    </div>
+
+    <nav class="ch-nav">
+      <a href="#climate" class="active">🌡️ Climate</a>
+      <a href="#wind">💨 Wind</a>
+      <a href="#sun">☀️ Sunlight</a>
+      <a href="#air">🌿 Air quality</a>
+      <a href="#safety">🛡️ Safety</a>
+      <a href="#transit">🚇 Transit</a>
+      <a href="#hazards">⚠️ Hazards</a>
+      <a href="#nearby">📍 Nearby</a>
+    </nav>
+
+    <!-- ═══ CLIMATE ═══ -->
+    <div class="ch" id="climate">
+      <div class="ch-hd">
+        <span class="ch-n">Chapter 1</span>
+        <h2 class="ch-q">What's the weather really like?</h2>
+        <p class="ch-a">Mediterranean climate — mild winters, hot dry summers. Kifissia runs cooler than central Athens thanks to its elevation and 34% tree canopy.</p>
+      </div>
+
+      <div class="mrow">
+        <div class="mc"><span class="v">17.8°C</span><span class="n">Annual mean</span><span class="h">Mild year-round</span></div>
+        <div class="mc"><span class="v">2,840 h</span><span class="n">Sun hours/year</span><span class="h">Abundant sunshine</span></div>
+        <div class="mc"><span class="v">412 mm</span><span class="n">Annual rain</span><span class="h">Mostly Oct–Feb</span></div>
+        <div class="mc"><span class="v">9.2</span><span class="n">Peak UV</span><span class="chip warn"><span class="dot"></span> High in summer</span></div>
+      </div>
+
+      <!-- Thermal heatmap -->
+      <div>
+        <span class="sec-label">Temperature by month &amp; hour</span>
+        <div class="hm-legend" style="margin-top:var(--s-sm)"><span>5°C</span><div class="grad"></div><span>38°C</span><span style="margin-left:auto">Hover for detail</span></div>
+        <div class="heatmap" id="heatmap"></div>
+      </div>
+
+      <!-- Precipitation -->
+      <div>
+        <span class="sec-label">Monthly precipitation (mm)</span>
+        <div class="bars" id="precipChart" style="margin-top:var(--s-sm)"></div>
+      </div>
+
+      <!-- Extremes -->
+      <div>
+        <span class="sec-label">Temperature extremes</span>
+        <div class="mrow" style="margin-top:var(--s-sm)">
+          <div class="mc"><span class="v" style="color:var(--risk)">82</span><span class="n">Days above 25°C</span></div>
+          <div class="mc"><span class="v" style="color:var(--risk)">34</span><span class="n">Days above 30°C</span></div>
+          <div class="mc"><span class="v" style="color:var(--heat-cold)">8</span><span class="n">Days below 0°C</span></div>
+          <div class="mc"><span class="v" style="color:var(--heat-cold)">0</span><span class="n">Days below −5°C</span></div>
+        </div>
+      </div>
+
+      <div class="callout warn"><span class="ic">🌡️</span><span>34 days above 30°C in summer. Plan for air conditioning. Peak UV reaches 9.2 — sun protection essential for children outdoors.</span></div>
+    </div>
+
+    <!-- ═══ WIND ═══ -->
+    <div class="ch" id="wind">
+      <div class="ch-hd">
+        <span class="ch-n">Chapter 2</span>
+        <h2 class="ch-q">How windy does it get?</h2>
+        <p class="ch-a">Moderate winds from the north (Etesian winds) in summer. Generally calm conditions — not a high-wind area. Winter can bring occasional gusts.</p>
+      </div>
+
+      <!-- Wind Rose -->
+      <div>
+        <span class="sec-label">Wind rose — annual average</span>
+        <div class="wind-rose" style="margin-top:var(--s-sm)">
+          <svg viewBox="0 0 220 220">
+            <!-- Grid -->
+            <circle cx="110" cy="110" r="90" fill="none" stroke="var(--bdr)" stroke-width="0.5"/>
+            <circle cx="110" cy="110" r="65" fill="none" stroke="var(--bdr)" stroke-width="0.5"/>
+            <circle cx="110" cy="110" r="40" fill="none" stroke="var(--bdr)" stroke-width="0.5"/>
+            <line x1="110" y1="20" x2="110" y2="200" stroke="var(--bdr)" stroke-width="0.5"/>
+            <line x1="20" y1="110" x2="200" y2="110" stroke="var(--bdr)" stroke-width="0.5"/>
+            <line x1="46" y1="46" x2="174" y2="174" stroke="var(--bdr)" stroke-width="0.3"/>
+            <line x1="174" y1="46" x2="46" y2="174" stroke="var(--bdr)" stroke-width="0.3"/>
+            <!-- Directional labels -->
+            <text x="110" y="14" text-anchor="middle" fill="var(--tx3)" font-size="10" font-weight="600">N</text>
+            <text x="110" y="210" text-anchor="middle" fill="var(--tx3)" font-size="10" font-weight="600">S</text>
+            <text x="206" y="114" text-anchor="middle" fill="var(--tx3)" font-size="10" font-weight="600">E</text>
+            <text x="14" y="114" text-anchor="middle" fill="var(--tx3)" font-size="10" font-weight="600">W</text>
+            <!-- Wind bars (N dominant) -->
+            <polygon points="105,110 110,30 115,110" fill="var(--acc)" opacity="0.7"/>
+            <polygon points="105,110 110,45 115,110" fill="var(--acc)" opacity="0.5"/>
+            <polygon points="110,105 180,110 110,115" fill="var(--acc-m)" opacity="0.3"/>
+            <polygon points="105,110 110,60 115,110" fill="var(--warm)" opacity="0.4"/>
+            <!-- NE -->
+            <polygon points="110,108 155,55 112,110" fill="var(--acc-m)" opacity="0.35"/>
+            <!-- NW -->
+            <polygon points="108,110 65,55 110,108" fill="var(--acc-m)" opacity="0.25"/>
+            <!-- S (weak) -->
+            <polygon points="105,110 110,155 115,110" fill="var(--acc-m)" opacity="0.15"/>
+            <circle cx="110" cy="110" r="4" fill="var(--acc)"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="mrow">
+        <div class="mc"><span class="v">N (350°)</span><span class="n">Prevailing direction</span><span class="h">Etesian winds in summer</span></div>
+        <div class="mc"><span class="v">18%</span><span class="n">Calm hours</span><span class="h">Wind below 2 m/s</span></div>
+        <div class="mc"><span class="v">4.2 m/s</span><span class="n">Annual mean</span><span class="chip good"><span class="dot"></span> Moderate</span></div>
+      </div>
+
+      <!-- Seasonal -->
+      <div>
+        <span class="sec-label">Seasonal wind profile</span>
+        <div class="mrow" style="margin-top:var(--s-sm)">
+          <div class="mc"><span class="v">3.1 m/s</span><span class="n">Winter mean</span><span class="h">Gusts to 14 m/s</span></div>
+          <div class="mc"><span class="v">3.8 m/s</span><span class="n">Spring mean</span><span class="h">Gusts to 12 m/s</span></div>
+          <div class="mc"><span class="v">5.4 m/s</span><span class="n">Summer mean</span><span class="h">Gusts to 16 m/s</span></div>
+          <div class="mc"><span class="v">3.5 m/s</span><span class="n">Autumn mean</span><span class="h">Gusts to 11 m/s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SUNLIGHT ═══ -->
+    <div class="ch" id="sun">
+      <div class="ch-hd">
+        <span class="ch-n">Chapter 3</span>
+        <h2 class="ch-q">How much sunlight will you get?</h2>
+        <p class="ch-a">Abundant year-round. Even in winter, 9.5 hours of daylight. If you select a building on the map, we'll calculate direct sunlight per facade.</p>
+      </div>
+
+      <!-- Sun path diagram -->
+      <div>
+        <span class="sec-label">Sun path — seasonal arcs</span>
+        <div class="sun-path" style="margin-top:var(--s-sm)">
+          <svg viewBox="0 0 460 150" preserveAspectRatio="xMidYMid meet">
+            <!-- Grid -->
+            <line x1="30" y1="140" x2="430" y2="140" stroke="var(--bdr)" stroke-width="0.5"/>
+            <line x1="30" y1="100" x2="430" y2="100" stroke="var(--bdr)" stroke-width="0.3" stroke-dasharray="4 4"/>
+            <line x1="30" y1="60" x2="430" y2="60" stroke="var(--bdr)" stroke-width="0.3" stroke-dasharray="4 4"/>
+            <line x1="30" y1="20" x2="430" y2="20" stroke="var(--bdr)" stroke-width="0.3" stroke-dasharray="4 4"/>
+            <!-- Azimuth labels -->
+            <text x="30" y="152" fill="var(--tx3)" font-size="8" text-anchor="middle">E</text>
+            <text x="130" y="152" fill="var(--tx3)" font-size="8" text-anchor="middle">SE</text>
+            <text x="230" y="152" fill="var(--tx3)" font-size="8" text-anchor="middle">S</text>
+            <text x="330" y="152" fill="var(--tx3)" font-size="8" text-anchor="middle">SW</text>
+            <text x="430" y="152" fill="var(--tx3)" font-size="8" text-anchor="middle">W</text>
+            <!-- Altitude labels -->
+            <text x="22" y="143" fill="var(--tx3)" font-size="7" text-anchor="end">0°</text>
+            <text x="22" y="103" fill="var(--tx3)" font-size="7" text-anchor="end">30°</text>
+            <text x="22" y="63" fill="var(--tx3)" font-size="7" text-anchor="end">60°</text>
+            <text x="22" y="23" fill="var(--tx3)" font-size="7" text-anchor="end">90°</text>
+            <!-- Summer solstice (highest) -->
+            <path d="M50,140 Q130,50 230,15 Q330,50 410,140" fill="none" stroke="var(--warm)" stroke-width="2.5" opacity="0.8"/>
+            <!-- Equinox -->
+            <path d="M80,140 Q160,75 230,55 Q300,75 380,140" fill="none" stroke="var(--acc)" stroke-width="2" opacity="0.7"/>
+            <!-- Winter solstice (lowest) -->
+            <path d="M120,140 Q180,100 230,88 Q280,100 340,140" fill="none" stroke="var(--heat-cold)" stroke-width="2" opacity="0.6"/>
+            <!-- Legend -->
+            <line x1="50" y1="10" x2="70" y2="10" stroke="var(--warm)" stroke-width="2"/>
+            <text x="74" y="13" fill="var(--tx2)" font-size="7">Summer</text>
+            <line x1="120" y1="10" x2="140" y2="10" stroke="var(--acc)" stroke-width="2"/>
+            <text x="144" y="13" fill="var(--tx2)" font-size="7">Equinox</text>
+            <line x1="190" y1="10" x2="210" y2="10" stroke="var(--heat-cold)" stroke-width="2"/>
+            <text x="214" y="13" fill="var(--tx2)" font-size="7">Winter</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="mrow">
+        <div class="mc"><span class="v">14.8h</span><span class="n">Summer daylight</span><span class="h">Max altitude 75°</span></div>
+        <div class="mc"><span class="v">12.1h</span><span class="n">Equinox daylight</span><span class="h">Max altitude 52°</span></div>
+        <div class="mc"><span class="v">9.5h</span><span class="n">Winter daylight</span><span class="h">Max altitude 28°</span></div>
+      </div>
+
+      <!-- Building facade detail -->
+      <div>
+        <span class="sec-label">Building facade sunlight</span>
+        <div class="callout info" style="margin-top:var(--s-sm)"><span class="ic">🏢</span><span>Building detected at your location. Facade orientation: 165° SSE front.</span></div>
+        <div class="bld-section" style="margin-top:var(--s-md)">
+          <div>
+            <div class="compass">
+              <svg viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="65" fill="none" stroke="var(--bdr)" stroke-width="1"/>
+                <circle cx="80" cy="80" r="45" fill="none" stroke="var(--bdr)" stroke-width="0.5"/>
+                <line x1="80" y1="15" x2="80" y2="145" stroke="var(--bdr)" stroke-width="0.5"/>
+                <line x1="15" y1="80" x2="145" y2="80" stroke="var(--bdr)" stroke-width="0.5"/>
+                <line x1="80" y1="80" x2="72" y2="142" stroke="var(--acc)" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+                <line x1="80" y1="80" x2="18" y2="88" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                <line x1="80" y1="80" x2="88" y2="18" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                <line x1="80" y1="80" x2="142" y2="72" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                <circle cx="80" cy="80" r="4" fill="var(--acc)"/>
+                <text x="80" y="10" text-anchor="middle" fill="var(--tx3)" font-size="9" font-weight="600">N</text>
+                <text x="80" y="156" text-anchor="middle" fill="var(--tx3)" font-size="9" font-weight="600">S</text>
+                <text x="152" y="84" text-anchor="middle" fill="var(--tx3)" font-size="9" font-weight="600">E</text>
+                <text x="8" y="84" text-anchor="middle" fill="var(--tx3)" font-size="9" font-weight="600">W</text>
+              </svg>
+            </div>
+            <div class="bld-stats">
+              <div class="bld-s"><span class="v">245 m²</span><span class="l">Area</span></div>
+              <div class="bld-s"><span class="v">3</span><span class="l">Levels</span></div>
+            </div>
+          </div>
+          <div>
+            <table class="facade-tbl">
+              <thead><tr><th>Facade</th><th>Bearing</th><th>Direct sun</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Front</strong></td><td>165° SSE</td><td class="hrs">7.2 h/day</td></tr>
+                <tr><td>Right</td><td>255° WSW</td><td class="hrs">5.8 h/day</td></tr>
+                <tr><td>Rear</td><td>345° NNW</td><td class="hrs">2.1 h/day</td></tr>
+                <tr><td>Left</td><td>75° ENE</td><td class="hrs">4.4 h/day</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:.7rem;color:var(--tx3);margin-top:var(--s-sm)">Click the compass to override detected front orientation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ AIR QUALITY ═══ -->
+    <div class="ch" id="air">
+      <div class="ch-hd">
+        <span class="ch-n">Chapter 4</span>
+        <h2 class="ch-q">How clean is the air?</h2>
+        <p class="ch-a">Excellent — Kifissia has the best air quality in Athens metro. All pollutants well below WHO recommended limits.</p>
+      </div>
+
+      <div class="mrow">
+        <div class="mc"><span class="v">38</span><span class="n">Mean AQI</span><span class="chip good"><span class="dot"></span> Good</span></div>
+        <div class="mc"><span class="v">62</span><span class="n">Peak AQI</span><span class="chip warn"><span class="dot"></span> Moderate peak</span></div>
+      </div>
+
+      <!-- Pollutant grid -->
+      <div>
+        <span class="sec-label">Pollutant levels vs WHO limits</span>
+        <div class="poll-grid" style="margin-top:var(--s-sm)">
+          <div class="poll">
+            <span class="name">PM2.5</span>
+            <span class="val">4.2 <span style="font-size:.7rem;font-weight:400;color:var(--tx3)">µg/m³</span></span>
+            <span class="limit">WHO limit: 5 µg/m³</span>
+            <div class="bar-bg"><div class="bar-fill" style="width:84%;background:var(--caution)"></div></div>
+          </div>
+          <div class="poll">
+            <span class="name">PM10</span>
+            <span class="val">12.1 <span style="font-size:.7rem;font-weight:400;color:var(--tx3)">µg/m³</span></span>
+            <span class="limit">WHO limit: 15 µg/m³</span>
+            <div class="bar-bg"><div class="bar-fill" style="width:80%;background:var(--caution)"></div></div>
+          </div>
+          <div class="poll">
+            <span class="name">NO₂</span>
+            <span class="val">7.8 <span style="font-size:.7rem;font-weight:400;color:var(--tx3)">µg/m³</span></span>
+            <span class="limit">WHO limit: 10 µg/m³</span>
+            <div class="bar-bg"><div class="bar-fill" style="width:78%;background:var(--good)"></div></div>
+          </div>
+          <div class="poll">
+            <span class="name">O₃</span>
+            <span class="val">42 <span style="font-size:.7rem;font-weight:400;color:var(--tx3)">µg/m³</span></span>
+            <span class="limit">WHO limit: 60 µg/m³</span>
+            <div class="bar-bg"><div class="bar-fill" style="width:70%;background:var(--good)"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout info"><span class="ic">📊</span><span>92-day AQI trend available. All readings from the nearest monitoring station, 2.4km away.</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement,n=h.dataset.theme==='light'?'dark':'light';
+  h.dataset.theme=n;document.getElementById('themeBtn').textContent=n==='dark'?'🌙':'☀️';
+  buildHeatmap();
+}
+document.getElementById('themeBtn').textContent='☀️';
+
+// Heatmap
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const temps=[[7,6,6,6,7,8,10,12,14,15,16,15,14,14,15,15,14,13,12,11,10,9,8,7],
+[8,7,7,7,8,9,11,13,15,17,18,17,16,16,17,16,15,14,13,12,11,10,9,8],
+[10,9,9,9,10,12,14,16,18,20,21,20,19,19,20,19,18,17,16,14,13,12,11,10],
+[13,12,12,12,13,15,17,20,22,24,25,24,23,23,24,23,22,20,19,17,16,15,14,13],
+[18,17,17,17,18,20,23,26,28,30,31,30,29,29,30,29,28,26,24,22,21,20,19,18],
+[23,22,22,22,23,26,28,31,33,35,36,35,34,34,35,34,33,31,29,27,26,25,24,23],
+[26,25,25,25,26,28,31,34,36,38,38,37,36,36,37,36,35,33,31,29,28,27,26,26],
+[25,24,24,24,25,28,30,33,35,37,38,37,36,36,37,36,34,32,30,28,27,26,25,25],
+[22,21,21,21,22,24,27,29,31,33,34,33,32,32,33,32,31,29,27,25,24,23,22,22],
+[17,16,16,16,17,19,21,24,26,28,29,28,27,27,28,27,26,24,22,20,19,18,17,17],
+[13,12,12,12,13,14,16,18,20,22,23,22,21,21,22,21,20,19,17,16,15,14,13,13],
+[9,8,8,8,9,10,12,14,16,18,18,17,16,16,17,17,16,15,13,12,11,10,9,9]];
+
+function tempColor(t){
+  const r=(t-5)/(38-5);
+  if(r<.25) return `oklch(${.6-r*.4} ${.06+r*.08} 250)`;
+  if(r<.5) return `oklch(${.45+(r-.25)*.4} ${.04} 280)`;
+  if(r<.75) return `oklch(${.5+(r-.5)*.32} ${.1+(r-.5)*.16} 65)`;
+  return `oklch(${.52-(r-.75)*.2} ${.14+(r-.75)*.16} 30)`;
+}
+
+function buildHeatmap(){
+  const c=document.getElementById('heatmap');c.innerHTML='';
+  const hl=document.createElement('div');hl.className='hr-labels';
+  for(let h=0;h<24;h++){const s=document.createElement('span');s.textContent=h%3===0?h+'h':'';hl.appendChild(s)}
+  c.appendChild(hl);
+  months.forEach((m,mi)=>{
+    const row=document.createElement('div');row.className='hm-row';
+    const ml=document.createElement('span');ml.className='hm-mo';ml.textContent=m;
+    row.appendChild(ml);
+    const cells=document.createElement('div');cells.className='hm-cells';
+    temps[mi].forEach(t=>{
+      const cell=document.createElement('div');cell.className='hm-c';
+      cell.style.background=tempColor(t);cell.title=`${m} · ${t}°C`;
+      cells.appendChild(cell);
+    });
+    row.appendChild(cells);c.appendChild(row);
+  });
+}
+buildHeatmap();
+
+// Precip
+const precip=[48,42,38,28,18,8,5,6,14,32,52,58];
+const pc=document.getElementById('precipChart');
+const maxP=Math.max(...precip);
+months.forEach((m,i)=>{
+  const g=document.createElement('div');g.className='bar-g';
+  const col=document.createElement('div');col.className='bar-col';
+  const b=document.createElement('div');b.className='bar acc';b.style.height=(precip[i]/maxP*100)+'%';
+  col.appendChild(b);
+  const lbl=document.createElement('span');lbl.className='bar-l';lbl.textContent=m.substring(0,1);
+  g.appendChild(col);g.appendChild(lbl);pc.appendChild(g);
+});
+
+// Scroll tracking
+const story=document.getElementById('story');
+const chs=document.querySelectorAll('.ch');
+const navs=document.querySelectorAll('.ch-nav a');
+const mapCh=document.querySelector('.map-ch');
+const meta={climate:{e:'🌡️',l:'Climate'},wind:{e:'💨',l:'Wind'},sun:{e:'☀️',l:'Sunlight'},air:{e:'🌿',l:'Air Quality'}};
+story.addEventListener('scroll',()=>{
+  let cur='climate';
+  chs.forEach(c=>{if(c.getBoundingClientRect().top<300)cur=c.id});
+  navs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+  const m=meta[cur];
+  if(m){mapCh.querySelector('span:first-child').textContent=m.e;mapCh.querySelector('.lbl').textContent=m.l}
+});
+</script>
+</body>
+</html>

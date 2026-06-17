@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlindSpot — Hybrid 1: Report → Advanced</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --s-xs:4px;--s-sm:8px;--s-md:12px;--s-base:16px;--s-lg:24px;--s-xl:32px;--s-2xl:48px;--s-3xl:64px;
+    --r:10px;--r-sm:6px;--r-lg:14px;--r-full:9999px;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --sans:'Karla',system-ui,sans-serif;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  [data-theme="dark"]{
+    --bg:oklch(0.13 0.02 260);--srf:oklch(0.17 0.02 260);--el:oklch(0.21 0.022 260);
+    --map-bg:oklch(0.12 0.015 260);
+    --bdr:oklch(0.25 0.018 260);--bdr-h:oklch(0.32 0.02 260);
+    --tx:oklch(0.92 0.006 260);--tx2:oklch(0.64 0.01 260);--tx3:oklch(0.46 0.008 260);
+    --cyan:oklch(0.72 0.1 200);--cyan-s:oklch(0.22 0.03 200);
+    --amber:oklch(0.74 0.12 70);--amber-s:oklch(0.22 0.03 70);
+    --good:oklch(0.68 0.1 155);--good-s:oklch(0.22 0.03 155);
+    --risk:oklch(0.68 0.14 25);--risk-s:oklch(0.22 0.04 25);
+    --warn:oklch(0.74 0.12 70);--warn-s:oklch(0.22 0.03 70);
+    --sh:0 2px 8px oklch(0.05 0 0/0.3);--sh-lg:0 8px 32px oklch(0.05 0 0/0.4);
+  }
+  [data-theme="light"]{
+    --bg:oklch(0.96 0.005 260);--srf:oklch(0.99 0.002 260);--el:oklch(1 0.001 260);
+    --map-bg:oklch(0.94 0.01 220);
+    --bdr:oklch(0.89 0.006 260);--bdr-h:oklch(0.82 0.008 260);
+    --tx:oklch(0.18 0.02 260);--tx2:oklch(0.44 0.015 260);--tx3:oklch(0.6 0.01 260);
+    --cyan:oklch(0.48 0.12 200);--cyan-s:oklch(0.92 0.03 200);
+    --amber:oklch(0.58 0.14 70);--amber-s:oklch(0.94 0.03 70);
+    --good:oklch(0.48 0.12 155);--good-s:oklch(0.93 0.03 155);
+    --risk:oklch(0.52 0.16 25);--risk-s:oklch(0.94 0.04 25);
+    --warn:oklch(0.58 0.14 70);--warn-s:oklch(0.94 0.03 70);
+    --sh:0 2px 8px oklch(0.3 0.02 260/0.06);--sh-lg:0 8px 32px oklch(0.3 0.02 260/0.08);
+  }
+
+  html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--tx);
+    transition:background .4s var(--ease),color .3s var(--ease);-webkit-font-smoothing:antialiased}
+  .app{height:100vh;display:grid;grid-template-columns:7fr 3fr;grid-template-rows:1fr auto;overflow:hidden}
+
+  /* ─── MAP ─── */
+  .map{position:relative;background:var(--map-bg);overflow:hidden;transition:background .4s var(--ease);grid-row:1/2}
+  .map-grid{position:absolute;inset:0;opacity:.1;
+    background:repeating-linear-gradient(0deg,transparent,transparent 80px,var(--bdr) 80px,var(--bdr) 81px),
+    repeating-linear-gradient(90deg,transparent,transparent 80px,var(--bdr) 80px,var(--bdr) 81px)}
+  .pin{position:absolute;left:45%;top:42%;display:flex;flex-direction:column;align-items:center;gap:3px;
+    transform:translate(-50%,-100%);z-index:4}
+  .pin .dot{width:14px;height:14px;border-radius:50%;background:var(--cyan);border:2.5px solid var(--srf);box-shadow:var(--sh)}
+  .pin .lbl{background:var(--el);padding:3px 10px;border-radius:var(--r-sm);font-size:.7rem;font-weight:600;box-shadow:var(--sh)}
+
+  /* Location card on map */
+  .loc-card{position:absolute;top:var(--s-lg);left:var(--s-lg);z-index:6;width:280px;
+    background:var(--srf);border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh-lg);
+    padding:var(--s-base);display:flex;flex-direction:column;gap:var(--s-md);transition:background .4s var(--ease)}
+  .loc-hdr{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:var(--mono);font-size:.85rem;font-weight:700;letter-spacing:-.3px}
+  .logo .a{color:var(--cyan)}
+  .btn-row{display:flex;gap:var(--s-xs)}
+  .sm-btn{padding:var(--s-xs) var(--s-sm);border-radius:var(--r-sm);border:1px solid var(--bdr);
+    background:var(--el);font-family:var(--sans);font-size:.65rem;font-weight:600;color:var(--tx2);cursor:pointer}
+  .sm-btn:hover{border-color:var(--bdr-h);color:var(--tx)}
+  .loc-inp{display:flex;align-items:center;gap:var(--s-sm);background:var(--el);border:1px solid var(--bdr);
+    border-radius:var(--r);padding:var(--s-sm) var(--s-md)}
+  .loc-inp .sd{width:7px;height:7px;border-radius:50%;background:var(--cyan);flex-shrink:0}
+  .loc-inp input{border:none;background:none;outline:none;width:100%;font-family:var(--mono);font-size:.75rem;color:var(--tx)}
+  .loc-name{font-size:.8rem;color:var(--tx2)}
+  .loc-name b{color:var(--tx)}
+
+  /* Map controls */
+  .map-ctrl{position:absolute;bottom:var(--s-lg);right:var(--s-lg);display:flex;flex-direction:column;gap:var(--s-xs);z-index:4}
+  .map-btn{width:34px;height:34px;border-radius:var(--r);background:var(--srf);border:1px solid var(--bdr);
+    display:grid;place-items:center;cursor:pointer;box-shadow:var(--sh);color:var(--tx2);font-size:15px}
+
+  /* ─── RIGHT PANEL ─── */
+  .right-panel{grid-row:1/3;background:var(--srf);border-left:1px solid var(--bdr);overflow:hidden;
+    display:flex;flex-direction:column;transition:background .4s var(--ease)}
+
+  /* Mode toggle bar */
+  .mode-bar{padding:var(--s-md) var(--s-lg);border-bottom:1px solid var(--bdr);display:flex;
+    align-items:center;gap:var(--s-md);flex-shrink:0}
+  .mode-toggle{display:flex;background:var(--el);border-radius:var(--r);padding:3px;border:1px solid var(--bdr)}
+  .mode-opt{padding:var(--s-sm) var(--s-base);border-radius:var(--r-sm);font-size:.75rem;font-weight:600;
+    cursor:pointer;transition:all .2s;color:var(--tx3);font-family:var(--sans)}
+  .mode-opt.active{background:var(--srf);color:var(--tx);box-shadow:var(--sh)}
+  .mode-opt:not(.active):hover{color:var(--tx2)}
+  .mode-right{margin-left:auto;display:flex;gap:var(--s-xs)}
+
+  /* Font size controls */
+  .fs-ctrl{display:flex;align-items:center;border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+  .fs-btn{width:32px;height:28px;border:none;background:var(--el);cursor:pointer;
+    font-family:var(--sans);font-weight:700;color:var(--tx2);transition:all .15s;
+    display:grid;place-items:center}
+  .fs-btn:hover{background:var(--bdr);color:var(--tx)}
+  .fs-btn:active{background:var(--cyan-s);color:var(--cyan)}
+  .fs-btn .letter{font-size:.7rem}
+  .fs-btn.up .letter{font-size:.9rem}
+  .fs-sep{width:1px;height:16px;background:var(--bdr)}
+  .fs-label{padding:0 var(--s-sm);font-size:.55rem;font-weight:600;color:var(--tx3);
+    font-family:var(--mono);min-width:32px;text-align:center}
+
+  /* Lucide icons */
+  .ch-nav i,.adv-tab i,.svc .ico i,.callout i,.adv-cta i{width:14px;height:14px;stroke-width:2}
+  .svc .ico{display:grid;place-items:center;width:28px;height:28px;border-radius:var(--r-sm);
+    background:var(--el);flex-shrink:0}
+  .svc .ico i{width:14px;height:14px;color:var(--cyan)}
+  .adv-cta .icon i{width:22px;height:22px;color:var(--cyan)}
+
+  /* ─── REPORT VIEW ─── */
+  .report{flex:1;overflow-y:auto;scroll-behavior:smooth}
+  .report::-webkit-scrollbar{width:4px}
+  .report::-webkit-scrollbar-thumb{background:var(--bdr-h);border-radius:2px}
+
+  .report-hero{padding:var(--s-2xl) var(--s-xl) var(--s-xl);border-bottom:1px solid var(--bdr)}
+  .rh-ey{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cyan)}
+  .rh-title{font-family:var(--mono);font-size:1.6rem;font-weight:700;letter-spacing:-.5px;margin-top:var(--s-sm)}
+  .rh-region{font-size:.85rem;color:var(--tx2);margin-top:var(--s-xs)}
+  .rh-score{display:flex;align-items:center;gap:var(--s-md);margin-top:var(--s-base);
+    padding:var(--s-md);background:var(--cyan-s);border-radius:var(--r)}
+  .rh-num{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--cyan);line-height:1}
+  .rh-meta{display:flex;flex-direction:column;gap:1px}
+  .rh-lbl{font-size:.82rem;font-weight:600}
+  .rh-sub{font-size:.7rem;color:var(--tx2)}
+
+  /* Chapter nav */
+  .ch-nav{position:sticky;top:0;z-index:5;background:var(--srf);border-bottom:1px solid var(--bdr);
+    padding:var(--s-sm) var(--s-lg);display:flex;gap:var(--s-sm);overflow-x:auto;scrollbar-width:none}
+  .ch-nav::-webkit-scrollbar{display:none}
+  .ch-nav a{font-size:.58rem;font-weight:600;color:var(--tx3);text-decoration:none;
+    padding:var(--s-sm) var(--s-md);border-radius:var(--r);white-space:nowrap;transition:all .2s;flex-shrink:0;
+    display:flex;flex-direction:column;align-items:center;gap:2px}
+  .ch-nav a i{width:16px;height:16px}
+  .ch-nav a.active{color:var(--cyan);background:var(--cyan-s)}
+  .ch-nav a:hover{color:var(--tx2)}
+
+  /* Chapters */
+  .ch{padding:var(--s-xl) var(--s-xl);border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:var(--s-lg)}
+  .ch:last-child{border-bottom:none;padding-bottom:var(--s-3xl)}
+  .ch-n{font-size:.62rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em}
+  .ch-q{font-family:var(--mono);font-size:1.05rem;font-weight:700;letter-spacing:-.3px;margin-top:var(--s-xs);line-height:1.3}
+  .ch-a{font-size:.84rem;color:var(--tx2);line-height:1.55;max-width:55ch}
+
+  /* Stats */
+  .mrow{display:flex;gap:var(--s-md);flex-wrap:wrap}
+  .mc{padding:var(--s-md);background:var(--el);border-radius:var(--r);border:1px solid var(--bdr);
+    display:flex;flex-direction:column;gap:var(--s-xs);flex:1;min-width:120px;transition:border-color .2s}
+  .mc:hover{border-color:var(--bdr-h)}
+  .mc .v{font-family:var(--mono);font-size:1.15rem;font-weight:700;letter-spacing:-.3px}
+  .mc .n{font-size:.72rem;color:var(--tx2)}
+  .mc .h{font-size:.65rem;color:var(--tx3);line-height:1.35}
+  .chip{display:inline-flex;align-items:center;gap:var(--s-xs);padding:2px var(--s-sm);
+    border-radius:var(--r-sm);font-size:.6rem;font-weight:600;width:fit-content}
+  .chip.good{background:var(--good-s);color:var(--good)}
+  .chip.warn{background:var(--warn-s);color:var(--warn)}
+  .chip.risk{background:var(--risk-s);color:var(--risk)}
+  .chip .d{width:4px;height:4px;border-radius:50%;background:currentColor}
+
+  /* Services */
+  .svc-list{display:flex;flex-direction:column;gap:var(--s-sm)}
+  .svc{display:flex;align-items:center;gap:var(--s-md);padding:var(--s-sm) var(--s-md);
+    border-radius:var(--r);background:var(--el);border:1px solid var(--bdr)}
+  .svc .ico{font-size:1rem;flex-shrink:0}
+  .svc .info{flex:1;display:flex;flex-direction:column;gap:1px}
+  .svc .sname{font-size:.78rem;font-weight:600}
+  .svc .splace{font-size:.65rem;color:var(--tx3)}
+  .svc .sdist{font-size:.78rem;font-weight:600;font-family:var(--mono);color:var(--good)}
+
+  .callout{padding:var(--s-md);border-radius:var(--r);font-size:.8rem;color:var(--tx2);line-height:1.5;
+    display:flex;gap:var(--s-sm)}
+  .callout.warn{background:var(--warn-s)}
+  .callout.info{background:var(--cyan-s)}
+
+  /* Advanced CTA */
+  .adv-cta{margin:var(--s-lg) var(--s-xl);padding:var(--s-base);background:var(--el);
+    border:1px solid var(--bdr);border-radius:var(--r-lg);display:flex;align-items:center;gap:var(--s-md);
+    cursor:pointer;transition:all .2s}
+  .adv-cta:hover{border-color:var(--cyan);background:var(--cyan-s)}
+  .adv-cta .icon{font-size:1.5rem}
+  .adv-cta .text{flex:1}
+  .adv-cta .title{font-family:var(--mono);font-size:.85rem;font-weight:700}
+  .adv-cta .desc{font-size:.75rem;color:var(--tx2);margin-top:2px}
+  .adv-cta .arrow{font-size:1.2rem;color:var(--cyan)}
+
+  /* ─── ADVANCED VIEW (hidden by default) ─── */
+  .advanced{flex:1;overflow-y:auto;display:none;flex-direction:column}
+  .advanced.visible{display:flex}
+  .report.hidden{display:none}
+
+  /* Rail tabs in advanced */
+  .adv-tabs{padding:var(--s-sm) var(--s-lg);border-bottom:1px solid var(--bdr);display:flex;gap:var(--s-xs);
+    overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+  .adv-tabs::-webkit-scrollbar{display:none}
+  .adv-tab{padding:var(--s-sm) var(--s-md);border-radius:var(--r);background:var(--el);
+    border:1px solid var(--bdr);font-size:.58rem;font-weight:600;color:var(--tx2);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap;transition:all .2s;flex-shrink:0}
+  .adv-tab i{width:16px;height:16px}
+  .adv-tab.active{border-color:var(--cyan);background:var(--cyan-s);color:var(--cyan)}
+  .adv-tab:hover{border-color:var(--bdr-h)}
+
+  /* Module content in advanced */
+  .adv-body{flex:1;overflow-y:auto;padding:var(--s-lg);display:flex;flex-direction:column;gap:var(--s-xl)}
+  .adv-body::-webkit-scrollbar{width:4px}
+  .adv-body::-webkit-scrollbar-thumb{background:var(--bdr-h);border-radius:2px}
+
+  .sec{display:flex;flex-direction:column;gap:var(--s-md)}
+  .sec-t{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3)}
+
+  /* Heatmap */
+  .heatmap{display:flex;flex-direction:column;gap:1px}
+  .hm-row{display:flex;align-items:center;gap:1px}
+  .hm-mo{width:26px;font-size:.55rem;font-weight:600;color:var(--tx3);text-align:right;padding-right:3px;flex-shrink:0}
+  .hm-cells{display:flex;gap:1px;flex:1}
+  .hm-c{flex:1;height:15px;border-radius:2px;cursor:default;transition:transform .1s}
+  .hm-c:hover{transform:scaleY(1.4);z-index:1}
+  .hr-labels{display:flex;gap:1px;margin-left:28px}
+  .hr-labels span{flex:1;font-size:.48rem;color:var(--tx3);text-align:center}
+  .hm-legend{display:flex;align-items:center;gap:var(--s-sm);font-size:.58rem;color:var(--tx3);margin-bottom:var(--s-xs)}
+  .hm-legend .grad{height:5px;width:80px;border-radius:3px;
+    background:linear-gradient(90deg,oklch(0.55 0.08 240),oklch(0.4 0.04 260),oklch(0.55 0.14 65),oklch(0.5 0.18 30))}
+
+  .bars{display:flex;align-items:flex-end;gap:3px;height:80px}
+  .bar-g{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%}
+  .bar-col{flex:1;display:flex;align-items:flex-end;width:100%}
+  .bar{border-radius:3px 3px 0 0;min-height:2px;width:100%;background:var(--cyan);transition:height .5s var(--ease)}
+  .bar-l{font-size:.48rem;color:var(--tx3)}
+
+  .extremes{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s-sm)}
+  .ext{padding:var(--s-md);background:var(--el);border-radius:var(--r);border:1px solid var(--bdr);
+    text-align:center;display:flex;flex-direction:column;gap:var(--s-xs)}
+  .ext .v{font-family:var(--mono);font-size:1rem;font-weight:700}
+  .ext .l{font-size:.58rem;color:var(--tx3)}
+  .ext.hot .v{color:var(--risk)}
+  .ext.cold .v{color:oklch(0.65 0.08 240)}
+
+  .adv-foot{padding:var(--s-sm) var(--s-lg);border-top:1px solid var(--bdr);font-size:.62rem;
+    color:var(--tx3);display:flex;justify-content:space-between;flex-shrink:0}
+
+  /* ─── BOTTOM STRIP ─── */
+  .strip{grid-column:1/2;height:32px;background:var(--srf);border-top:1px solid var(--bdr);display:flex;
+    align-items:center;padding:0 var(--s-lg);gap:var(--s-xl);font-size:.65rem;color:var(--tx3);z-index:8}
+  .strip .sd{width:6px;height:6px;border-radius:50%;background:var(--cyan);display:inline-block;margin-right:var(--s-sm)}
+  .strip .coord{font-family:var(--mono);font-size:.62rem}
+
+  .badge{position:fixed;top:var(--s-base);left:50%;transform:translateX(-50%);z-index:100;
+    background:var(--cyan);color:oklch(0.12 0 0);font-family:var(--mono);font-size:.65rem;
+    font-weight:700;padding:var(--s-sm) var(--s-md);border-radius:var(--r-sm)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .ch{animation:fadeUp .35s var(--ease) both}
+  .ch:nth-child(1){animation-delay:.05s}
+  .ch:nth-child(2){animation-delay:.1s}
+  .ch:nth-child(3){animation-delay:.15s}
+  .ch:nth-child(4){animation-delay:.2s}
+  .ch:nth-child(5){animation-delay:.25s}
+</style>
+</head>
+<body>
+<div class="badge">Hybrid 1 — Report (default) → Advanced (CTA toggle)</div>
+<div class="app">
+  <div class="map">
+    <div class="map-grid"></div>
+    <div class="pin"><div class="lbl">Kifissia</div><div class="dot"></div></div>
+    <div class="loc-card">
+      <div class="loc-hdr">
+        <div class="logo">blind<span class="a">spot</span></div>
+        <div class="btn-row">
+          <button class="sm-btn" style="border-color:var(--amber);color:var(--amber)">+ Compare</button>
+          <button class="sm-btn" onclick="toggleTheme()" id="themeBtn"><i data-lucide="sun" style="width:12px;height:12px;vertical-align:middle"></i></button>
+        </div>
+      </div>
+      <div class="loc-inp"><div class="sd"></div><input value="38.0742, 23.8103"></div>
+      <div class="loc-name"><b>Kifissia</b> · Northern Athens, Greece</div>
+    </div>
+    <div class="map-ctrl"><button class="map-btn">+</button><button class="map-btn">−</button></div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="right-panel">
+    <div class="mode-bar">
+      <div class="mode-toggle">
+        <div class="mode-opt active" id="modeReport" onclick="setMode('report')">Report</div>
+        <div class="mode-opt" id="modeAdv" onclick="setMode('advanced')">Advanced</div>
+      </div>
+      <div class="fs-ctrl">
+        <button class="fs-btn down" onclick="fontScale(-1)" title="Smaller text"><span class="letter">A</span></button>
+        <div class="fs-sep"></div>
+        <span class="fs-label" id="fsLabel">100%</span>
+        <div class="fs-sep"></div>
+        <button class="fs-btn up" onclick="fontScale(1)" title="Larger text"><span class="letter">A</span></button>
+      </div>
+      <div class="mode-right">
+        <button class="sm-btn">♡ Save</button>
+      </div>
+    </div>
+
+    <!-- ═══ REPORT VIEW (default) ═══ -->
+    <div class="report" id="reportView">
+      <div class="report-hero">
+        <span class="rh-ey">Location Report</span>
+        <h1 class="rh-title">Kifissia</h1>
+        <span class="rh-region">Northern Athens, Attica, Greece</span>
+        <div class="rh-score">
+          <span class="rh-num">8.4</span>
+          <div class="rh-meta"><span class="rh-lbl">Excellent for families</span><span class="rh-sub">Top 12% of Athens neighborhoods</span></div>
+        </div>
+      </div>
+
+      <nav class="ch-nav">
+        <a href="#r-safety" class="active"><i data-lucide="shield-check"></i> Safety</a>
+        <a href="#r-climate"><i data-lucide="thermometer"></i> Climate</a>
+        <a href="#r-air"><i data-lucide="leaf"></i> Air</a>
+        <a href="#r-schools"><i data-lucide="graduation-cap"></i> Schools</a>
+        <a href="#r-transit"><i data-lucide="train-front"></i> Transit</a>
+        <a href="#r-sun"><i data-lucide="sun"></i> Sun</a>
+        <a href="#r-hazards"><i data-lucide="triangle-alert"></i> Hazards</a>
+        <a href="#r-nearby"><i data-lucide="map-pin"></i> Nearby</a>
+      </nav>
+
+      <div class="ch" id="r-safety">
+        <div><span class="ch-n">Safety</span><h2 class="ch-q">Is Kifissia safe for a family?</h2>
+        <p class="ch-a">Yes — one of the safest in Athens. Low crime, well-lit streets, emergency services within walking distance.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">9.1</span><span class="n">Safety score</span><span class="chip good"><span class="d"></span> Very safe</span></div>
+          <div class="mc"><span class="v">42 dB</span><span class="n">Noise level</span><span class="h">Residential quiet</span></div>
+        </div>
+        <div class="svc-list">
+          <div class="svc"><span class="ico"><i data-lucide="shield"></i></span><div class="info"><span class="sname">Police</span><span class="splace">Kifissia A.T.</span></div><span class="sdist">0.4 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="flame"></i></span><div class="info"><span class="sname">Fire Station</span><span class="splace">Kifissia P.Y.</span></div><span class="sdist">0.6 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="heart-pulse"></i></span><div class="info"><span class="sname">Hospital</span><span class="splace">KAT Hospital</span></div><span class="sdist">1.1 km</span></div>
+        </div>
+      </div>
+
+      <div class="ch" id="r-climate">
+        <div><span class="ch-n">Climate</span><h2 class="ch-q">What's the weather really like?</h2>
+        <p class="ch-a">Mediterranean — mild winters, hot dry summers. Runs cooler than central Athens thanks to elevation and tree coverage.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">17.8°C</span><span class="n">Annual mean</span></div>
+          <div class="mc"><span class="v">2,840 h</span><span class="n">Sun hours</span></div>
+          <div class="mc"><span class="v">412 mm</span><span class="n">Annual rain</span></div>
+          <div class="mc"><span class="v">9.2</span><span class="n">Peak UV</span><span class="chip warn"><span class="d"></span> High</span></div>
+        </div>
+        <div class="callout warn"><span><i data-lucide="thermometer" style="width:16px;height:16px;flex-shrink:0"></i></span><span>34 days above 30°C in summer. Peak UV 9.2 — sun protection essential for children.</span></div>
+      </div>
+
+      <div class="ch" id="r-air">
+        <div><span class="ch-n">Air Quality</span><h2 class="ch-q">How clean is the air?</h2>
+        <p class="ch-a">Excellent — best in Athens metro. All pollutants below WHO limits.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">38</span><span class="n">Mean AQI</span><span class="chip good"><span class="d"></span> Good</span></div>
+          <div class="mc"><span class="v">4.2</span><span class="n">PM2.5 µg/m³</span><span class="h">WHO limit: 5</span></div>
+        </div>
+      </div>
+
+      <div class="ch" id="r-schools">
+        <div><span class="ch-n">Schools</span><h2 class="ch-q">Are there good schools?</h2>
+        <p class="ch-a">12 schools within 2km including 3 international. Nearest primary at 300m.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">3</span><span class="n">International</span></div>
+          <div class="mc"><span class="v">5</span><span class="n">Public</span></div>
+          <div class="mc"><span class="v">4</span><span class="n">Private</span></div>
+        </div>
+      </div>
+
+      <div class="ch" id="r-transit">
+        <div><span class="ch-n">Transit</span><h2 class="ch-q">How do you get around?</h2>
+        <p class="ch-a">Metro Line 1 direct to center. 28 minutes to Syntagma Square.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">7.2</span><span class="n">Transit score</span></div>
+          <div class="mc"><span class="v">0.8 km</span><span class="n">To metro</span></div>
+        </div>
+      </div>
+
+      <div class="ch" id="r-sun">
+        <div><span class="ch-n">Sunlight</span><h2 class="ch-q">How much sunlight?</h2>
+        <p class="ch-a">Abundant year-round. 14.8h daylight in summer, 9.5h in winter.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">14.8h</span><span class="n">Summer daylight</span></div>
+          <div class="mc"><span class="v">9.5h</span><span class="n">Winter daylight</span></div>
+        </div>
+      </div>
+
+      <div class="ch" id="r-hazards">
+        <div><span class="ch-n">Hazards</span><h2 class="ch-q">Any natural hazard risks?</h2>
+        <p class="ch-a">No significant seismic activity nearby in 10 years. Wildfire monitored via satellite — low risk.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">0</span><span class="n">M5+ quakes (10yr)</span><span class="chip good"><span class="d"></span> Low</span></div>
+          <div class="mc"><span class="v">2</span><span class="n">Hotspots (180km)</span><span class="h">Satellite monitoring</span></div>
+        </div>
+      </div>
+
+      <div class="ch" id="r-nearby">
+        <div><span class="ch-n">Nearby</span><h2 class="ch-q">What's in walking distance?</h2>
+        <p class="ch-a">Everything daily within 1km.</p></div>
+        <div class="svc-list">
+          <div class="svc"><span class="ico"><i data-lucide="trees"></i></span><div class="info"><span class="sname">Kifissia Park</span><span class="splace">Park</span></div><span class="sdist">0.1 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="pill"></i></span><div class="info"><span class="sname">Farmakeio Nea</span><span class="splace">Pharmacy</span></div><span class="sdist">0.2 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="graduation-cap"></i></span><div class="info"><span class="sname">1st Primary</span><span class="splace">School</span></div><span class="sdist">0.3 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="shopping-cart"></i></span><div class="info"><span class="sname">Sklavenitis</span><span class="splace">Grocery</span></div><span class="sdist">0.5 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="train-front"></i></span><div class="info"><span class="sname">Kifissia Station</span><span class="splace">Metro</span></div><span class="sdist">0.8 km</span></div>
+        </div>
+      </div>
+
+      <!-- Advanced CTA at bottom of report -->
+      <div class="adv-cta" onclick="setMode('advanced')">
+        <span class="icon"><i data-lucide="microscope"></i></span>
+        <div class="text">
+          <div class="title">Go deeper</div>
+          <div class="desc">Heatmaps, wind rose, sun paths, pollutant breakdowns, building facade analysis and more.</div>
+        </div>
+        <span class="arrow"><i data-lucide="arrow-right" style="width:16px;height:16px"></i></span>
+      </div>
+    </div>
+
+    <!-- ═══ ADVANCED VIEW ═══ -->
+    <div class="advanced" id="advView">
+      <div class="adv-tabs">
+        <div class="adv-tab active"><i data-lucide="thermometer"></i> Climate</div>
+        <div class="adv-tab"><i data-lucide="wind"></i> Wind</div>
+        <div class="adv-tab"><i data-lucide="sun"></i> Sun</div>
+        <div class="adv-tab"><i data-lucide="triangle-alert"></i> Hazards</div>
+        <div class="adv-tab"><i data-lucide="leaf"></i> Air</div>
+        <div class="adv-tab"><i data-lucide="map-pin"></i> Context</div>
+      </div>
+
+      <div class="adv-body">
+        <div class="sec">
+          <span class="sec-t">Annual overview</span>
+          <div class="mrow">
+            <div class="mc"><span class="v">17.8°C</span><span class="n">Mean temp</span></div>
+            <div class="mc"><span class="v">412 mm</span><span class="n">Rain</span></div>
+            <div class="mc"><span class="v">2,840 h</span><span class="n">Sun</span></div>
+            <div class="mc"><span class="v">9.2</span><span class="n">Peak UV</span></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <span class="sec-t">Temperature by month × hour</span>
+          <div class="hm-legend"><span>5°C</span><div class="grad"></div><span>38°C</span></div>
+          <div class="heatmap" id="heatmap"></div>
+        </div>
+
+        <div class="sec">
+          <span class="sec-t">Monthly precipitation (mm)</span>
+          <div class="bars" id="precipChart"></div>
+        </div>
+
+        <div class="sec">
+          <span class="sec-t">Temperature extremes</span>
+          <div class="extremes">
+            <div class="ext hot"><span class="v">82</span><span class="l">Days &gt;25°C</span></div>
+            <div class="ext hot"><span class="v">34</span><span class="l">Days &gt;30°C</span></div>
+            <div class="ext cold"><span class="v">8</span><span class="l">Days &lt;0°C</span></div>
+            <div class="ext cold"><span class="v">0</span><span class="l">Days &lt;−5°C</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adv-foot">
+        <span>Source: Open-Meteo · Grid: 0.1° ≈ 11km</span>
+        <span>Climate</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <span><span class="sd"></span><span class="coord">38.0742°N 23.8103°E</span> · Kifissia</span>
+    <span style="color:var(--bdr)">|</span><span>280m elev</span>
+    <span style="margin-left:auto">17:42 EEST</span>
+  </div>
+</div>
+
+<script>
+// Font scale — Minor Third ratio (1.2) per step, default 110%
+const RATIO = 1.2; // Minor Third
+const BASE = 1.1;  // default zoom
+let fsStep = 0; // -2 to +3
+const fsSteps = [
+  BASE / (RATIO * RATIO),   // -2: ~76%
+  BASE / RATIO,              // -1: ~92%
+  BASE,                       //  0: 110%
+  BASE * RATIO,               // +1: ~132%
+  BASE * RATIO * RATIO,       // +2: ~158%
+  BASE * RATIO * RATIO * RATIO // +3: ~190%
+];
+
+function fontScale(dir) {
+  fsStep = Math.max(-2, Math.min(3, fsStep + dir));
+  const z = fsSteps[fsStep + 2];
+  // Apply zoom to scrollable content areas
+  document.getElementById('reportView').style.zoom = z;
+  const advBody = document.querySelector('.adv-body');
+  if (advBody) advBody.style.zoom = z;
+  document.getElementById('fsLabel').textContent = Math.round(z * 100) + '%';
+}
+
+function toggleTheme(){
+  const h=document.documentElement,n=h.dataset.theme==='dark'?'light':'dark';
+  h.dataset.theme=n;
+  var btn=document.getElementById('themeBtn');
+  btn.innerHTML=n==='dark'?'<i data-lucide="moon" style="width:12px;height:12px;vertical-align:middle"></i>':'<i data-lucide="sun" style="width:12px;height:12px;vertical-align:middle"></i>';
+  lucide.createIcons();
+  buildHeatmap();
+}
+
+function setMode(mode){
+  const r=document.getElementById('reportView'),a=document.getElementById('advView');
+  const mr=document.getElementById('modeReport'),ma=document.getElementById('modeAdv');
+  if(mode==='report'){
+    r.classList.remove('hidden');r.style.display='';
+    a.classList.remove('visible');a.style.display='none';
+    mr.classList.add('active');ma.classList.remove('active');
+  } else {
+    r.style.display='none';
+    a.style.display='flex';a.classList.add('visible');
+    ma.classList.add('active');mr.classList.remove('active');
+    buildHeatmap();buildPrecip();
+  }
+}
+
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const temps=[[7,6,6,6,7,8,10,12,14,15,16,15,14,14,15,15,14,13,12,11,10,9,8,7],[8,7,7,7,8,9,11,13,15,17,18,17,16,16,17,16,15,14,13,12,11,10,9,8],[10,9,9,9,10,12,14,16,18,20,21,20,19,19,20,19,18,17,16,14,13,12,11,10],[13,12,12,12,13,15,17,20,22,24,25,24,23,23,24,23,22,20,19,17,16,15,14,13],[18,17,17,17,18,20,23,26,28,30,31,30,29,29,30,29,28,26,24,22,21,20,19,18],[23,22,22,22,23,26,28,31,33,35,36,35,34,34,35,34,33,31,29,27,26,25,24,23],[26,25,25,25,26,28,31,34,36,38,38,37,36,36,37,36,35,33,31,29,28,27,26,26],[25,24,24,24,25,28,30,33,35,37,38,37,36,36,37,36,34,32,30,28,27,26,25,25],[22,21,21,21,22,24,27,29,31,33,34,33,32,32,33,32,31,29,27,25,24,23,22,22],[17,16,16,16,17,19,21,24,26,28,29,28,27,27,28,27,26,24,22,20,19,18,17,17],[13,12,12,12,13,14,16,18,20,22,23,22,21,21,22,21,20,19,17,16,15,14,13,13],[9,8,8,8,9,10,12,14,16,18,18,17,16,16,17,17,16,15,13,12,11,10,9,9]];
+
+function tempColor(t){
+  const r=(t-5)/(38-5);
+  if(r<.25)return`oklch(${.55-r*.3} ${.06+r*.08} 240)`;
+  if(r<.5)return`oklch(${.4+(r-.25)*.4} .04 260)`;
+  if(r<.75)return`oklch(${.5+(r-.5)*.2} ${.1+(r-.5)*.16} 65)`;
+  return`oklch(${.5-(r-.75)*.1} ${.14+(r-.75)*.16} 30)`;
+}
+
+function buildHeatmap(){
+  const c=document.getElementById('heatmap');if(!c)return;c.innerHTML='';
+  const hl=document.createElement('div');hl.className='hr-labels';
+  for(let h=0;h<24;h++){const s=document.createElement('span');s.textContent=h%4===0?h+'h':'';hl.appendChild(s)}
+  c.appendChild(hl);
+  months.forEach((m,mi)=>{
+    const row=document.createElement('div');row.className='hm-row';
+    const ml=document.createElement('span');ml.className='hm-mo';ml.textContent=m;row.appendChild(ml);
+    const cells=document.createElement('div');cells.className='hm-cells';
+    temps[mi].forEach(t=>{const cell=document.createElement('div');cell.className='hm-c';
+      cell.style.background=tempColor(t);cell.title=`${m} · ${t}°C`;cells.appendChild(cell)});
+    row.appendChild(cells);c.appendChild(row);
+  });
+}
+
+function buildPrecip(){
+  const pc=document.getElementById('precipChart');if(!pc||pc.children.length)return;
+  const precip=[48,42,38,28,18,8,5,6,14,32,52,58],maxP=Math.max(...precip);
+  months.forEach((m,i)=>{
+    const g=document.createElement('div');g.className='bar-g';
+    const col=document.createElement('div');col.className='bar-col';
+    const b=document.createElement('div');b.className='bar';b.style.height=(precip[i]/maxP*100)+'%';
+    col.appendChild(b);const lbl=document.createElement('span');lbl.className='bar-l';lbl.textContent=m.substring(0,1);
+    g.appendChild(col);g.appendChild(lbl);pc.appendChild(g);
+  });
+}
+
+// Scroll tracking for report
+const story=document.getElementById('reportView');
+const chs=story.querySelectorAll('.ch');
+const navs=story.querySelectorAll('.ch-nav a');
+story.addEventListener('scroll',()=>{
+  let cur=chs[0]?.id;
+  chs.forEach(c=>{if(c.getBoundingClientRect().top<300)cur=c.id});
+  navs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+});
+
+// Apply default 110% zoom on load
+fontScale(0);
+
+// Init Lucide icons
+lucide.createIcons();
+</script>
+</body>
+</html>

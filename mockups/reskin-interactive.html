@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>settl. — Location Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Karla:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --s-xs:4px;--s-sm:8px;--s-md:12px;--s-base:16px;--s-lg:24px;--s-xl:32px;--s-2xl:48px;
+    --r:8px;--r-sm:5px;--r-lg:12px;--r-full:9999px;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --sans:'Karla',system-ui,sans-serif;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  [data-theme="dark"]{
+    --bg:oklch(0.12 0.018 260);--srf:oklch(0.16 0.018 260);--el:oklch(0.20 0.02 260);
+    --map-bg:oklch(0.11 0.015 260);
+    --bdr:oklch(0.24 0.016 260);--bdr-h:oklch(0.30 0.018 260);
+    --tx:oklch(0.91 0.006 260);--tx2:oklch(0.62 0.01 260);--tx3:oklch(0.44 0.008 260);
+    --cyan:oklch(0.72 0.1 200);--cyan-s:oklch(0.20 0.03 200);--cyan-dim:oklch(0.50 0.06 200);
+    --amber:oklch(0.74 0.12 70);--amber-s:oklch(0.20 0.03 70);
+    --good:oklch(0.68 0.1 155);--good-s:oklch(0.20 0.03 155);
+    --risk:oklch(0.68 0.14 25);--risk-s:oklch(0.20 0.04 25);
+    --warn:oklch(0.74 0.12 70);--warn-s:oklch(0.20 0.03 70);
+    --sh:0 2px 8px oklch(0.04 0 0/0.4);--sh-lg:0 4px 20px oklch(0.04 0 0/0.5);
+  }
+  [data-theme="light"]{
+    --bg:oklch(0.96 0.004 260);--srf:oklch(0.99 0.002 260);--el:oklch(1 0.001 260);
+    --map-bg:oklch(0.94 0.008 220);
+    --bdr:oklch(0.89 0.005 260);--bdr-h:oklch(0.82 0.007 260);
+    --tx:oklch(0.18 0.018 260);--tx2:oklch(0.44 0.012 260);--tx3:oklch(0.60 0.008 260);
+    --cyan:oklch(0.46 0.12 200);--cyan-s:oklch(0.92 0.025 200);--cyan-dim:oklch(0.60 0.06 200);
+    --amber:oklch(0.56 0.14 70);--amber-s:oklch(0.94 0.03 70);
+    --good:oklch(0.46 0.12 155);--good-s:oklch(0.93 0.025 155);
+    --risk:oklch(0.50 0.16 25);--risk-s:oklch(0.94 0.035 25);
+    --warn:oklch(0.56 0.14 70);--warn-s:oklch(0.94 0.03 70);
+    --sh:0 2px 8px oklch(0.3 0.01 260/0.06);--sh-lg:0 4px 20px oklch(0.3 0.01 260/0.08);
+  }
+
+  html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--tx);
+    transition:background .4s var(--ease),color .3s var(--ease);-webkit-font-smoothing:antialiased;
+    overflow:hidden}
+
+  /* ═══ LAYOUT: map | right-panel + strip ═══ */
+  .app{height:100vh;display:grid;grid-template-columns:1fr 520px;grid-template-rows:1fr 28px;overflow:hidden}
+
+  /* ═══ LEFT FLOATING PANELS (over map) ═══ */
+  .left{position:absolute;top:var(--s-base);left:var(--s-base);z-index:6;width:320px;
+    display:flex;flex-direction:column;gap:var(--s-base);max-height:calc(100vh - 60px);
+    overflow-y:auto;scrollbar-width:none}
+  .left::-webkit-scrollbar{display:none}
+
+  /* Location card */
+  .loc{background:var(--srf);padding:var(--s-base);display:flex;flex-direction:column;gap:var(--s-md);
+    border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh-lg)}
+  .loc-top{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-family:var(--mono);font-size:.95rem;font-weight:700;letter-spacing:-.3px}
+  .logo .a{color:var(--cyan)}
+  .loc-actions{display:flex;gap:var(--s-xs);margin-left:auto}
+  .cmp-btn{padding:var(--s-xs) var(--s-sm);border-radius:var(--r-sm);border:1px solid var(--cyan);
+    background:transparent;font-family:var(--mono);font-size:.6rem;font-weight:600;color:var(--cyan);cursor:pointer;
+    height:24px;display:flex;align-items:center}
+  .cmp-btn:hover{background:var(--cyan-s)}
+
+  .loc-section{font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)}
+
+  .loc-input-wrap{position:relative;flex:1}
+  .loc-input-row{display:flex;gap:var(--s-xs)}
+  /* Autocomplete dropdown */
+  .ac-drop{display:none;position:absolute;top:100%;left:0;right:0;margin-top:2px;
+    background:var(--srf);border:1px solid var(--bdr-h);border-radius:var(--r);
+    box-shadow:var(--sh-lg);z-index:20;max-height:200px;overflow-y:auto}
+  .ac-drop.open{display:block}
+  .ac-item{padding:var(--s-sm) var(--s-md);font-size:.68rem;color:var(--tx2);cursor:pointer;
+    border-bottom:1px solid var(--bdr);font-family:var(--sans);line-height:1.35;
+    display:flex;align-items:center;gap:var(--s-sm)}
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover{background:var(--el);color:var(--tx)}
+  .ac-item i{width:12px;height:12px;color:var(--tx3);flex-shrink:0}
+  /* Save button */
+  .save-btn{padding:var(--s-xs) var(--s-sm);border-radius:var(--r-sm);border:1px solid var(--bdr);
+    background:transparent;font-family:var(--mono);font-size:.6rem;font-weight:600;color:var(--tx3);
+    cursor:pointer;display:flex;align-items:center;gap:var(--s-xs);transition:all .15s;height:24px}
+  .save-btn:hover{border-color:var(--risk);color:var(--risk)}
+  .save-btn.saved{border-color:var(--risk);color:var(--risk)}
+  .save-btn i{width:11px;height:11px}
+  .loc-input{flex:1;background:var(--el);border:1px solid var(--bdr);border-radius:var(--r-sm);
+    padding:var(--s-sm) var(--s-md);font-family:var(--mono);font-size:.75rem;color:var(--tx);outline:none}
+  .loc-input:focus{border-color:var(--cyan)}
+  .loc-exec{padding:var(--s-sm) var(--s-md);border-radius:var(--r-sm);border:1px solid var(--cyan);
+    background:var(--cyan-s);font-family:var(--mono);font-size:.6rem;font-weight:700;color:var(--cyan);cursor:pointer}
+  .loc-geo{padding:var(--s-sm);border-radius:var(--r-sm);border:1px solid var(--bdr);
+    background:var(--el);cursor:pointer;display:grid;place-items:center;color:var(--tx2)}
+  .loc-geo:hover{border-color:var(--cyan);color:var(--cyan)}
+
+  .fix-row{display:flex;align-items:center;gap:var(--s-sm)}
+  .fix-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan)}
+  .fix-label{font-family:var(--mono);font-size:.6rem;font-weight:600;color:var(--tx2)}
+  .fix-status{font-family:var(--mono);font-size:.55rem;font-weight:600;color:var(--good);margin-left:auto}
+
+  .coord-grid{display:grid;grid-template-columns:auto 1fr;gap:2px var(--s-sm);font-family:var(--mono);font-size:.7rem}
+  .coord-label{color:var(--tx3);font-size:.6rem}
+  .coord-val{color:var(--cyan);font-weight:600}
+  .coord-val.loc-text{color:var(--tx2);font-size:.65rem;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .loc-hint{font-size:.55rem;color:var(--tx3);font-style:italic}
+
+  /* Building card */
+  .bld{background:var(--srf);padding:var(--s-base);display:flex;flex-direction:column;gap:var(--s-md);
+    border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh-lg)}
+  .bld-hdr{display:flex;align-items:center;justify-content:space-between}
+  .bld-title{display:flex;align-items:center;gap:var(--s-sm);font-family:var(--mono);font-size:.65rem;font-weight:600}
+  .bld-title .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan)}
+  .bld-badge{font-size:.55rem;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+
+  .bld-body{display:flex;gap:var(--s-md);align-items:center}
+  .footprint{width:110px;height:110px;flex-shrink:0}
+  .footprint svg{width:100%;height:100%}
+  .bld-stats{display:flex;flex-direction:column;gap:var(--s-xs);font-family:var(--mono);font-size:.65rem}
+  .bld-stat{display:flex;gap:var(--s-sm)}
+  .bld-stat .k{color:var(--tx3);min-width:36px}
+  .bld-stat .v{font-weight:600}
+
+  .bld-hint{font-size:.5rem;color:var(--tx3);font-style:italic}
+
+  /* Risk panel */
+  .risk{background:var(--srf);padding:var(--s-base);display:flex;flex-direction:column;gap:var(--s-md);flex:1;
+    border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh-lg)}
+  .risk-hdr{display:flex;align-items:center;justify-content:space-between}
+  .risk-title{display:flex;align-items:center;gap:var(--s-sm);font-family:var(--mono);
+    font-size:.7rem;font-weight:700;color:var(--cyan);position:relative;cursor:help}
+  .risk-title .tip{display:none;position:absolute;top:100%;left:0;margin-top:var(--s-sm);
+    width:240px;padding:var(--s-sm) var(--s-md);background:var(--el);border:1px solid var(--bdr-h);
+    border-radius:var(--r);font-family:var(--sans);font-size:.65rem;font-weight:400;color:var(--tx2);
+    line-height:1.45;box-shadow:var(--sh-lg);z-index:10}
+  .risk-title:hover .tip{display:block}
+  .risk-count{font-family:var(--mono);font-size:.6rem;font-weight:600;color:var(--tx3);
+    padding:2px 6px;background:var(--el);border-radius:var(--r-sm)}
+
+  .risk-list{display:flex;flex-direction:column;gap:var(--s-sm)}
+  .risk-item{display:flex;flex-direction:column;gap:2px}
+  .risk-item .tone{font-family:var(--mono);font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .risk-item .tone.warn{color:var(--warn)}
+  .risk-item .tone.watch{color:var(--cyan-dim)}
+  .risk-item .tone.good{color:var(--good)}
+  .risk-item .headline{font-family:var(--mono);font-size:.68rem;font-weight:600}
+  .risk-item .detail{font-size:.6rem;color:var(--tx3);line-height:1.4}
+
+  /* ═══ MAP ═══ */
+  .map{position:relative;background:var(--map-bg);overflow:hidden;grid-row:1;grid-column:1}
+  .map-grid{position:absolute;inset:0;opacity:.08;
+    background:repeating-linear-gradient(0deg,transparent,transparent 80px,var(--bdr) 80px,var(--bdr) 81px),
+    repeating-linear-gradient(90deg,transparent,transparent 80px,var(--bdr) 80px,var(--bdr) 81px)}
+  .pin{position:absolute;left:50%;top:48%;display:flex;flex-direction:column;align-items:center;gap:3px;
+    transform:translate(-50%,-100%);z-index:3}
+  .pin .pd{width:14px;height:14px;border-radius:50%;background:var(--cyan);border:2px solid var(--srf);box-shadow:var(--sh)}
+  .pin .pl{background:var(--el);padding:3px 8px;border-radius:var(--r-sm);font-family:var(--mono);
+    font-size:.6rem;font-weight:600;box-shadow:var(--sh)}
+
+  /* Crosshair */
+  .crosshair{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);pointer-events:none;z-index:2;opacity:.3}
+  .crosshair svg{width:60px;height:60px}
+
+  .map-attr{position:absolute;bottom:var(--s-sm);right:var(--s-sm);font-size:.5rem;color:var(--tx3);
+    font-family:var(--mono);display:flex;gap:var(--s-sm)}
+
+  /* ═══ RIGHT PANEL ═══ */
+  .right{grid-row:1;background:var(--srf);border-left:1px solid var(--bdr);overflow:hidden;
+    display:flex;flex-direction:column;transition:background .4s var(--ease)}
+
+  .mode-bar{padding:var(--s-sm) var(--s-md);border-bottom:1px solid var(--bdr);display:flex;
+    align-items:center;gap:var(--s-sm);flex-shrink:0}
+  .mode-toggle{display:flex;background:var(--el);border-radius:var(--r);padding:2px;border:1px solid var(--bdr)}
+  .mode-opt{padding:var(--s-xs) var(--s-md);border-radius:var(--r-sm);font-size:.65rem;font-weight:600;
+    cursor:pointer;transition:all .2s;color:var(--tx3);font-family:var(--mono)}
+  .mode-opt.active{background:var(--srf);color:var(--tx);box-shadow:var(--sh)}
+
+  .fs-ctrl{display:flex;align-items:center;border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-left:auto}
+  .fs-btn{width:26px;height:24px;border:none;background:var(--el);cursor:pointer;
+    font-family:var(--sans);font-weight:700;color:var(--tx2);display:grid;place-items:center;transition:all .15s}
+  .fs-btn:hover{background:var(--bdr);color:var(--tx)}
+  .fs-btn .letter{font-size:.6rem}
+  .fs-btn.up .letter{font-size:.8rem}
+  .fs-sep{width:1px;height:14px;background:var(--bdr)}
+  .fs-label{padding:0 var(--s-xs);font-size:.5rem;font-weight:600;color:var(--tx3);
+    font-family:var(--mono);min-width:28px;text-align:center}
+
+  .tbtn{width:28px;height:28px;border-radius:var(--r-sm);border:1px solid var(--bdr);
+    background:var(--el);cursor:pointer;display:grid;place-items:center;color:var(--tx2);transition:all .15s}
+  .tbtn:hover{border-color:var(--bdr-h);color:var(--tx)}
+
+  /* ─── REPORT VIEW ─── */
+  .report{flex:1;overflow-y:auto;scroll-behavior:smooth}
+  .report::-webkit-scrollbar{width:3px}
+  .report::-webkit-scrollbar-thumb{background:var(--bdr-h);border-radius:2px}
+
+  /* ═══ TYPE SCALE: Major Third 1.25 ═══
+     Display: 1.5rem  |  Heading: 1.05rem  |  Body: 0.85rem
+     Label: 0.72rem   |  Caption: 0.6rem   |  Micro: 0.5rem  */
+
+  .rp-hero{padding:var(--s-xl) var(--s-lg) var(--s-lg);border-bottom:1px solid var(--bdr)}
+  .rp-ey{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--cyan)}
+  .rp-title{font-family:var(--mono);font-size:1.5rem;font-weight:700;letter-spacing:-.5px;margin-top:var(--s-sm);line-height:1.15}
+  .rp-region{font-size:.85rem;color:var(--tx2);margin-top:var(--s-xs)}
+
+  .ch-nav{position:sticky;top:0;z-index:5;background:var(--srf);border-bottom:1px solid var(--bdr);
+    padding:var(--s-sm) var(--s-lg);display:flex;gap:var(--s-xs);overflow-x:auto;scrollbar-width:none}
+  .ch-nav::-webkit-scrollbar{display:none}
+  .ch-nav a{font-size:.55rem;font-weight:600;color:var(--tx3);text-decoration:none;
+    padding:var(--s-sm) var(--s-md);border-radius:var(--r);white-space:nowrap;transition:all .2s;flex-shrink:0;
+    display:flex;flex-direction:column;align-items:center;gap:3px}
+  .ch-nav a i{width:16px;height:16px}
+  .ch-nav a.active{color:var(--cyan);background:var(--cyan-s)}
+  .ch-nav a:hover{color:var(--tx2)}
+
+  .ch{padding:var(--s-lg);border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:var(--s-base)}
+  .ch:last-child{border-bottom:none;padding-bottom:var(--s-2xl)}
+  .ch-n{font-size:.6rem;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em}
+  .ch-q{font-family:var(--mono);font-size:1.05rem;font-weight:700;letter-spacing:-.3px;margin-top:var(--s-xs);line-height:1.25}
+  .ch-a{font-size:.85rem;color:var(--tx2);line-height:1.6;max-width:55ch}
+
+  .mrow{display:flex;gap:var(--s-sm);flex-wrap:wrap}
+  .mc{padding:var(--s-md);background:var(--el);border-radius:var(--r);border:1px solid var(--bdr);
+    display:flex;flex-direction:column;gap:var(--s-xs);flex:1;min-width:110px}
+  .mc .v{font-family:var(--mono);font-size:1.15rem;font-weight:700;letter-spacing:-.3px}
+  .mc .n{font-size:.72rem;color:var(--tx2);font-weight:500}
+  .mc .h{font-size:.6rem;color:var(--tx3);line-height:1.35}
+  .chip{display:inline-flex;align-items:center;gap:3px;padding:2px var(--s-sm);
+    border-radius:var(--r-sm);font-size:.6rem;font-weight:600;width:fit-content}
+  .chip.good{background:var(--good-s);color:var(--good)}
+  .chip.warn{background:var(--warn-s);color:var(--warn)}
+
+  .svc-list{display:flex;flex-direction:column;gap:var(--s-sm)}
+  .svc{display:flex;align-items:center;gap:var(--s-md);padding:var(--s-sm) var(--s-md);
+    border-radius:var(--r);background:var(--el);border:1px solid var(--bdr)}
+  .svc .ico{display:grid;place-items:center;width:28px;height:28px;border-radius:var(--r-sm);
+    background:var(--srf);flex-shrink:0}
+  .svc .ico i{width:13px;height:13px;color:var(--cyan)}
+  .svc .info{flex:1;display:flex;flex-direction:column;gap:1px}
+  .svc .sname{font-size:.78rem;font-weight:600}
+  .svc .splace{font-size:.6rem;color:var(--tx3)}
+  .svc .sdist{font-size:.68rem;font-weight:600;font-family:var(--mono);color:var(--good)}
+
+  .callout{padding:var(--s-sm) var(--s-md);border-radius:var(--r);font-size:.72rem;color:var(--tx2);
+    line-height:1.45;display:flex;gap:var(--s-sm);align-items:flex-start}
+  .callout.warn{background:var(--warn-s)}
+  .callout i{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+  .src{font-size:.48rem;color:var(--tx3);font-style:italic;margin-top:var(--s-xs);display:block;opacity:.7}
+
+  .adv-cta{margin:var(--s-md) var(--s-base);padding:var(--s-md);background:var(--el);
+    border:1px solid var(--bdr);border-radius:var(--r-lg);display:flex;align-items:center;gap:var(--s-md);
+    cursor:pointer;transition:all .2s}
+  .adv-cta:hover{border-color:var(--cyan);background:var(--cyan-s)}
+  .adv-cta .icon i{width:18px;height:18px;color:var(--cyan)}
+  .adv-cta .text{flex:1}
+  .adv-cta .atitle{font-family:var(--mono);font-size:.75rem;font-weight:700}
+  .adv-cta .adesc{font-size:.65rem;color:var(--tx2);margin-top:1px}
+  .adv-cta .arrow i{width:14px;height:14px;color:var(--cyan)}
+
+  /* ─── ADVANCED VIEW ─── */
+  .advanced{flex:1;overflow-y:auto;display:none;flex-direction:column}
+  .advanced.visible{display:flex}
+  .report.hidden{display:none}
+
+  .adv-tabs{padding:var(--s-sm) var(--s-md);border-bottom:1px solid var(--bdr);display:flex;gap:var(--s-xs);
+    overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+  .adv-tabs::-webkit-scrollbar{display:none}
+  .adv-tab{padding:var(--s-sm) var(--s-sm);border-radius:var(--r);background:var(--el);
+    border:1px solid var(--bdr);font-size:.52rem;font-weight:600;color:var(--tx2);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap;transition:all .2s;flex-shrink:0}
+  .adv-tab i{width:14px;height:14px}
+  .adv-tab.active{border-color:var(--cyan);background:var(--cyan-s);color:var(--cyan)}
+
+  .adv-body{flex:1;overflow-y:auto;padding:var(--s-base);display:flex;flex-direction:column;gap:var(--s-lg)}
+  .adv-body::-webkit-scrollbar{width:3px}
+  .adv-body::-webkit-scrollbar-thumb{background:var(--bdr-h);border-radius:2px}
+
+  .sec-t{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:var(--s-sm)}
+
+  /* Heatmap */
+  .heatmap{display:flex;flex-direction:column;gap:1px}
+  .hm-row{display:flex;align-items:center;gap:1px}
+  .hm-mo{width:22px;font-size:.5rem;font-weight:600;color:var(--tx3);text-align:right;padding-right:2px;flex-shrink:0}
+  .hm-cells{display:flex;gap:1px;flex:1}
+  .hm-c{flex:1;height:13px;border-radius:2px;cursor:default;transition:transform .1s}
+  .hm-c:hover{transform:scaleY(1.4);z-index:1}
+  .hr-labels{display:flex;gap:1px;margin-left:24px}
+  .hr-labels span{flex:1;font-size:.42rem;color:var(--tx3);text-align:center}
+
+  .bars{display:flex;align-items:flex-end;gap:2px;height:70px}
+  .bar-g{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;height:100%}
+  .bar-col{flex:1;display:flex;align-items:flex-end;width:100%}
+  .bar{border-radius:2px 2px 0 0;min-height:1px;width:100%;background:var(--cyan);transition:height .5s var(--ease)}
+  .bar-l{font-size:.42rem;color:var(--tx3)}
+
+  .adv-foot{padding:var(--s-sm) var(--s-md);border-top:1px solid var(--bdr);font-size:.55rem;
+    color:var(--tx3);display:flex;justify-content:space-between;font-family:var(--mono);flex-shrink:0}
+
+  /* ═══ BOTTOM STRIP ═══ */
+  .strip{grid-column:1/-1;grid-row:2;height:28px;background:var(--srf);border-top:1px solid var(--bdr);display:flex;
+    align-items:center;padding:0 var(--s-md);gap:var(--s-lg);font-size:.58rem;color:var(--tx3);
+    font-family:var(--mono);z-index:8}
+  .strip .sd{width:5px;height:5px;border-radius:50%;display:inline-block;margin-right:var(--s-xs)}
+  .strip .online{color:var(--good)}
+  .strip .sep{color:var(--bdr)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+  .ch{animation:fadeUp .3s var(--ease) both}
+  .ch:nth-child(1){animation-delay:.04s}
+  .ch:nth-child(2){animation-delay:.08s}
+  .ch:nth-child(3){animation-delay:.12s}
+  .ch:nth-child(4){animation-delay:.16s}
+  .ch:nth-child(5){animation-delay:.20s}
+  .ch:nth-child(6){animation-delay:.24s}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ MAP ═══ -->
+  <div class="map">
+    <div class="map-grid"></div>
+    <div class="crosshair">
+      <svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="20" fill="none" stroke="var(--cyan)" stroke-width="0.5" opacity=".4"/>
+        <circle cx="30" cy="30" r="10" fill="none" stroke="var(--cyan)" stroke-width="0.5" opacity=".3"/>
+        <line x1="30" y1="5" x2="30" y2="55" stroke="var(--cyan)" stroke-width="0.3" opacity=".3"/>
+        <line x1="5" y1="30" x2="55" y2="30" stroke="var(--cyan)" stroke-width="0.3" opacity=".3"/>
+      </svg>
+    </div>
+    <div class="pin"><div class="pl" id="pinLabel">Locating...</div><div class="pd"></div></div>
+    <div class="map-attr"><span>Leaflet</span><span>|</span><span>OSM</span><span>×</span><span>CARTO</span></div>
+
+  <!-- Floating left panels -->
+  <div class="left">
+    <!-- Location Card -->
+    <div class="loc">
+      <div class="loc-top">
+        <div class="logo">settl<span class="a">.</span></div>
+        <div class="loc-actions">
+          <button class="cmp-btn" id="cmpBtn" title="Add a second location to compare">+ CMP</button>
+          <button class="save-btn" id="saveBtn" onclick="toggleSave()" title="Save location"><i data-lucide="heart" style="width:11px;height:11px"></i></button>
+        </div>
+      </div>
+
+      <span class="loc-section">Input</span>
+      <div class="loc-input-row">
+        <button class="loc-geo" onclick="geolocate()" title="Use my location"><i data-lucide="crosshair" style="width:14px;height:14px"></i></button>
+        <div class="loc-input-wrap">
+          <input class="loc-input" id="coordInput" value="" placeholder="Coords, address, or place name"
+            oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Enter')goToLocation()">
+          <div class="ac-drop" id="acDrop"></div>
+        </div>
+        <button class="loc-exec" id="execBtn" onclick="goToLocation()">GO</button>
+      </div>
+
+      <div class="fix-row">
+        <span class="fix-dot"></span>
+        <span class="fix-label">FIX A</span>
+        <span class="fix-status" id="fixStatus">LOCATING...</span>
+      </div>
+
+      <div class="coord-grid" id="coordGrid">
+        <span class="coord-label">LAT</span><span class="coord-val" id="latVal">—</span>
+        <span class="coord-label">LON</span><span class="coord-val" id="lonVal">—</span>
+        <span class="coord-label">CC</span><span class="coord-val" id="ccVal">—</span>
+        <span class="coord-label">LOC</span><span class="coord-val loc-text" id="locVal">Acquiring position...</span>
+      </div>
+
+      <span class="loc-hint">Map click · Drag pin · Enter coords</span>
+    </div>
+
+    <!-- Building Card -->
+    <div class="bld">
+      <div class="bld-hdr">
+        <div class="bld-title"><span class="dot"></span> Building · Fix A</div>
+        <span class="bld-badge">OSM Footprint</span>
+      </div>
+      <div class="bld-body">
+        <div class="footprint">
+          <svg viewBox="0 0 140 140">
+            <!-- Compass grid -->
+            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--bdr)" stroke-width="0.5"/>
+            <circle cx="70" cy="70" r="38" fill="none" stroke="var(--bdr)" stroke-width="0.3"/>
+            <line x1="70" y1="10" x2="70" y2="130" stroke="var(--bdr)" stroke-width="0.3"/>
+            <line x1="10" y1="70" x2="130" y2="70" stroke="var(--bdr)" stroke-width="0.3"/>
+            <!-- Building polygon (irregular quad, rotated ~184°) -->
+            <polygon points="52,38 88,42 84,98 48,94"
+              fill="var(--cyan)" fill-opacity="0.15" stroke="var(--cyan)" stroke-width="1.5"/>
+            <!-- Facade labels -->
+            <text x="30" y="68" fill="var(--cyan)" font-size="7" font-weight="600" font-family="var(--mono)">FRONT</text>
+            <text x="70" y="30" text-anchor="middle" fill="var(--amber)" font-size="6.5" font-weight="600" font-family="var(--mono)">RIGHT</text>
+            <text x="100" y="72" fill="var(--tx3)" font-size="6.5" font-weight="600" font-family="var(--mono)">REAR</text>
+            <text x="64" y="115" text-anchor="middle" fill="var(--tx3)" font-size="6.5" font-weight="600" font-family="var(--mono)">LEFT</text>
+            <!-- N marker -->
+            <text x="70" y="8" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" font-family="var(--mono)">N</text>
+            <text x="70" y="138" text-anchor="middle" fill="var(--tx3)" font-size="6" font-family="var(--mono)">S</text>
+          </svg>
+        </div>
+        <div class="bld-stats">
+          <div class="bld-stat"><span class="k">AXIS</span><span class="v">184° S</span></div>
+          <div class="bld-stat"><span class="k">AREA</span><span class="v">210 m²</span></div>
+          <div class="bld-stat"><span class="k">TYPE</span><span class="v">APARTMENTS</span></div>
+          <div class="bld-stat"><span class="k">FRNT</span><span class="v">W</span></div>
+        </div>
+      </div>
+      <span class="bld-hint">Click a facade to set front</span>
+    </div>
+
+    <!-- Risk Synthesis -->
+    <div class="risk">
+      <div class="risk-hdr">
+        <span class="risk-title"><i data-lucide="zap" style="width:12px;height:12px"></i> Risk Synthesis <i data-lucide="info" style="width:10px;height:10px;opacity:0.5"></i><span class="tip">Aggregated risk signals from all data sources — seismic activity, air quality, extreme weather, wildfires, and environmental hazards — ranked by severity so you see the most important concerns first.</span></span>
+        <span class="risk-count">5</span>
+      </div>
+      <div class="risk-list">
+        <div class="risk-item"><span class="tone warn">WARN</span><span class="headline">Seismic Cadence</span><span class="detail">25 events (M3.7+) past 3 yr · avg 1 mo interval</span></div>
+        <div class="risk-item"><span class="tone warn">WARN</span><span class="headline">Moderate-Strong Seismic</span><span class="detail">Last M5.2 · 6 mo ago · 89 km</span></div>
+        <div class="risk-item"><span class="tone warn">WARN</span><span class="headline">Heat Stress</span><span class="detail">31 days ≥ 35°C past 12 mo · cooling demand + health risk</span></div>
+        <div class="risk-item"><span class="tone watch">WATCH</span><span class="headline">Wind-Borne Pollution</span><span class="detail">NE wind (30% of yr) pulls from commercial 0.3 km ENE</span></div>
+        <div class="risk-item"><span class="tone watch">WATCH</span><span class="headline">PM2.5 Above WHO</span><span class="detail">Mean 11.4 µg/m³ · 2.3× WHO annual limit (5 µg/m³)</span></div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ═══ RIGHT PANEL ═══ -->
+  <div class="right">
+    <div class="mode-bar">
+      <div class="mode-toggle">
+        <div class="mode-opt active" id="modeReport" onclick="setMode('report')">Overview</div>
+        <div class="mode-opt" id="modeAdv" onclick="setMode('advanced')">Advanced</div>
+      </div>
+      <div class="fs-ctrl">
+        <button class="fs-btn down" onclick="fontScale(-1)"><span class="letter">A</span></button>
+        <div class="fs-sep"></div>
+        <span class="fs-label" id="fsLabel">110%</span>
+        <div class="fs-sep"></div>
+        <button class="fs-btn up" onclick="fontScale(1)"><span class="letter">A</span></button>
+      </div>
+      <button class="tbtn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme"><i data-lucide="sun" style="width:14px;height:14px"></i></button>
+    </div>
+
+    <!-- REPORT -->
+    <div class="report" id="reportView">
+      <div class="rp-hero">
+        <span class="rp-ey">Location Report</span>
+        <h1 class="rp-title" id="rpTitle">Acquiring...</h1>
+        <span class="rp-region" id="rpRegion">Requesting location access</span>
+      </div>
+
+      <nav class="ch-nav">
+        <a href="#r-emergency" class="active"><i data-lucide="shield-check"></i> Emergency</a>
+        <a href="#r-climate"><i data-lucide="thermometer"></i> Climate</a>
+        <a href="#r-air"><i data-lucide="leaf"></i> Air</a>
+        <a href="#r-schools"><i data-lucide="graduation-cap"></i> Schools</a>
+        <a href="#r-transit"><i data-lucide="train-front"></i> Transit</a>
+        <a href="#r-sun"><i data-lucide="sun"></i> Sun</a>
+        <a href="#r-hazards"><i data-lucide="triangle-alert"></i> Hazards</a>
+        <a href="#r-nearby"><i data-lucide="map-pin"></i> Nearby</a>
+      </nav>
+
+      <div class="ch" id="r-emergency">
+        <div><span class="ch-n">Emergency Access</span><h2 class="ch-q">How close are emergency services?</h2>
+        <p class="ch-a">Distance to nearest police, fire, and hospital from OpenStreetMap.</p></div>
+        <div class="svc-list">
+          <div class="svc"><span class="ico"><i data-lucide="shield"></i></span><div class="info"><span class="sname">Police</span><span class="splace">Nearest station</span></div><span class="sdist">0.4 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="flame"></i></span><div class="info"><span class="sname">Fire Station</span><span class="splace">Nearest station</span></div><span class="sdist">0.6 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="heart-pulse"></i></span><div class="info"><span class="sname">Hospital</span><span class="splace">Nearest facility</span></div><span class="sdist">1.1 km</span></div>
+        </div>
+        <span class="src">Source: OpenStreetMap / Overpass API</span>
+      </div>
+
+      <div class="ch" id="r-climate">
+        <div><span class="ch-n">Climate</span><h2 class="ch-q">What's the climate like?</h2>
+        <p class="ch-a">Annual averages from historical weather model data.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">17.8°C</span><span class="n">Mean temperature</span></div>
+          <div class="mc"><span class="v">2,840 h</span><span class="n">Annual sun hours</span></div>
+          <div class="mc"><span class="v">412 mm</span><span class="n">Total precipitation</span></div>
+          <div class="mc"><span class="v">9.2</span><span class="n">Peak UV index</span><span class="chip warn"><span style="width:4px;height:4px;border-radius:50%;background:currentColor;display:inline-block"></span> High summer</span></div>
+        </div>
+        <span class="src">Source: Open-Meteo API · Grid: 0.1° ≈ 11km</span>
+      </div>
+
+      <div class="ch" id="r-air">
+        <div><span class="ch-n">Air Quality</span><h2 class="ch-q">What are the pollution levels?</h2>
+        <p class="ch-a">92-day rolling average from nearest monitoring station.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">38</span><span class="n">Mean European AQI</span></div>
+          <div class="mc"><span class="v">4.2</span><span class="n">PM2.5 µg/m³</span><span class="h">WHO limit: 5</span></div>
+          <div class="mc"><span class="v">12.1</span><span class="n">PM10 µg/m³</span><span class="h">WHO limit: 15</span></div>
+          <div class="mc"><span class="v">7.8</span><span class="n">NO₂ µg/m³</span><span class="h">WHO limit: 10</span></div>
+        </div>
+        <span class="src">Source: Open-AQ API · European AQI scale</span>
+      </div>
+
+      <div class="ch" id="r-schools">
+        <div><span class="ch-n">Schools</span><h2 class="ch-q">How many schools are nearby?</h2>
+        <p class="ch-a">Schools tagged in OpenStreetMap within 2km radius.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">12</span><span class="n">Schools within 2km</span></div>
+          <div class="mc"><span class="v">0.3 km</span><span class="n">Nearest school</span></div>
+        </div>
+        <span class="src">Source: OpenStreetMap / Overpass API</span>
+      </div>
+
+      <div class="ch" id="r-transit">
+        <div><span class="ch-n">Transit</span><h2 class="ch-q">What public transport is nearby?</h2>
+        <p class="ch-a">Public transport stops and stations from OpenStreetMap.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">16</span><span class="n">Transit stops within 2km</span></div>
+          <div class="mc"><span class="v">0.8 km</span><span class="n">Nearest station</span></div>
+        </div>
+        <span class="src">Source: OpenStreetMap / Overpass API</span>
+      </div>
+
+      <div class="ch" id="r-sun">
+        <div><span class="ch-n">Sunlight</span><h2 class="ch-q">How much daylight throughout the year?</h2>
+        <p class="ch-a">Calculated from solar geometry for this latitude.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">14.8h</span><span class="n">Summer solstice daylight</span></div>
+          <div class="mc"><span class="v">9.5h</span><span class="n">Winter solstice daylight</span></div>
+          <div class="mc"><span class="v">75°</span><span class="n">Max solar altitude</span></div>
+        </div>
+        <span class="src">Source: Solar geometry calculation (SunCalc)</span>
+      </div>
+
+      <div class="ch" id="r-hazards">
+        <div><span class="ch-n">Hazards</span><h2 class="ch-q">What about seismic and wildfire risk?</h2>
+        <p class="ch-a">Earthquake history from USGS, active fires from NASA satellite data.</p></div>
+        <div class="mrow">
+          <div class="mc"><span class="v">25</span><span class="n">M3+ quakes (3yr, 100km)</span></div>
+          <div class="mc"><span class="v">M5.2</span><span class="n">Largest recent event</span><span class="h">89 km · 6 months ago</span></div>
+          <div class="mc"><span class="v">2</span><span class="n">Active fire hotspots</span><span class="h">Within 220km · FIRMS satellite</span></div>
+        </div>
+        <span class="src">Source: USGS Earthquakes · NASA EONET · FIRMS</span>
+      </div>
+
+      <div class="ch" id="r-nearby">
+        <div><span class="ch-n">Nearby</span><h2 class="ch-q">What's in walking distance?</h2></div>
+        <div class="svc-list">
+          <div class="svc"><span class="ico"><i data-lucide="trees"></i></span><div class="info"><span class="sname">Park</span></div><span class="sdist">0.1 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="pill"></i></span><div class="info"><span class="sname">Pharmacy</span></div><span class="sdist">0.2 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="graduation-cap"></i></span><div class="info"><span class="sname">School</span></div><span class="sdist">0.3 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="shopping-cart"></i></span><div class="info"><span class="sname">Grocery</span></div><span class="sdist">0.5 km</span></div>
+          <div class="svc"><span class="ico"><i data-lucide="train-front"></i></span><div class="info"><span class="sname">Metro</span></div><span class="sdist">0.8 km</span></div>
+        </div>
+      </div>
+
+      <div class="adv-cta" onclick="setMode('advanced')">
+        <span class="icon"><i data-lucide="microscope"></i></span>
+        <div class="text"><div class="atitle">Go deeper</div><div class="adesc">Heatmaps, wind rose, sun paths, pollutant breakdowns and more.</div></div>
+        <span class="arrow"><i data-lucide="arrow-right"></i></span>
+      </div>
+    </div>
+
+    <!-- ADVANCED -->
+    <div class="advanced" id="advView">
+      <div class="adv-tabs">
+        <div class="adv-tab active"><i data-lucide="thermometer"></i> Climate</div>
+        <div class="adv-tab"><i data-lucide="wind"></i> Wind</div>
+        <div class="adv-tab"><i data-lucide="sun"></i> Sun</div>
+        <div class="adv-tab"><i data-lucide="triangle-alert"></i> Hazards</div>
+        <div class="adv-tab"><i data-lucide="leaf"></i> Air</div>
+        <div class="adv-tab"><i data-lucide="map-pin"></i> Context</div>
+      </div>
+      <div class="adv-body">
+        <div><span class="sec-t">Annual overview</span>
+          <div class="mrow">
+            <div class="mc"><span class="v">17.8°C</span><span class="n">Mean temp</span></div>
+            <div class="mc"><span class="v">412 mm</span><span class="n">Rain</span></div>
+            <div class="mc"><span class="v">2,840 h</span><span class="n">Sun</span></div>
+            <div class="mc"><span class="v">9.2</span><span class="n">Peak UV</span></div>
+          </div>
+        </div>
+        <div><span class="sec-t">Temperature · Month × Hour</span><div class="heatmap" id="heatmap"></div></div>
+        <div><span class="sec-t">Monthly precipitation (mm)</span><div class="bars" id="precipChart"></div></div>
+      </div>
+      <div class="adv-foot"><span>Source: Open-Meteo</span><span>Climate</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ BOTTOM STRIP ═══ -->
+  <div class="strip">
+    <span class="online"><span class="sd" style="background:var(--good)"></span>ONLINE</span>
+    <span class="sep">|</span>
+    <span>SYS settl./0.1.0</span>
+    <span class="sep">|</span>
+    <span>TGT A <span id="stripCoord">—</span></span>
+    <span class="sep">|</span>
+    <span id="stripLoc">Acquiring...</span>
+    <span style="margin-left:auto" id="stripTime">—</span>
+  </div>
+</div>
+
+<script>
+// ─── Font Scale (linear 10% steps, default 110%) ───
+let fsStep=3;
+const fsSteps=[0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4];
+function fontScale(dir){
+  fsStep=Math.max(0,Math.min(fsSteps.length-1,fsStep+dir));
+  const z=fsSteps[fsStep];
+  // Zoom content areas only — strip stays fixed
+  document.querySelector('.left').style.zoom=z;
+  document.getElementById('reportView').style.zoom=z;
+  const ab=document.querySelector('.adv-body');if(ab)ab.style.zoom=z;
+  document.getElementById('fsLabel').textContent=Math.round(z*100)+'%';
+}
+
+// ─── Theme ───
+function toggleTheme(){
+  const h=document.documentElement,n=h.dataset.theme==='dark'?'light':'dark';
+  h.dataset.theme=n;
+  const btn=document.getElementById('themeBtn');
+  btn.innerHTML=n==='dark'?'<i data-lucide="moon" style="width:14px;height:14px"></i>':'<i data-lucide="sun" style="width:14px;height:14px"></i>';
+  lucide.createIcons();buildHeatmap();
+}
+
+// ─── Mode Toggle ───
+function setMode(mode){
+  const r=document.getElementById('reportView'),a=document.getElementById('advView');
+  const mr=document.getElementById('modeReport'),ma=document.getElementById('modeAdv');
+  if(mode==='report'){r.style.display='';a.style.display='none';mr.classList.add('active');ma.classList.remove('active')}
+  else{r.style.display='none';a.style.display='flex';ma.classList.add('active');mr.classList.remove('active');buildHeatmap();buildPrecip()}
+}
+
+// ─── Geolocation (browser GPS, not IP) ───
+function geolocate(){
+  document.getElementById('fixStatus').textContent='LOCATING...';
+  document.getElementById('fixStatus').style.color='var(--warn)';
+  if(!navigator.geolocation){document.getElementById('fixStatus').textContent='NO GPS';return}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`)
+      .then(r=>r.json()).then(d=>applyLocation(lat,lon,d)).catch(()=>applyLocation(lat,lon,null));
+  },err=>{
+    document.getElementById('fixStatus').textContent='DENIED';
+    document.getElementById('fixStatus').style.color='var(--risk)';
+    document.getElementById('rpTitle').textContent='Grant Location Access';
+    document.getElementById('rpRegion').textContent='Click the crosshair button or enter coordinates manually';
+  },{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+}
+
+function formatDeg(d,p,n){const dir=d>=0?p:n;d=Math.abs(d);return d.toFixed(5)+'°'+dir}
+
+// ─── Update all location fields from lat/lon + Nominatim data ───
+function applyLocation(lat,lon,data){
+  document.getElementById('coordInput').value=lat.toFixed(4)+', '+lon.toFixed(4);
+  document.getElementById('latVal').textContent=formatDeg(lat,'N','S');
+  document.getElementById('lonVal').textContent=formatDeg(lon,'E','W');
+  document.getElementById('stripCoord').textContent=lat.toFixed(4)+'° '+lon.toFixed(4)+'°';
+  document.getElementById('fixStatus').textContent='ACTIVE';
+  document.getElementById('fixStatus').style.color='var(--good)';
+  if(data){
+    const addr=data.display_name||'';
+    const cc=data.address?.country_code?.toUpperCase()||'—';
+    document.getElementById('ccVal').textContent=cc;
+    document.getElementById('locVal').textContent=addr.substring(0,50);
+    const name=data.address?.suburb||data.address?.city||data.address?.town||data.name||'Location';
+    document.getElementById('pinLabel').textContent=name;
+    document.getElementById('rpTitle').textContent=name;
+    document.getElementById('rpRegion').textContent=(data.address?.city||'')+(data.address?.state?', '+data.address.state:'')+(data.address?.country?', '+data.address.country:'');
+    document.getElementById('stripLoc').textContent=addr.substring(0,60);
+    // Move pin visually (simulate map pan)
+    const pin=document.querySelector('.pin');
+    pin.style.left=(30+Math.random()*40)+'%';
+    pin.style.top=(30+Math.random()*30)+'%';
+    pin.style.transition='all 0.5s var(--ease)';
+  }
+  updateSaveBtn();
+}
+
+// ─── Search as you type (Nominatim, debounced) ───
+let searchTimer=null;
+function onSearchInput(val){
+  clearTimeout(searchTimer);
+  const drop=document.getElementById('acDrop');
+  if(val.length<3){drop.classList.remove('open');return}
+  searchTimer=setTimeout(()=>{
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=6&addressdetails=1`)
+      .then(r=>r.json()).then(results=>{
+        if(!results.length){drop.classList.remove('open');return}
+        drop.innerHTML=results.map((r,i)=>
+          `<div class="ac-item" onclick="selectResult(${i})"><i data-lucide="map-pin"></i>${r.display_name.substring(0,70)}</div>`
+        ).join('');
+        window._searchResults=results;
+        drop.classList.add('open');
+        lucide.createIcons();
+      }).catch(()=>{});
+  },350);
+}
+
+function selectResult(i){
+  const r=window._searchResults[i];
+  document.getElementById('acDrop').classList.remove('open');
+  document.getElementById('coordInput').value=r.display_name.substring(0,50);
+  applyLocation(parseFloat(r.lat),parseFloat(r.lon),r);
+}
+
+// ─── GO button / Enter ───
+function goToLocation(){
+  const val=document.getElementById('coordInput').value.trim();
+  document.getElementById('acDrop').classList.remove('open');
+  if(!val)return;
+  // Check if it's coordinates
+  const coordMatch=val.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if(coordMatch){
+    const lat=parseFloat(coordMatch[1]),lon=parseFloat(coordMatch[2]);
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`)
+      .then(r=>r.json()).then(d=>applyLocation(lat,lon,d)).catch(()=>applyLocation(lat,lon,null));
+  } else {
+    // Forward geocode
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=1&addressdetails=1`)
+      .then(r=>r.json()).then(results=>{
+        if(results.length){const r=results[0];applyLocation(parseFloat(r.lat),parseFloat(r.lon),r)}
+      }).catch(()=>{});
+  }
+}
+
+// Close dropdown on outside click
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.loc-input-wrap'))document.getElementById('acDrop').classList.remove('open');
+});
+
+// ─── Save to localStorage ───
+function getSaved(){try{return JSON.parse(localStorage.getItem('settl_saved')||'[]')}catch(e){return[]}}
+function setSaved(arr){localStorage.setItem('settl_saved',JSON.stringify(arr))}
+
+function getCurrentLoc(){
+  return{lat:document.getElementById('latVal').textContent,
+    lon:document.getElementById('lonVal').textContent,
+    name:document.getElementById('pinLabel').textContent,
+    region:document.getElementById('rpRegion').textContent,
+    ts:Date.now()}
+}
+
+function isSaved(){
+  const cur=document.getElementById('pinLabel').textContent;
+  return getSaved().some(s=>s.name===cur);
+}
+
+function updateSaveBtn(){
+  const btn=document.getElementById('saveBtn');
+  if(isSaved()){btn.classList.add('saved');btn.innerHTML='<i data-lucide="heart" style="width:11px;height:11px;fill:currentColor"></i>'}
+  else{btn.classList.remove('saved');btn.innerHTML='<i data-lucide="heart" style="width:11px;height:11px"></i>'}
+  lucide.createIcons();
+}
+
+function toggleSave(){
+  const cur=getCurrentLoc();
+  if(!cur.name||cur.name==='Locating...')return;
+  let saved=getSaved();
+  if(isSaved()){saved=saved.filter(s=>s.name!==cur.name)}
+  else{saved.push(cur)}
+  setSaved(saved);
+  updateSaveBtn();
+}
+
+// ─── Clock ───
+function updateClock(){
+  const now=new Date();
+  document.getElementById('stripTime').textContent='UTC '+now.toISOString().substring(11,19);
+}
+setInterval(updateClock,1000);updateClock();
+
+// ─── Heatmap ───
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const temps=[[7,6,6,6,7,8,10,12,14,15,16,15,14,14,15,15,14,13,12,11,10,9,8,7],[8,7,7,7,8,9,11,13,15,17,18,17,16,16,17,16,15,14,13,12,11,10,9,8],[10,9,9,9,10,12,14,16,18,20,21,20,19,19,20,19,18,17,16,14,13,12,11,10],[13,12,12,12,13,15,17,20,22,24,25,24,23,23,24,23,22,20,19,17,16,15,14,13],[18,17,17,17,18,20,23,26,28,30,31,30,29,29,30,29,28,26,24,22,21,20,19,18],[23,22,22,22,23,26,28,31,33,35,36,35,34,34,35,34,33,31,29,27,26,25,24,23],[26,25,25,25,26,28,31,34,36,38,38,37,36,36,37,36,35,33,31,29,28,27,26,26],[25,24,24,24,25,28,30,33,35,37,38,37,36,36,37,36,34,32,30,28,27,26,25,25],[22,21,21,21,22,24,27,29,31,33,34,33,32,32,33,32,31,29,27,25,24,23,22,22],[17,16,16,16,17,19,21,24,26,28,29,28,27,27,28,27,26,24,22,20,19,18,17,17],[13,12,12,12,13,14,16,18,20,22,23,22,21,21,22,21,20,19,17,16,15,14,13,13],[9,8,8,8,9,10,12,14,16,18,18,17,16,16,17,17,16,15,13,12,11,10,9,9]];
+function tempColor(t){const r=(t-5)/(38-5);if(r<.25)return`oklch(${.55-r*.3} ${.06+r*.08} 240)`;if(r<.5)return`oklch(${.4+(r-.25)*.4} .04 260)`;if(r<.75)return`oklch(${.5+(r-.5)*.2} ${.1+(r-.5)*.16} 65)`;return`oklch(${.5-(r-.75)*.1} ${.14+(r-.75)*.16} 30)`}
+function buildHeatmap(){
+  const c=document.getElementById('heatmap');if(!c)return;c.innerHTML='';
+  const hl=document.createElement('div');hl.className='hr-labels';
+  for(let h=0;h<24;h++){const s=document.createElement('span');s.textContent=h%6===0?h+'h':'';hl.appendChild(s)}
+  c.appendChild(hl);
+  months.forEach((m,mi)=>{const row=document.createElement('div');row.className='hm-row';
+    const ml=document.createElement('span');ml.className='hm-mo';ml.textContent=m;row.appendChild(ml);
+    const cells=document.createElement('div');cells.className='hm-cells';
+    temps[mi].forEach(t=>{const cell=document.createElement('div');cell.className='hm-c';cell.style.background=tempColor(t);cell.title=m+' · '+t+'°C';cells.appendChild(cell)});
+    row.appendChild(cells);c.appendChild(row)});
+}
+function buildPrecip(){
+  const pc=document.getElementById('precipChart');if(!pc||pc.children.length)return;
+  const precip=[48,42,38,28,18,8,5,6,14,32,52,58],mx=Math.max(...precip);
+  months.forEach((m,i)=>{const g=document.createElement('div');g.className='bar-g';
+    const col=document.createElement('div');col.className='bar-col';
+    const b=document.createElement('div');b.className='bar';b.style.height=(precip[i]/mx*100)+'%';
+    col.appendChild(b);const lbl=document.createElement('span');lbl.className='bar-l';lbl.textContent=m[0];
+    g.appendChild(col);g.appendChild(lbl);pc.appendChild(g)});
+}
+
+// Scroll tracking
+const story=document.getElementById('reportView');
+const chs=story.querySelectorAll('.ch');
+const navs=story.querySelectorAll('.ch-nav a');
+story.addEventListener('scroll',()=>{let cur=chs[0]?.id;chs.forEach(c=>{if(c.getBoundingClientRect().top<300)cur=c.id});navs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur))});
+
+// Detect OS theme preference
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+document.documentElement.dataset.theme = prefersDark ? 'dark' : 'light';
+document.getElementById('themeBtn').innerHTML = prefersDark
+  ? '<i data-lucide="moon" style="width:14px;height:14px"></i>'
+  : '<i data-lucide="sun" style="width:14px;height:14px"></i>';
+// Listen for OS theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  document.documentElement.dataset.theme = e.matches ? 'dark' : 'light';
+  const btn = document.getElementById('themeBtn');
+  btn.innerHTML = e.matches ? '<i data-lucide="moon" style="width:14px;height:14px"></i>' : '<i data-lucide="sun" style="width:14px;height:14px"></i>';
+  lucide.createIcons();
+});
+
+// Init
+fontScale(0); // apply default 110%
+lucide.createIcons();
+// Auto-geolocate on load
+geolocate();
+</script>
+</body>
+</html>
