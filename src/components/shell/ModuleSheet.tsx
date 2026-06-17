@@ -74,7 +74,7 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose }: 
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 40, opacity: 0 }}
           transition={{ type: 'tween', duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute top-0 right-[32px] bottom-0 w-[min(680px,calc(100vw-200px))] bg-panel/95 backdrop-blur-md border-l border-edge shadow-hud-strong flex flex-col z-20"
+          className="absolute top-0 right-[32px] bottom-0 w-[min(680px,calc(100vw-200px))] bg-panel/95 backdrop-blur-md border-l border-edge shadow-panel-strong rounded-l-lg flex flex-col z-20"
         >
           <header className="border-b border-edge px-5 py-3 flex items-center justify-between shrink-0 bg-rail/50">
             <div className="flex items-baseline gap-3">
@@ -117,7 +117,7 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose }: 
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-scan-line">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <div className="p-5 stagger">
               <ErrorBoundary>
                 <Suspense fallback={<LoadingSkeleton />}>
