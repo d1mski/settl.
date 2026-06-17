@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import type { BuildingData, Coordinates } from '../../types';
 import { useOverpassBuilding } from '../../hooks/useOverpass';
 import { useFacadeOverride } from '../../hooks/useFacadeOverride';
@@ -118,8 +119,9 @@ export function BuildingCard({ coords, slot }: Props) {
             </div>
             {adjusted.matchDistanceM !== null &&
               adjusted.matchDistanceM > 40 && (
-                <div className="mt-2 text-[9px] font-mono uppercase tracking-widest text-warn/80">
-                  ⚠ NEAREST FOOTPRINT {adjusted.matchDistanceM.toFixed(0)}M FROM PIN
+                <div className="mt-2 text-[9px] font-mono uppercase tracking-widest text-warn/80 flex items-center gap-1">
+                  <TriangleAlert size={12} strokeWidth={1.4} className="shrink-0" />
+                  NEAREST FOOTPRINT {adjusted.matchDistanceM.toFixed(0)}M FROM PIN
                 </div>
               )}
           </>

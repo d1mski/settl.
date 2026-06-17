@@ -1,45 +1,14 @@
+import { Sun, Sunrise, Wind, TriangleAlert, Gauge, Globe } from 'lucide-react';
 import type { TabId } from '../../types';
 import { TAB_ORDER } from '../../types';
 
 const ICONS: Record<TabId, JSX.Element> = {
-  climate: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.5 5.5l1.5 1.5M17 17l1.5 1.5M5.5 18.5L7 17M17 7l1.5-1.5" />
-      <circle cx="12" cy="12" r="4" />
-    </svg>
-  ),
-  wind: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <path d="M3 8h11a3 3 0 100-6 3 3 0 00-2.83 2" />
-      <path d="M3 16h15a3 3 0 110 6 3 3 0 01-2.83-2" />
-      <path d="M3 12h9" />
-    </svg>
-  ),
-  sun: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-    </svg>
-  ),
-  hazards: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <path d="M12 3l9 16H3L12 3z" />
-      <path d="M12 10v4M12 17v0.5" strokeLinecap="round" />
-    </svg>
-  ),
-  air: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <path d="M3 8c2 0 3-1 5-1s3 1 5 1 3-1 5-1 3 1 3 1" />
-      <path d="M3 14c2 0 3-1 5-1s3 1 5 1 3-1 5-1 3 1 3 1" />
-      <path d="M3 20c2 0 3-1 5-1s3 1 5 1 3-1 5-1 3 1 3 1" />
-    </svg>
-  ),
-  context: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3c3 3 4.5 6 4.5 9s-1.5 6-4.5 9M12 3c-3 3-4.5 6-4.5 9s1.5 6 4.5 9" />
-    </svg>
-  ),
+  climate: <Sun className="w-full h-full" strokeWidth={1.4} />,
+  wind:    <Wind className="w-full h-full" strokeWidth={1.4} />,
+  sun:     <Sunrise className="w-full h-full" strokeWidth={1.4} />,
+  hazards: <TriangleAlert className="w-full h-full" strokeWidth={1.4} />,
+  air:     <Gauge className="w-full h-full" strokeWidth={1.4} />,
+  context: <Globe className="w-full h-full" strokeWidth={1.4} />,
 };
 
 const CODES: Record<TabId, string> = {
