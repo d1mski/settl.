@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Coordinates, TabId } from './types';
 import type { Slot } from './hooks/useUrlState';
-import { MapCanvas, type BaseMap } from './components/shell/MapCanvas';
+import { MapCanvas } from './components/shell/MapCanvas';
 import { MapHud } from './components/shell/MapHud';
 import { LocationIntelCard } from './components/shell/LocationIntelCard';
 import { BuildingCard } from './components/shell/BuildingCard';
@@ -18,16 +18,6 @@ export default function App() {
   const { result: geocodedA, loading: resolvingA } = useReverseGeocode(state.coordsA);
   const { result: geocodedB, loading: resolvingB } = useReverseGeocode(state.coordsB);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [baseMap, setBaseMap] = useState<BaseMap>('dark');
-
-  useEffect(() => {
-    const el = document.documentElement;
-    if (baseMap === 'light') el.classList.add('theme-light');
-    else el.classList.remove('theme-light');
-    return () => {
-      // leave class in place between renders; only cleanup on unmount
-    };
-  }, [baseMap]);
 
   const compareMode = state.coordsB !== null;
 
@@ -87,7 +77,6 @@ export default function App() {
               onChangeB={setCoordsB}
               activeSlot={state.slot}
               compareMode={compareMode}
-              baseMap={baseMap}
               activeTab={activeTab}
             />
             <MapHud
@@ -108,8 +97,6 @@ export default function App() {
                   resolvingB={resolvingB}
                   activeSlot={state.slot}
                   compareMode={compareMode}
-                  baseMap={baseMap}
-                  onBaseMapChange={setBaseMap}
                   onSetSlot={setSlot}
                   onChangeA={setCoordsA}
                   onChangeB={setCoordsB}

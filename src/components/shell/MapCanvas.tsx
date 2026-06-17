@@ -12,6 +12,7 @@ import { iconA, iconB } from '../../utils/mapIcons';
 import { ContextMapLayer } from './layers/ContextMapLayer';
 import { HazardsMapLayer } from './layers/HazardsMapLayer';
 import { ClimateCellLayer } from './layers/ClimateCellLayer';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const DEFAULT_CENTER: [number, number] = [30, 20];
 const CITY_ZOOM = 13;
@@ -25,7 +26,6 @@ interface Props {
   onChangeB: (coords: Coordinates) => void;
   activeSlot: 'a' | 'b';
   compareMode: boolean;
-  baseMap: BaseMap;
   activeTab: TabId | null;
 }
 
@@ -131,9 +131,11 @@ export function MapCanvas({
   onChangeB,
   activeSlot,
   compareMode,
-  baseMap,
   activeTab,
 }: Props) {
+  const { theme } = useTheme();
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
   const [initial] = useState<{
     center: [number, number];
     zoom: number;
@@ -145,10 +147,9 @@ export function MapCanvas({
   }));
 
   const showLine = compareMode && coordsA && coordsB;
-  const baseUrl =
-    baseMap === 'light'
-      ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const baseUrl = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
   const attribution =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
@@ -162,7 +163,7 @@ export function MapCanvas({
         className="h-full w-full"
       >
         <TileLayer
-          key={`base-${baseMap}`}
+          key={`base-${isDark ? 'dark' : 'light'}`}
           attribution={attribution}
           url={baseUrl}
           maxZoom={20}

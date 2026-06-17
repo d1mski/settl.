@@ -17,8 +17,8 @@ interface Props {
   resolvingB: boolean;
   activeSlot: Slot;
   compareMode: boolean;
-  baseMap: BaseMap;
-  onBaseMapChange: (base: BaseMap) => void;
+  baseMap?: BaseMap;
+  onBaseMapChange?: (base: BaseMap) => void;
   onSetSlot: (slot: Slot) => void;
   onChangeA: (coords: Coordinates | null) => void;
   onChangeB: (coords: Coordinates | null) => void;
@@ -158,7 +158,9 @@ export function LocationIntelCard({
             >
               {searching ? '...' : 'EXEC'}
             </button>
-            <ThemeToggle baseMap={baseMap} onBaseMapChange={onBaseMapChange} />
+            {baseMap !== undefined && onBaseMapChange !== undefined && (
+              <ThemeToggle baseMap={baseMap} onBaseMapChange={onBaseMapChange} />
+            )}
           </div>
 
           {error && (
