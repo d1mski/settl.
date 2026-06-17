@@ -10,24 +10,24 @@ See: .planning/PROJECT.md (updated 2026-06-17)
 ## Current Position
 
 Phase: 1 of 6 (CSS Foundations + Reskin)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-06-17 — Roadmap created, milestone v1.0 scoped
+Plan: 2 of 2 in current phase (01-01, 01-02 complete)
+Status: In progress
+Last activity: 2026-06-17 — 01-02 complete: HUD removal + rounded corners applied
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: —
+- Total plans completed: 2
+- Average duration: ~10min
+- Total execution time: ~20min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1 — CSS Foundations + Reskin | 2 | ~20min | ~10min |
 
 *Updated after each plan completion*
 
@@ -40,6 +40,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Research] CSS zoom prohibited on any Leaflet ancestor — font scale uses font-size on html + rem only
 - [Research] Nominatim debounce locked at 400ms (rate limit policy)
 - [Research] ReportPanel renders INSIDE ModuleSheet — no new z-index context
+- [01-02] Removed brackets prop entirely from Panel API — no callers needed it after reskin
+- [01-02] MapHud simplified to compareMode+activeSlot only — coordsA/coordsB were unused inside component
 
 ### Pending Todos
 
@@ -52,5 +54,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-17
-Stopped at: ROADMAP.md, STATE.md, REQUIREMENTS.md traceability written. Ready for /gsd:plan-phase 1.
+Stopped at: Completed 01-02-PLAN.md — HUD removal + rounded corners on all panels
 Resume file: None

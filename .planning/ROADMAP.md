@@ -32,8 +32,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Leaflet popups and tooltip arrows render correctly on both dark and light themes after all CSS changes
 **Plans:** 3 plans
 Plans:
-- [ ] 01-01-PLAN.md — CSS token layer: strip HUD decorative CSS, add rounded corner tokens, update Leaflet overrides
-- [ ] 01-02-PLAN.md — Component cleanup: remove brackets from Panel, strip MapHud decorations, apply rounded corners
+- [x] 01-01-PLAN.md — CSS token layer: strip HUD decorative CSS, add rounded corner tokens, update Leaflet overrides
+- [x] 01-02-PLAN.md — Component cleanup: remove brackets from Panel, strip MapHud decorations, apply rounded corners
 - [ ] 01-03-PLAN.md — Brand rename: rebrand BlindSpot to settl. across all files
 **UI hint**: yes
 
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. CSS Foundations + Reskin | 0/3 | Planned | - |
+| 1. CSS Foundations + Reskin | 2/3 | In progress | - |
 | 2. App Shell State | 0/? | Not started | - |
 | 3. LocationIntelCard Enhancements | 0/? | Not started | - |
 | 4. Saved Locations | 0/? | Not started | - |
