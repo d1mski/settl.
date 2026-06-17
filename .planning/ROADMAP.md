@@ -74,7 +74,9 @@ Plans:
   2. Clicking a saved location in the list re-centers the map and reloads all module data for that location
   3. Removing a saved location removes it from the list immediately and does not reappear after refresh
   4. Saving an 11th location is rejected gracefully (10-item cap enforced, user informed)
-**Plans**: TBD
+**Plans:** 0/1 plans executed
+Plans:
+- [ ] 04-01-PLAN.md — SavedLocation type, useSavedLocations hook, heart toggle + saved list in LocationIntelCard
 **UI hint**: yes
 
 ### Phase 5: ModuleRail + Lucide Icons
@@ -114,6 +116,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. CSS Foundations + Reskin | 0/3 | Planned    |  |
 | 2. App Shell State | 1/2 | In Progress | - |
 | 3. LocationIntelCard Enhancements | 0/? | Not started | - |
-| 4. Saved Locations | 0/? | Not started | - |
+| 4. Saved Locations | 0/1 | Planned | - |
 | 5. ModuleRail + Lucide Icons | 0/2 | Planned | - |
 | 6. ReportPanel (Overview Mode) | 0/? | Not started | - |
