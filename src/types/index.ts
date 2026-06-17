@@ -3,6 +3,14 @@ export interface Coordinates {
   lon: number;
 }
 
+export interface SavedLocation {
+  id: string;       // `${lat.toFixed(5)},${lon.toFixed(5)}`
+  label: string;    // reverse-geocoded address or fallback coords string
+  lat: number;
+  lon: number;
+  savedAt: number;  // Date.now() timestamp for stable ordering
+}
+
 export type ModuleStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export interface ModuleState<T> {
