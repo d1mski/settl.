@@ -29,12 +29,12 @@ const ContextModule = lazy(() =>
 );
 
 const TAB_ICONS: Record<TabId, JSX.Element> = {
-  climate: <SunLucide className="w-4 h-4" strokeWidth={1.4} />,
-  wind:    <Wind className="w-4 h-4" strokeWidth={1.4} />,
-  sun:     <Sunrise className="w-4 h-4" strokeWidth={1.4} />,
-  hazards: <TriangleAlert className="w-4 h-4" strokeWidth={1.4} />,
-  air:     <Gauge className="w-4 h-4" strokeWidth={1.4} />,
-  context: <Globe className="w-4 h-4" strokeWidth={1.4} />,
+  climate: <SunLucide className="w-5 h-5" strokeWidth={1.4} />,
+  wind:    <Wind className="w-5 h-5" strokeWidth={1.4} />,
+  sun:     <Sunrise className="w-5 h-5" strokeWidth={1.4} />,
+  hazards: <TriangleAlert className="w-5 h-5" strokeWidth={1.4} />,
+  air:     <Gauge className="w-5 h-5" strokeWidth={1.4} />,
+  context: <Globe className="w-5 h-5" strokeWidth={1.4} />,
 };
 
 interface Props {
@@ -100,14 +100,14 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resol
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            {/* Horizontal module tabs */}
-            <div className="px-4 py-2 border-b border-edge flex gap-1 shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {/* Horizontal module tabs — icon on top, label below */}
+            <div className="px-4 py-3 border-b border-edge flex gap-2 shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               {TAB_ORDER.map(id => (
                 <button
                   key={id}
                   onClick={() => onSelect(id)}
                   disabled={!coordsA}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-mono font-semibold tracking-wider transition-colors whitespace-nowrap ${
+                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-md text-[9px] font-mono font-semibold tracking-wider transition-colors whitespace-nowrap min-w-[60px] ${
                     active === id
                       ? 'bg-cyan/10 text-cyan'
                       : 'text-muted hover:text-ink hover:bg-edge/40'
