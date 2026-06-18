@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: CSS Foundations + Reskin** - Tokens, rounded corners, brand rename, Leaflet override block
 - [ ] **Phase 2: App Shell State** - 3-state theme toggle, OS detection, FontScaleContext, A-/A+ controls
-- [ ] **Phase 3: LocationIntelCard Enhancements** - Debounced autocomplete, geolocation button, plain-English headers
+- [x] **Phase 3: LocationIntelCard Enhancements** - Debounced autocomplete, geolocation button, plain-English headers (completed 2026-06-18)
 - [ ] **Phase 4: Saved Locations** - Heart toggle, localStorage persistence, labeled location list
 - [ ] **Phase 5: ModuleRail + Lucide Icons** - Icon swap in rail, section headers, service rows, overview toggle UI
 - [ ] **Phase 6: ReportPanel (Overview Mode)** - Scrollable overview panel inside ModuleSheet, view toggle, severity cards
@@ -62,10 +62,10 @@ Plans:
   2. Clicking "Use my location" prompts for permission (never autofires); on grant, map centers on GPS coordinates
   3. Declining or revoking geolocation permission shows a clear inline message, no uncaught errors
   4. All section headers across modules display plain English labels ("Climate", "Air Quality") with no §XX codes visible
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 03-01-PLAN.md — GPS geolocation button, debounced autocomplete dropdown with keyboard nav and click-outside dismiss
-- [ ] 03-02-PLAN.md — Remove section codes from SectionHeader and LocationIntelCard inline labels, visual checkpoint
+- [x] 03-02-PLAN.md — Remove section codes from SectionHeader and LocationIntelCard inline labels, visual checkpoint
 **UI hint**: yes
 
 ### Phase 4: Saved Locations
@@ -118,7 +118,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. CSS Foundations + Reskin | 0/3 | Planned    |  |
 | 2. App Shell State | 1/2 | In Progress | - |
-| 3. LocationIntelCard Enhancements | 1/2 | In Progress|  |
+| 3. LocationIntelCard Enhancements | 2/2 | Complete   | 2026-06-18 |
 | 4. Saved Locations | 0/1 | Planned | - |
 | 5. ModuleRail + Lucide Icons | 0/2 | Planned    |  |
 | 6. ReportPanel (Overview Mode) | 0/? | Not started | - |
