@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: CSS Foundations + Reskin** - Tokens, rounded corners, brand rename, Leaflet override block
 - [ ] **Phase 2: App Shell State** - 3-state theme toggle, OS detection, FontScaleContext, A-/A+ controls
-- [x] **Phase 3: LocationIntelCard Enhancements** - Debounced autocomplete, geolocation button, plain-English headers (completed 2026-06-18)
+- [x] **Phase 3: LocationIntelCard Enhancements** - Debounced autocomplete, geolocation button, plain-English headers (completed 2026-06-18)
 - [ ] **Phase 4: Saved Locations** - Heart toggle, localStorage persistence, labeled location list
 - [ ] **Phase 5: ModuleRail + Lucide Icons** - Icon swap in rail, section headers, service rows, overview toggle UI
 - [ ] **Phase 6: ReportPanel (Overview Mode)** - Scrollable overview panel inside ModuleSheet, view toggle, severity cards
@@ -106,7 +106,10 @@ Plans:
   3. Each card shows an OK / Watch / Alert status indicator derived from existing risk synthesis data
   4. Clicking the advanced toggle switches to the existing module-detail view; clicking back returns to overview without data reload
   5. ReportPanel renders inside ModuleSheet with no new z-index context that buries Leaflet popups
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 06-01-PLAN.md — ChapterCard component + overviewSeverity utility (building blocks)
+- [ ] 06-02-PLAN.md — ReportPanel assembly, ModuleSheet view branching, App.tsx onDrillDown wiring
 **UI hint**: yes
 
 ## Progress
@@ -121,4 +124,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. LocationIntelCard Enhancements | 2/2 | Complete   | 2026-06-18 |
 | 4. Saved Locations | 0/1 | Planned | - |
 | 5. ModuleRail + Lucide Icons | 0/2 | Planned    |  |
-| 6. ReportPanel (Overview Mode) | 0/? | Not started | - |
+| 6. ReportPanel (Overview Mode) | 0/2 | Planned | - |
