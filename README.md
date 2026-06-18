@@ -4,6 +4,13 @@ Pin a location, see what it's actually like to live there. Climate, wind, sun, a
 
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 
+<img width="1792" height="1033" alt="image" src="https://github.com/user-attachments/assets/860aa7d3-859f-4b2c-bea3-652c468e1eb8" />
+<img width="553" height="252" alt="image" src="https://github.com/user-attachments/assets/b9c1a751-c3dc-45d6-bb95-d11706ab270c" />
+<img width="552" height="513" alt="image" src="https://github.com/user-attachments/assets/9e23e6f6-880d-4ce2-920e-975ad623e2af" />
+<img width="560" height="518" alt="image" src="https://github.com/user-attachments/assets/78c91201-a784-4c85-bd46-d50e0ac9efde" />
+
+
+
 ## The backstory
 
 I was about to relocate to a new area. The house was great, the neighborhood looked good. But the area is known for high winds, and that was my major blind spot. Would I be able to leave the house with a small kid in winter without getting soaked and blasted by gale-force gusts? That kind of thing doesn't show up on a house listing or a weekend visit in June.
