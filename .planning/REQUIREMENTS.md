@@ -17,8 +17,8 @@
 
 ## Features
 
-- [ ] **FEAT-01**: App requests browser geolocation on load (permission-aware, GPS accuracy, HTTPS) and auto-populates location
-- [ ] **FEAT-02**: Search input provides autocomplete dropdown from Nominatim (400ms debounce, 3-char min, keyboard navigation, AbortController cleanup)
+- [x] **FEAT-01**: App requests browser geolocation on load (permission-aware, GPS accuracy, HTTPS) and auto-populates location
+- [x] **FEAT-02**: Search input provides autocomplete dropdown from Nominatim (400ms debounce, 3-char min, keyboard navigation, AbortController cleanup)
 - [ ] **FEAT-03**: User can save/unsave locations via heart toggle, persisted to localStorage (max 10, schema-versioned)
 
 ## Future Requirements
@@ -46,6 +46,6 @@
 | UX-03 | Phase 5 + 6 | Complete |
 | UX-04 | Phase 2 | Pending |
 | UX-05 | Phase 2 | Pending |
-| FEAT-01 | Phase 3 | Pending |
-| FEAT-02 | Phase 3 | Pending |
+| FEAT-01 | Phase 3 | Complete |
+| FEAT-02 | Phase 3 | Complete |
 | FEAT-03 | Phase 4 | Pending |

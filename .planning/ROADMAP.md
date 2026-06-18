@@ -62,9 +62,9 @@ Plans:
   2. Clicking "Use my location" prompts for permission (never autofires); on grant, map centers on GPS coordinates
   3. Declining or revoking geolocation permission shows a clear inline message, no uncaught errors
   4. All section headers across modules display plain English labels ("Climate", "Air Quality") with no §XX codes visible
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 Plans:
-- [ ] 03-01-PLAN.md — GPS geolocation button, debounced autocomplete dropdown with keyboard nav and click-outside dismiss
+- [x] 03-01-PLAN.md — GPS geolocation button, debounced autocomplete dropdown with keyboard nav and click-outside dismiss
 - [ ] 03-02-PLAN.md — Remove section codes from SectionHeader and LocationIntelCard inline labels, visual checkpoint
 **UI hint**: yes
 
@@ -118,7 +118,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. CSS Foundations + Reskin | 0/3 | Planned    |  |
 | 2. App Shell State | 1/2 | In Progress | - |
-| 3. LocationIntelCard Enhancements | 0/2 | Planned | - |
+| 3. LocationIntelCard Enhancements | 1/2 | In Progress|  |
 | 4. Saved Locations | 0/1 | Planned | - |
 | 5. ModuleRail + Lucide Icons | 0/2 | Planned    |  |
 | 6. ReportPanel (Overview Mode) | 0/? | Not started | - |
