@@ -267,7 +267,7 @@ export function LocationIntelCard({
       <div className="p-4 space-y-3">
         <div>
           <div className="text-[9px] font-mono uppercase tracking-widest text-muted mb-1.5 flex items-center gap-2">
-            <span>§01 · INPUT</span>
+            <span>INPUT</span>
             <span className="flex-1 h-px bg-edge" />
             {compareMode && (
               <SlotToggle activeSlot={activeSlot} onSetSlot={onSetSlot} />
@@ -594,7 +594,7 @@ function FixBlock({
     >
       <div className="text-[9px] font-mono uppercase tracking-widest text-muted mb-1.5 flex items-center gap-2">
         <span className={`inline-block w-1.5 h-1.5 ${toneBg}`} />
-        <span>§02 · {label}</span>
+        <span>{label}</span>
         {active && <span className={`text-[8px] ${toneText}`}>· ACTIVE</span>}
         <span className="flex-1 h-px bg-edge" />
       </div>

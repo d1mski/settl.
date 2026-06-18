@@ -53,8 +53,8 @@ interface Props {
   view: 'overview' | 'advanced';
 }
 
-export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, view }: Props) {
-  // view prop consumed by Phase 6 for ReportPanel switching
+export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, view: _view }: Props) {
+  // _view prop consumed by Phase 6 for ReportPanel switching
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
