@@ -1,4 +1,6 @@
 <img width="2556" height="1300" alt="image" src="https://github.com/user-attachments/assets/4f178b05-7682-4f3b-b7b2-775c806a4ed0" />
+<img width="2558" height="1292" alt="image" src="https://github.com/user-attachments/assets/d07537e0-d925-4490-a6e6-db618fd86054" />
+
 
 # settl. - Location Intelligence.
 
