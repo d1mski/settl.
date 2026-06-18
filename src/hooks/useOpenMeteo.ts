@@ -44,7 +44,6 @@ const DAILY_VARS = [
   'wind_gusts_10m_max',
   'wind_direction_10m_dominant',
   'sunshine_duration',
-  'uv_index_max',
 ];
 
 const cache = new Map<string, ClimateData>();
@@ -59,7 +58,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const KEY_VERSION = 'v6';
+const KEY_VERSION = 'v7';
 
 function makeKey(coords: Coordinates, start: string, end: string, model: string): string {
   return `${KEY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}|${start}|${end}|${model}`;
@@ -123,6 +122,19 @@ function buildUrl(
   return `${BASE}?${params.toString()}`;
 }
 
+// UV index not available on ICON model; fetch separately without model param
+function buildUvUrl(coords: Coordinates, start: string, end: string): string {
+  const params = new URLSearchParams({
+    latitude: coords.lat.toString(),
+    longitude: coords.lon.toString(),
+    start_date: start,
+    end_date: end,
+    daily: 'uv_index_max',
+    timezone: 'auto',
+  });
+  return `${BASE}?${params.toString()}`;
+}
+
 function arr(obj: Record<string, number[] | string[]>, key: string): number[] {
   return (obj[key] as number[]) ?? [];
 }
@@ -165,7 +177,11 @@ async function fetchOpenMeteo(
   signal: AbortSignal,
 ): Promise<ClimateData> {
   const url = buildUrl(coords, start, end, model);
-  const raw = await fetchWithBackoff(url, signal);
+  const uvUrl = buildUvUrl(coords, start, end);
+  const [raw, uvRaw] = await Promise.all([
+    fetchWithBackoff(url, signal),
+    fetchWithBackoff(uvUrl, signal).catch(() => null),
+  ]);
 
   const resolved: Coordinates = { lat: raw.latitude, lon: raw.longitude };
   const distanceMeters = haversine(coords, resolved);
@@ -208,7 +224,7 @@ async function fetchOpenMeteo(
     windGustsMax: arr(raw.daily, 'wind_gusts_10m_max'),
     windDirectionDominant: arr(raw.daily, 'wind_direction_10m_dominant'),
     sunshineDuration: arr(raw.daily, 'sunshine_duration'),
-    uvIndexMax: arr(raw.daily, 'uv_index_max'),
+    uvIndexMax: uvRaw ? arr(uvRaw.daily, 'uv_index_max') : [],
   };
 
   return { resolved: resolvedLoc, hourly, daily };
