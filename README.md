@@ -20,6 +20,26 @@ Recent earthquakes from USGS and active wildfires from NASA FIRMS. Schools, hosp
 
 You can compare two locations side by side and bookmark spots you're considering.
 
+## Modules
+
+The app is organized into six modules. You pick a location on the map, then drill into whichever angle matters to you.
+
+**Climate** pulls a full year of historical daily data from Open-Meteo. You get monthly temperature and precipitation charts, a heatmap grid showing day-by-day patterns across the year, extreme day counts (how many days above 35C, below 0C, etc.), and UV index bands. Enough to see whether summers are brutal or winters are mild before you experience them.
+
+**Wind** builds a wind rose from hourly historical data, so you can see which direction wind comes from most often and how hard it blows. There's a seasonal breakdown too, because wind in January and wind in July can be completely different stories.
+
+**Sun** calculates the sun path arc for any date using SunCalc, shows golden hour and daylight duration across the year, and (if building footprint data exists in OpenStreetMap) estimates how many hours of direct sun each facade of a building gets. Useful for figuring out which rooms get cooked in summer.
+
+**Air quality** shows real-time AQI, PM2.5, pollen counts, and individual pollutant levels over time. All from Open-Meteo's air quality API.
+
+**Hazards** maps recent earthquakes within range (USGS data) and active wildfire detections (NASA FIRMS satellite data). Each gets a mini map and magnitude/intensity charts.
+
+**Context** pulls nearby points of interest from OpenStreetMap via the Overpass API: schools, hospitals, clinics, transit stops, parks, and bodies of water. It also grabs relevant Wikipedia articles about the area so you get some local background. The nearest feature of each type is shown with distance.
+
+### Other features
+
+There's an overview mode that summarizes all modules on one screen with severity indicators, so you can get the headline picture without drilling into each one. Compare mode lets you pin two locations and see their data side by side. Saved locations persist in your browser (IndexedDB) so you can come back to spots you're evaluating.
+
 ## Run it
 
 ```bash
