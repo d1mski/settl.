@@ -1,5 +1,14 @@
 <img width="2556" height="1300" alt="image" src="https://github.com/user-attachments/assets/4f178b05-7682-4f3b-b7b2-775c806a4ed0" />
-<img width="2558" height="1292" alt="image" src="https://github.com/user-attachments/assets/d07537e0-d925-4490-a6e6-db618fd86054" />
+
+<img width="579" height="1164" alt="image" src="https://github.com/user-attachments/assets/d1b955f1-7963-4b3a-8868-849dfc3b7910" />
+
+<img width="612" height="868" alt="image" src="https://github.com/user-attachments/assets/b44fa445-2c22-4b89-b6c7-5518e6135ae5" />
+
+
+<img width="609" height="1024" alt="image" src="https://github.com/user-attachments/assets/af9d5246-2541-497e-8299-bf521d933a70" />
+
+<img width="616" height="1206" alt="image" src="https://github.com/user-attachments/assets/79e178fd-df93-4aa0-9c9f-0a803736c9a2" />
+
 
 
 # settl. - Location Intelligence.
