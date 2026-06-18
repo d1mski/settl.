@@ -24,8 +24,8 @@ React 18 · TypeScript · Vite · Tailwind CSS · Leaflet · Recharts · Framer 
 ## Getting started
 
 ```bash
-git clone https://github.com/d1mski/settl-location-intelligence.git
-cd settl-location-intelligence
+git clone https://github.com/d1mski/settl..git
+cd settl.
 npm install
 npm run dev
 ```
