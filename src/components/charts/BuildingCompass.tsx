@@ -7,10 +7,10 @@ interface Props {
 }
 
 const FACADE_COLORS: Record<string, string> = {
-  Front: '#7eeaff',
-  Right: '#ffb347',
+  Front: '#ffb347',
+  Right: '#a5d8ff',
   Rear: '#e8eef5',
-  Left: '#a5d8ff',
+  Left: '#7eeaff',
 };
 
 const EARTH_RADIUS_M = 6371000;
