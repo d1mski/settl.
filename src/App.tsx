@@ -65,6 +65,11 @@ export default function App() {
 
   const closeSheet = useCallback(() => setSheetOpen(false), []);
   const toggleView = useCallback(() => setViewMode(v => v === 'overview' ? 'advanced' : 'overview'), []);
+  const handleDrillDown = useCallback((tab: TabId) => {
+    update({ tab });
+    setSheetOpen(true);
+    setViewMode('advanced');
+  }, [update]);
   const activeTab = sheetOpen ? state.tab : null;
 
   return (
@@ -120,6 +125,7 @@ export default function App() {
               compareMode={compareMode}
               onClose={closeSheet}
               view={viewMode}
+              onDrillDown={handleDrillDown}
             />
           </div>
 
