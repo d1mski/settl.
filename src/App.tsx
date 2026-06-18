@@ -5,7 +5,6 @@ import { MapCanvas } from './components/shell/MapCanvas';
 import { MapHud } from './components/shell/MapHud';
 import { LocationIntelCard } from './components/shell/LocationIntelCard';
 import { BuildingCard } from './components/shell/BuildingCard';
-import { ModuleRail } from './components/shell/ModuleRail';
 import { ModuleSheet } from './components/shell/ModuleSheet';
 import { BottomStrip } from './components/shell/BottomStrip';
 import { RiskPanel } from './components/hud/RiskPanel';
@@ -17,7 +16,6 @@ export default function App() {
   const { state, update } = useUrlState();
   const { result: geocodedA, loading: resolvingA } = useReverseGeocode(state.coordsA);
   const { result: geocodedB, loading: resolvingB } = useReverseGeocode(state.coordsB);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'overview' | 'advanced'>('overview');
 
   const compareMode = state.coordsB !== null;
@@ -51,31 +49,26 @@ export default function App() {
     update({ coordsB: null, slot: 'a' });
   }, [update]);
 
-  const handleSelect = useCallback(
+  const selectTab = useCallback(
     (tab: TabId) => {
-      if (sheetOpen && state.tab === tab) {
-        setSheetOpen(false);
-        return;
-      }
       update({ tab });
-      setSheetOpen(true);
+      setViewMode('advanced');
     },
-    [sheetOpen, state.tab, update],
+    [update],
   );
 
-  const closeSheet = useCallback(() => setSheetOpen(false), []);
   const toggleView = useCallback(() => setViewMode(v => v === 'overview' ? 'advanced' : 'overview'), []);
+
   const handleDrillDown = useCallback((tab: TabId) => {
     update({ tab });
-    setSheetOpen(true);
     setViewMode('advanced');
   }, [update]);
-  const activeTab = sheetOpen ? state.tab : null;
 
   return (
     <ErrorBoundary>
       <div className="h-screen w-screen flex flex-col bg-void overflow-hidden">
-        <div className="flex-1 relative flex">
+        <div className="flex-1 relative flex overflow-hidden">
+          {/* Map area */}
           <div className="flex-1 relative">
             <MapCanvas
               coordsA={state.coordsA}
@@ -84,7 +77,7 @@ export default function App() {
               onChangeB={setCoordsB}
               activeSlot={state.slot}
               compareMode={compareMode}
-              activeTab={activeTab}
+              activeTab={state.tab}
             />
             <MapHud
               compareMode={compareMode}
@@ -117,24 +110,18 @@ export default function App() {
 
               <RiskPanel coords={state.coordsA} />
             </div>
-
-            <ModuleSheet
-              active={activeTab}
-              coordsA={state.coordsA}
-              coordsB={state.coordsB}
-              compareMode={compareMode}
-              onClose={closeSheet}
-              view={viewMode}
-              onDrillDown={handleDrillDown}
-            />
           </div>
 
-          <ModuleRail
-            active={activeTab}
-            onSelect={handleSelect}
-            coordsReady={state.coordsA !== null}
+          {/* Right panel — always visible */}
+          <ModuleSheet
+            active={state.tab}
+            coordsA={state.coordsA}
+            coordsB={state.coordsB}
+            compareMode={compareMode}
             view={viewMode}
             onToggleView={toggleView}
+            onSelect={selectTab}
+            onDrillDown={handleDrillDown}
           />
         </div>
 
