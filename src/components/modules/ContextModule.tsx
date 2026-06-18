@@ -340,12 +340,12 @@ function WikiList({
   return (
     <div className="grid gap-1.5">
       {wiki.slice(0, limit).map((article) => (
-        <a
+        <button
           key={`${article.language}-${article.pageid}`}
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block border border-edge bg-void/40 px-2 py-1.5 hover:border-cyan/60 hover:bg-cyan/5 transition-colors"
+          onClick={() => window.dispatchEvent(new CustomEvent('settl-flyto', {
+            detail: { lat: article.lat, lon: article.lon, title: article.title, url: article.url },
+          }))}
+          className="block w-full text-left border border-edge bg-void/40 px-2 py-1.5 hover:border-cyan/60 hover:bg-cyan/5 transition-colors cursor-pointer"
         >
           <div className="flex items-baseline justify-between gap-2">
             <div className="text-[11px] font-mono text-ink truncate">{article.title}</div>
@@ -358,15 +358,15 @@ function WikiList({
               {article.extract}
             </div>
           )}
-        </a>
+        </button>
       ))}
     </div>
   );
 }
 
 function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }) {
-  const flyTo = useCallback((lat: number, lon: number) => {
-    window.dispatchEvent(new CustomEvent('settl-flyto', { detail: { lat, lon } }));
+  const flyTo = useCallback((lat: number, lon: number, title?: string) => {
+    window.dispatchEvent(new CustomEvent('settl-flyto', { detail: { lat, lon, title } }));
   }, []);
 
   return (
@@ -384,7 +384,7 @@ function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }
             <tr
               key={label}
               className={`border-b border-edge/50${feature ? ' cursor-pointer hover:bg-cyan/5' : ''}`}
-              onClick={feature ? () => flyTo(feature.lat, feature.lon) : undefined}
+              onClick={feature ? () => flyTo(feature.lat, feature.lon, feature.name ?? label) : undefined}
             >
               <td className="py-2 pr-3 text-ink uppercase">{label}</td>
               <td className="py-2 pr-3 text-muted truncate max-w-[220px]">

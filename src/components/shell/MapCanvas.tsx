@@ -103,8 +103,20 @@ function FlyToListener() {
   const map = useMap();
   useEffect(() => {
     const handler = (e: Event) => {
-      const { lat, lon } = (e as CustomEvent).detail;
+      const { lat, lon, title, url } = (e as CustomEvent).detail;
       map.flyTo([lat, lon], Math.max(map.getZoom(), 16));
+      // ponytail: show popup with name + wiki link after fly animation settles
+      if (title) {
+        const link = url
+          ? `<br/><a href="${url}" target="_blank" rel="noopener noreferrer" style="color:rgb(126,234,255);font-size:10px">Open Wikipedia &rarr;</a>`
+          : '';
+        setTimeout(() => {
+          map.openPopup(
+            `<div style="font-family:'JetBrains Mono',monospace;font-size:11px"><strong>${title}</strong>${link}</div>`,
+            [lat, lon],
+          );
+        }, 700);
+      }
     };
     window.addEventListener('settl-flyto', handler);
     return () => window.removeEventListener('settl-flyto', handler);
