@@ -10,7 +10,7 @@ I was about to relocate to a new area. The house was great, the neighborhood loo
 
 That one question opened up a bigger one: what does a full year actually look like at this exact spot? When it rains, does it pour? My kid's bedroom faces west. Does it turn into an oven every summer afternoon?
 
-The data exists. It's just scattered across a dozen free APIs that nobody's bothered putting in one place. So I did.
+The data exists. It's just scattered across a dozen free APIs. This is my attempt at putting it all on one screen.
 
 ## What you get
 
