@@ -5,41 +5,6 @@ import { fetchJson } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
 import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
 
-const COUNTRY_TO_LANG: Record<string, string> = {
-  GR: 'el',
-  DE: 'de',
-  FR: 'fr',
-  ES: 'es',
-  IT: 'it',
-  PT: 'pt',
-  NL: 'nl',
-  BE: 'nl',
-  PL: 'pl',
-  CZ: 'cs',
-  SE: 'sv',
-  NO: 'no',
-  DK: 'da',
-  FI: 'fi',
-  RU: 'ru',
-  UA: 'uk',
-  TR: 'tr',
-  JP: 'ja',
-  CN: 'zh',
-  HK: 'zh',
-  TW: 'zh',
-  KR: 'ko',
-  VN: 'vi',
-  TH: 'th',
-  ID: 'id',
-  BR: 'pt',
-  MX: 'es',
-  AR: 'es',
-  SA: 'ar',
-  IL: 'he',
-  IR: 'fa',
-  IN: 'hi',
-};
-
 interface GeoSearchResponse {
   query: {
     geosearch: Array<{
@@ -106,12 +71,11 @@ async function fetchExtracts(
 
 async function fetchBoth(
   coords: Coordinates,
-  countryCode: string | null,
+  _countryCode: string | null,
   signal: AbortSignal,
 ): Promise<WikiArticle[]> {
+  // ponytail: English only — local lang produced duplicate entries in different scripts
   const langs = ['en'];
-  const local = countryCode ? COUNTRY_TO_LANG[countryCode] : null;
-  if (local && local !== 'en') langs.push(local);
 
   const byLang = await Promise.all(
     langs.map(async (lang) => {

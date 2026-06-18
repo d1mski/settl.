@@ -61,13 +61,13 @@ export function BuildingCompass({ building, size = 280, onFacadeClick }: Props) 
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={cx} cy={cy} r={compassRadius} fill="#0d121e" stroke="#1a2338" strokeWidth={1} />
+      <circle cx={cx} cy={cy} r={compassRadius} style={{ fill: 'rgb(var(--c-panel))', stroke: 'rgb(var(--c-edge))' }} strokeWidth={1} />
       <circle
         cx={cx}
         cy={cy}
         r={compassRadius * 0.7}
         fill="none"
-        stroke="#1a2338"
+        style={{ stroke: 'rgb(var(--c-edge))' }}
         strokeDasharray="2 4"
       />
       <circle
@@ -75,7 +75,7 @@ export function BuildingCompass({ building, size = 280, onFacadeClick }: Props) 
         cy={cy}
         r={compassRadius * 0.4}
         fill="none"
-        stroke="#1a2338"
+        style={{ stroke: 'rgb(var(--c-edge))' }}
         strokeDasharray="2 4"
       />
 
@@ -94,7 +94,7 @@ export function BuildingCompass({ building, size = 280, onFacadeClick }: Props) 
             y1={y1}
             x2={x2}
             y2={y2}
-            stroke={deg % 90 === 0 ? '#7eeaff' : '#3d4759'}
+            style={{ stroke: deg % 90 === 0 ? 'rgb(var(--c-cyan))' : 'rgb(var(--c-edge-bright))' }}
             strokeOpacity={deg % 90 === 0 ? 0.6 : 0.5}
             strokeWidth={deg % 90 === 0 ? 1.5 : 0.8}
           />
@@ -116,7 +116,7 @@ export function BuildingCompass({ building, size = 280, onFacadeClick }: Props) 
             fontSize={11}
             fontFamily="JetBrains Mono, monospace"
             fontWeight={600}
-            fill="#7eeaff"
+            style={{ fill: 'rgb(var(--c-cyan))' }}
             letterSpacing="0.1em"
           >
             {label}
@@ -126,8 +126,7 @@ export function BuildingCompass({ building, size = 280, onFacadeClick }: Props) 
 
       <path
         d={pathD}
-        fill="rgba(126,234,255,0.18)"
-        stroke="#7eeaff"
+        style={{ fill: 'rgb(var(--c-cyan) / 0.18)', stroke: 'rgb(var(--c-cyan))' }}
         strokeWidth={1.8}
         strokeLinejoin="round"
       />
@@ -175,7 +174,7 @@ export function BuildingCompass({ building, size = 280, onFacadeClick }: Props) 
         );
       })}
 
-      <circle cx={cx} cy={cy} r={2} fill="#7eeaff" />
+      <circle cx={cx} cy={cy} r={2} style={{ fill: 'rgb(var(--c-cyan))' }} />
     </svg>
   );
 }
