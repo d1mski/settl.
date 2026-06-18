@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Coordinates, TabId } from '../../types';
 import { TAB_LABELS } from '../../types';
+import { ReportPanel } from './ReportPanel';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { StatusDot } from '../hud/StatusDot';
@@ -43,10 +44,10 @@ interface Props {
   compareMode: boolean;
   onClose: () => void;
   view: 'overview' | 'advanced';
+  onDrillDown: (tab: TabId) => void;
 }
 
-export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, view: _view }: Props) {
-  // _view prop consumed by Phase 6 for ReportPanel switching
+export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, view, onDrillDown }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -61,9 +62,9 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, vi
 
   return (
     <AnimatePresence>
-      {active && (
+      {(active !== null || view === 'overview') && (
         <motion.aside
-          key={active}
+          key={view === 'overview' ? 'overview' : active}
           initial={{ x: 40, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 40, opacity: 0 }}
@@ -73,17 +74,25 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, vi
           <header className="border-b border-edge px-5 py-3 flex items-center justify-between shrink-0 bg-rail/50">
             <div className="flex items-baseline gap-3">
               <div>
-                <div className="text-[13px] font-mono uppercase tracking-widest text-ink flex items-baseline gap-2">
-                  {TAB_LABELS[active].toUpperCase()}
-                  {compare && (
-                    <span className="text-[9px] font-mono text-amber tracking-widest">
-                      · COMPARE A↔B
-                    </span>
-                  )}
-                </div>
-                <div className="text-[9px] font-mono uppercase tracking-widest text-muted mt-0.5">
-                  {MODULE_SUBTITLES[active]}
-                </div>
+                {view === 'overview' ? (
+                  <div className="text-[13px] font-mono uppercase tracking-widest text-ink">
+                    LOCATION REPORT
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-[13px] font-mono uppercase tracking-widest text-ink flex items-baseline gap-2">
+                      {active && TAB_LABELS[active].toUpperCase()}
+                      {compare && (
+                        <span className="text-[9px] font-mono text-amber tracking-widest">
+                          · COMPARE A↔B
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[9px] font-mono uppercase tracking-widest text-muted mt-0.5">
+                      {active && MODULE_SUBTITLES[active]}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -108,36 +117,62 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, vi
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="p-5 stagger">
-              <ErrorBoundary>
-                <Suspense fallback={<LoadingSkeleton />}>
-                  {active === 'climate' && (
-                    <ClimateModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
-                  )}
-                  {active === 'wind' && (
-                    <WindModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
-                  )}
-                  {active === 'sun' && (
-                    <SunModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
-                  )}
-                  {active === 'hazards' && (
-                    <HazardsModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
-                  )}
-                  {active === 'air' && (
-                    <AirQualityModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
-                  )}
-                  {active === 'context' && (
-                    <ContextModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
-                  )}
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          </div>
+          <AnimatePresence mode="wait">
+            {view === 'overview' ? (
+              <motion.div
+                key="overview"
+                className="flex-1 overflow-y-auto overflow-x-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15, ease: 'easeInOut' }}
+              >
+                <ReportPanel coordsA={coordsA} onDrillDown={onDrillDown} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="advanced"
+                className="flex-1 overflow-y-auto overflow-x-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15, ease: 'easeInOut' }}
+              >
+                <div className="p-5 stagger">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LoadingSkeleton />}>
+                      {active === 'climate' && (
+                        <ClimateModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
+                      )}
+                      {active === 'wind' && (
+                        <WindModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
+                      )}
+                      {active === 'sun' && (
+                        <SunModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
+                      )}
+                      {active === 'hazards' && (
+                        <HazardsModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
+                      )}
+                      {active === 'air' && (
+                        <AirQualityModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
+                      )}
+                      {active === 'context' && (
+                        <ContextModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />
+                      )}
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <footer className="border-t border-edge px-5 py-2 text-[9px] font-mono uppercase tracking-widest text-dim flex items-center justify-between shrink-0">
             <span>ESC TO CLOSE</span>
-            <span>MOD · {active.toUpperCase()}{compare ? ' · CMP' : ''}</span>
+            <span>
+              {view === 'overview'
+                ? 'OVW · REPORT'
+                : `MOD · ${active?.toUpperCase() ?? ''}${compare ? ' · CMP' : ''}`}
+            </span>
           </footer>
         </motion.aside>
       )}
