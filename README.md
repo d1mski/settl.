@@ -1,37 +1,33 @@
-# settl. — Location Intelligence
+# settl.
 
-Neighborhood-level intelligence for any location on Earth. Drop a pin and get climate, air quality, sun exposure, wind patterns, natural hazards, and nearby context — all from free, open APIs. No keys required.
+Drop a pin anywhere on Earth. See what it's actually like to live there — climate, wind, sun, air quality, hazards, what's nearby. A full year of data, one screen. No API keys, no signup, all free.
 
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 
-## Why this exists
+## The backstory
 
-I built this after relocating to a new area. The house was great, the neighborhood looked fine — but nobody tells you what the wind is like in January, or whether your kid's bedroom faces direct sun all afternoon in July.
+I moved to a new area. The house was great, neighborhood looked fine. What nobody mentioned was the wind.
 
-The major blind spot was weather exposure. Could I leave the house with a small child in winter without getting drenched and blasted by wind? That one question turned into a broader one: what does a full year actually look like at this exact spot?
+Turns out, stepping outside with a toddler in winter meant getting absolutely hammered by sideways rain and gale-force gusts. That kind of thing doesn't show up on a house listing or a weekend visit in June.
 
-When it rains, does it pour? When it's hot, is it bearable or relentless? How exposed is the building? What's nearby that you'd only discover after living there for six months?
+So I started digging. Can I see what the wind's like here across a whole year? What about rainfall — when it rains, does it pour? My kid's bedroom faces west — does it turn into an oven every summer afternoon?
 
-None of this information existed in one place. So I started stitching together free APIs — historical climate data, wind roses, sun path calculations, air quality, seismic activity, nearby amenities — anything that gives you real visibility into a location over a full year, before you commit to it.
+Turns out, the data exists. It's just scattered across a dozen free APIs that nobody's bothered to stitch together. So that's what this is — one place to get the full picture of a location before you sign a lease or a mortgage.
 
-## What it does
+## What you get
 
-- **Climate** — temperature, precipitation, and seasonal heatmaps via Open-Meteo
-- **Air Quality** — real-time AQI, PM2.5, pollen, and pollutant breakdown
-- **Sun** — sun path arc, golden hour, daylight duration using SunCalc
-- **Wind** — wind rose chart, prevailing direction, and speed distribution
-- **Hazards** — recent earthquakes (USGS) and active wildfires (NASA FIRMS)
-- **Context** — schools, hospitals, transit, parks, and POIs via OpenStreetMap Overpass
-- **Building** — orientation compass, facade analysis, and solar exposure
-- **Risk Synthesis** — aggregated risk signals with severity scoring
-- **Compare** — side-by-side A/B location comparison
-- **Saved Locations** — bookmark and revisit places (localStorage + IndexedDB)
+- **Climate** — temperature, precipitation, seasonal heatmaps (Open-Meteo historical data)
+- **Wind** — wind rose, prevailing direction, speed distribution across the year
+- **Sun** — sun path, golden hour, daylight hours, building solar exposure (SunCalc)
+- **Air quality** — AQI, PM2.5, pollen, pollutant breakdown
+- **Hazards** — recent earthquakes (USGS), active wildfires (NASA FIRMS)
+- **Nearby** — schools, hospitals, transit, parks, POIs (OpenStreetMap)
+- **Building** — orientation, facade analysis, how much sun each side gets
+- **Risk overview** — everything above rolled into severity signals
+- **Compare mode** — A/B two locations side by side
+- **Saved locations** — bookmark spots you're considering
 
-## Stack
-
-React 18 · TypeScript · Vite · Tailwind CSS · Leaflet · Recharts · Framer Motion
-
-## Getting started
+## Run it
 
 ```bash
 git clone https://github.com/d1mski/settl..git
@@ -40,27 +36,22 @@ npm install
 npm run dev
 ```
 
-No API keys, no `.env` file — everything runs against free public APIs.
+That's it. No `.env`, no API keys. Everything hits free public endpoints.
 
-## Scripts
+## Built with
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Type-check + production build |
-| `npm run preview` | Preview production build |
-| `npm run typecheck` | TypeScript check only |
+React 18 · TypeScript · Vite · Tailwind CSS · Leaflet · Recharts · Framer Motion
 
-## APIs used
+## Where the data comes from
 
-All free, no auth required:
+Everything's free and open, no auth needed:
 
-- [Open-Meteo](https://open-meteo.com/) — weather, climate, air quality
-- [Nominatim](https://nominatim.org/) — geocoding and reverse geocoding
-- [Overpass API](https://overpass-api.de/) — OpenStreetMap feature queries
-- [USGS Earthquake API](https://earthquake.usgs.gov/fdsnws/event/1/) — seismic activity
-- [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) — active fire data
+- [Open-Meteo](https://open-meteo.com/) — weather, climate history, air quality
+- [Nominatim](https://nominatim.org/) — geocoding
+- [Overpass](https://overpass-api.de/) — OpenStreetMap queries
+- [USGS](https://earthquake.usgs.gov/fdsnws/event/1/) — earthquake data
+- [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) — wildfire detection
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — do whatever you want with it.
