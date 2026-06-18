@@ -11,11 +11,13 @@ Pin a location, see what it's actually like to live there. Climate, wind, sun, a
 
 ## The backstory
 
-I was about to relocate to a new area. The house was great, the neighborhood looked good. But the area is known for high winds, and that was my major blind spot. Would I be able to leave the house with a small kid in winter without getting soaked and blasted by gale-force gusts? That kind of thing doesn't show up on a house listing or a weekend visit in June.
+House listings tell you everything except what it's actually like to live there.
 
-That one question opened up a bigger one: what does a full year actually look like at this exact spot? When it rains, does it pour? My kid's bedroom faces west. Does it turn into an oven every summer afternoon?
+I was about to move. Good house, good neighborhood — but nothing about the things you live with daily. The area gets high winds: could I get out the door with a toddler in January without being knocked sideways? My kid's bedroom faces west — does it bake every summer afternoon? 
 
-The data exists. It's just scattered across a dozen free APIs. This is my attempt at putting it all on one screen.
+None of that shows up in a listing or a sunny weekend visit in May.
+
+The data exists — climate, wind, sun, earthquakes, wildfires, nearby amenities and POIs. It's just scattered across a dozen free APIs. This puts it all on one screen, for any address.
 
 ## What you get
 
