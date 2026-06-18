@@ -1,3 +1,5 @@
+<img width="2556" height="1300" alt="image" src="https://github.com/user-attachments/assets/4f178b05-7682-4f3b-b7b2-775c806a4ed0" />
+
 # settl. - Location Intelligence.
 
 Pin a location, see what it's actually like to live there. Climate, wind, sun, air quality, hazards, what's nearby. A full year of data on one screen. Free, no API keys.
