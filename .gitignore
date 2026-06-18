@@ -20,3 +20,4 @@ mempalace.yaml
 entities.json
 vite.config.js
 vite.config.d.ts
+*.tsbuildinfo
