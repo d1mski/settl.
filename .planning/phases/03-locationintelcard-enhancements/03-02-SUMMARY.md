@@ -16,14 +16,15 @@ key_files:
     - src/components/hud/SectionHeader.tsx
     - src/components/shell/LocationIntelCard.tsx
     - src/components/shell/ModuleSheet.tsx
+    - src/components/shell/BuildingCard.tsx
 decisions:
   - code prop made optional (not removed) so all 6 module callers compile without changes
   - ModuleSheet view prop aliased to _view to suppress TS6133 without removing the reserved prop
 metrics:
   duration: 5m
   completed: "2026-06-18"
-  tasks_completed: 1
-  files_modified: 3
+  tasks_completed: 2
+  files_modified: 4
 ---
 
 # Phase 03 Plan 02: Section Code Removal Summary
@@ -47,14 +48,23 @@ metrics:
 - **Files modified:** src/components/shell/ModuleSheet.tsx
 - **Commit:** 3fb5bab
 
-## Known Stubs
+**2. [Checkpoint Fix] Theme/font controls blocking input width**
+- **Found during:** Task 2 human verification
+- **Issue:** ThemeToggle + FontScaleControl in input row stole address bar width
+- **Fix:** Moved controls out of input row
+- **Files modified:** src/components/shell/LocationIntelCard.tsx
+- **Commit:** 441603b
 
-None.
+**3. [Checkpoint Fix] Section codes missed in ModuleSheet, BuildingCard**
+- **Found during:** Task 2 human verification
+- **Issue:** ModuleSheet header, BuildingCard header still had § codes
+- **Fix:** Removed § prefix and unused MODULE_CODES constant
+- **Files modified:** ModuleSheet.tsx, BuildingCard.tsx
+- **Commit:** 441603b
 
 ## Self-Check: PASSED
 
-- src/components/hud/SectionHeader.tsx — FOUND, contains `code?: string`, no `§` character
-- src/components/shell/LocationIntelCard.tsx — FOUND, no `§01`, no `§02`
-- src/components/shell/ModuleSheet.tsx — FOUND, `_view` alias present
-- Commit 3fb5bab — FOUND
-- Build exit code 0 — CONFIRMED
+- Zero § characters in src/ (verified via grep)
+- Input row: [GPS] [input] [GO] only — full width restored
+- Build + typecheck pass clean
+- Commits: 3fb5bab, 441603b
