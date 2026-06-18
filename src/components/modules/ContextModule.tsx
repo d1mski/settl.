@@ -402,6 +402,9 @@ function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }
           ))}
         </tbody>
       </table>
+      <div className="mt-2 text-[8px] font-mono uppercase tracking-widest text-dim">
+        Source: OpenStreetMap · Data may be outdated
+      </div>
     </div>
   );
 }
