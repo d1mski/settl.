@@ -11,14 +11,6 @@ const ICONS: Record<TabId, JSX.Element> = {
   context: <Globe className="w-full h-full" strokeWidth={1.4} />,
 };
 
-const CODES: Record<TabId, string> = {
-  climate: '03',
-  wind: '04',
-  sun: '05',
-  hazards: '06',
-  air: '07',
-  context: '08',
-};
 
 const LABELS: Record<TabId, string> = {
   climate: 'CLM',
@@ -62,7 +54,7 @@ export function ModuleRail({ active, onSelect, coordsReady, view, onToggleView }
               {isActive && (
                 <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-cyan" />
               )}
-              <span className="text-[8px] font-mono text-dim">§{CODES[id]}</span>
+              {/* ponytail: codes removed per UX-01, rail codes return with Lucide icons in Phase 5 */}
               <span className="w-5 h-5">{ICONS[id]}</span>
               <span className="text-[8px] font-mono tracking-widest">{LABELS[id]}</span>
             </button>

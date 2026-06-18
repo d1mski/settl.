@@ -26,14 +26,6 @@ const ContextModule = lazy(() =>
   import('../modules/ContextModule').then((m) => ({ default: m.ContextModule })),
 );
 
-const MODULE_CODES: Record<TabId, string> = {
-  climate: '03',
-  wind: '04',
-  sun: '05',
-  hazards: '06',
-  air: '07',
-  context: '08',
-};
 
 const MODULE_SUBTITLES: Record<TabId, string> = {
   climate: 'THERMAL · PRECIP · UV',
@@ -80,9 +72,6 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, onClose, vi
         >
           <header className="border-b border-edge px-5 py-3 flex items-center justify-between shrink-0 bg-rail/50">
             <div className="flex items-baseline gap-3">
-              <span className="text-[9px] font-mono text-cyan/70 tracking-widest-plus">
-                §{MODULE_CODES[active]}
-              </span>
               <div>
                 <div className="text-[13px] font-mono uppercase tracking-widest text-ink flex items-baseline gap-2">
                   {TAB_LABELS[active].toUpperCase()}

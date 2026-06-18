@@ -36,7 +36,7 @@ export function BuildingCard({ coords, slot }: Props) {
       <div className="px-4 py-2 border-b border-edge flex items-center gap-2">
         <span className={`inline-block w-1.5 h-1.5 ${bg}`} />
         <span className="text-[9px] font-mono uppercase tracking-widest text-muted">
-          §BLD · {slot === 'A' ? 'FIX A' : 'FIX B'}
+          BLD · {slot === 'A' ? 'FIX A' : 'FIX B'}
         </span>
         <span className="flex-1 h-px bg-edge" />
         <span className={`text-[8px] font-mono uppercase tracking-widest ${tone}`}>

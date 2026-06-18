@@ -244,23 +244,27 @@ export function LocationIntelCard({
             LOCATION INTELLIGENCE
           </div>
         </div>
-        {!compareMode ? (
-          <button
-            onClick={onEnableCompare}
-            className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 text-amber hover:border-amber hover:bg-amber/5 transition-colors"
-            title="Add comparison location"
-          >
-            + CMP
-          </button>
-        ) : (
-          <button
-            onClick={onDisableCompare}
-            className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 text-muted hover:border-risk hover:text-risk transition-colors"
-            title="Exit compare mode"
-          >
-            × CMP
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <FontScaleControl />
+          {!compareMode ? (
+            <button
+              onClick={onEnableCompare}
+              className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 text-amber hover:border-amber hover:bg-amber/5 transition-colors"
+              title="Add comparison location"
+            >
+              + CMP
+            </button>
+          ) : (
+            <button
+              onClick={onDisableCompare}
+              className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 text-muted hover:border-risk hover:text-risk transition-colors"
+              title="Exit compare mode"
+            >
+              × CMP
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Input */}
@@ -335,10 +339,6 @@ export function LocationIntelCard({
             >
               {searching ? '...' : 'GO'}
             </button>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <FontScaleControl />
-            </div>
           </div>
 
           {fixStatus !== 'idle' && (
