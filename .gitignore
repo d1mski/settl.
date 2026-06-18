@@ -9,3 +9,11 @@ stats.html
 *.stackdump
 .claude/
 scripts/
+
+# Dev / planning artifacts
+.planning/
+.impeccable.md
+blindspot-prd.md
+mockups/
+.superpowers/
+mempalace.yaml
