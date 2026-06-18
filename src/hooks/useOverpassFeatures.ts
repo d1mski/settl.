@@ -116,6 +116,14 @@ function categorise(tags: Record<string, string>): {
   if (tags.highway === 'bus_stop') return { category: 'transit', subtype: 'bus_stop' };
   if (tags.natural === 'water') return { category: 'water', subtype: 'water' };
   if (tags.leisure === 'park') return { category: 'park', subtype: 'park' };
+  // ponytail: split hospital vs specialist clinic — specialist facilities have healthcare:speciality tag
+  if (tags.amenity === 'hospital') {
+    if (tags['healthcare:speciality']) return { category: 'amenity', subtype: 'clinic' };
+    return { category: 'amenity', subtype: 'hospital' };
+  }
+  if (tags.amenity === 'clinic' || tags.amenity === 'doctors') {
+    return { category: 'amenity', subtype: 'clinic' };
+  }
   if (tags.amenity === 'school') return { category: 'amenity', subtype: schoolSubtype(tags) };
   if (tags.public_transport === 'station') {
     return { category: 'transit', subtype: 'pt:station' };
@@ -264,7 +272,8 @@ export function useOverpassFeatures(
 }
 
 const NEAREST_ROWS: Array<{ label: string; match: (f: NearbyFeature) => boolean }> = [
-  { label: 'hospital', match: (f) => f.subtype === 'hospital' || f.subtype === 'clinic' },
+  // ponytail: hospital only — clinics (incl specialist facilities) excluded; add clinic row if needed
+  { label: 'hospital', match: (f) => f.subtype === 'hospital' },
   { label: 'pharmacy', match: (f) => f.subtype === 'pharmacy' },
   {
     label: 'supermarket',
