@@ -260,14 +260,14 @@ function Section({ code, title, subtitle, children }: { code: string; title: str
   return (
     <div>
       <SectionHeader code={code} title={title} subtitle={subtitle} />
-      <div className="border border-edge bg-bg/40 p-3">{children}</div>
+      <div className="border border-edge bg-bg/40 p-3 rounded-md">{children}</div>
     </div>
   );
 }
 
 function SubChart({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="border border-edge bg-bg/40">
+    <div className="border border-edge bg-bg/40 rounded-md">
       <div className="px-2 py-1 border-b border-edge text-[9px] font-mono uppercase tracking-widest flex items-center gap-1.5">
         <span className={`inline-block w-1.5 h-1.5 ${label === 'A' ? 'bg-cyan' : 'bg-amber'}`} />
         <span className={label === 'A' ? 'text-cyan' : 'text-amber'}>TGT · {label}</span>
@@ -279,7 +279,7 @@ function SubChart({ label, children }: { label: string; children: ReactNode }) {
 
 function EmptyState() {
   return (
-    <div className="border border-edge bg-bg/40 p-6 text-center">
+    <div className="border border-edge bg-bg/40 p-6 text-center rounded-md">
       <div className="text-[10px] font-mono uppercase tracking-widest text-cyan/70 mb-1">▸ AWAITING TARGET</div>
       <div className="text-[9px] font-mono uppercase tracking-wider text-muted">SET COORD VIA INPUT OR MAP CLICK</div>
     </div>

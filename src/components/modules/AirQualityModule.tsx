@@ -226,14 +226,14 @@ function Section({ code, title, subtitle, children }: { code: string; title: str
   return (
     <div>
       <SectionHeader code={code} title={title} subtitle={subtitle} />
-      <div className="border border-edge bg-bg/40 p-3">{children}</div>
+      <div className="border border-edge bg-bg/40 p-3 rounded-md">{children}</div>
     </div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="border border-edge bg-bg/40 p-6 text-center">
+    <div className="border border-edge bg-bg/40 p-6 text-center rounded-md">
       <div className="text-[10px] font-mono uppercase tracking-widest text-cyan/70 mb-1">▸ AWAITING TARGET</div>
       <div className="text-[9px] font-mono uppercase tracking-wider text-muted">SET COORD TO QUERY AIR QUALITY</div>
     </div>

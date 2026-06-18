@@ -125,7 +125,7 @@ function SingleView({
   if (events.length === 0) {
     return (
       <div className="space-y-5">
-        <div className="border border-good/40 bg-good/5 p-4">
+        <div className="border border-good/40 bg-good/5 p-4 rounded-md">
           <div className="text-[9px] font-mono uppercase tracking-widest text-good flex items-center gap-2">
             <span>✓ SEISMICALLY QUIET</span>
             <span className="flex-1 h-px bg-good/30" />
@@ -149,7 +149,7 @@ function SingleView({
       </div>
 
       <Section code="01" title="SEISMIC MAP" subtitle="RADIUS ∝ MAG · COLOR = DEPTH">
-        <div className="border border-edge h-[320px]">
+        <div className="border border-edge h-[320px] rounded-md overflow-hidden">
           <MapContainer center={[coords.lat, coords.lon]} zoom={9} scrollWheelZoom zoomControl={false} className="h-full w-full">
             <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
             {events.map((e) => (
@@ -243,7 +243,7 @@ function CompareView({
       </div>
 
       <Section code="01" title="SEISMIC MAP" subtitle="A (CYAN) ↔ B (AMBER) · M3.0+ · 100KM RADIUS">
-        <div className="border border-edge h-[360px]">
+        <div className="border border-edge h-[360px] rounded-md overflow-hidden">
           <MapContainer center={[centerLat, centerLon]} zoom={7} scrollWheelZoom zoomControl={false} className="h-full w-full">
             <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
             <CircleMarker center={[coordsA.lat, coordsA.lon]} radius={5} pathOptions={{ color: '#7eeaff', fillColor: '#7eeaff', fillOpacity: 0.9, weight: 2 }}>
@@ -332,7 +332,7 @@ function WildfireList({
 
   if (fires.length === 0) {
     return (
-      <div className="border border-good/30 bg-good/5 px-3 py-2">
+      <div className="border border-good/30 bg-good/5 px-3 py-2 rounded-md">
         <div className="text-[9px] font-mono uppercase tracking-widest text-good">
           ✓ NO ACTIVE HOTSPOTS IN RANGE
         </div>
@@ -353,7 +353,7 @@ function WildfireList({
       </div>
       <div className="grid gap-1">
         {fires.slice(0, 6).map((fire) => (
-          <div key={fire.id} className="border border-edge bg-void/40 px-2 py-1.5">
+          <div key={fire.id} className="border border-edge bg-void/40 px-2 py-1.5 rounded-md">
             <div className="flex items-baseline justify-between gap-2">
               <div className="text-[11px] font-mono text-ink truncate">
                 {fire.title ?? `${fire.source} HOTSPOT`}
@@ -381,14 +381,14 @@ function Section({ code, title, subtitle, children }: { code: string; title: str
   return (
     <div>
       <SectionHeader code={code} title={title} subtitle={subtitle} />
-      <div className="border border-edge bg-bg/40 p-3">{children}</div>
+      <div className="border border-edge bg-bg/40 p-3 rounded-md">{children}</div>
     </div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="border border-edge bg-bg/40 p-6 text-center">
+    <div className="border border-edge bg-bg/40 p-6 text-center rounded-md">
       <div className="text-[10px] font-mono uppercase tracking-widest text-cyan/70 mb-1">▸ AWAITING TARGET</div>
       <div className="text-[9px] font-mono uppercase tracking-wider text-muted">SET COORD TO QUERY USGS CATALOG</div>
     </div>

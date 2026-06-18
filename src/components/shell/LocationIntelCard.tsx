@@ -245,7 +245,7 @@ export function LocationIntelCard({
           {!compareMode ? (
             <button
               onClick={onEnableCompare}
-              className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 text-amber hover:border-amber hover:bg-amber/5 transition-colors"
+              className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 rounded-md text-amber hover:border-amber hover:bg-amber/5 transition-colors"
               title="Add comparison location"
             >
               + CMP
@@ -253,7 +253,7 @@ export function LocationIntelCard({
           ) : (
             <button
               onClick={onDisableCompare}
-              className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 text-muted hover:border-risk hover:text-risk transition-colors"
+              className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 rounded-md text-muted hover:border-risk hover:text-risk transition-colors"
               title="Exit compare mode"
             >
               × CMP
@@ -277,7 +277,7 @@ export function LocationIntelCard({
               onClick={handleGeolocate}
               title="Use current location"
               aria-label="Use current location"
-              className={`shrink-0 w-8 h-8 flex items-center justify-center border bg-void transition-colors ${
+              className={`shrink-0 w-8 h-8 flex items-center justify-center border rounded-md bg-void transition-colors ${
                 fixStatus === 'active'
                   ? 'border-cyan text-cyan'
                   : fixStatus === 'locating'
@@ -298,7 +298,7 @@ export function LocationIntelCard({
                 placeholder={
                   activeSlot === 'b' ? 'TGT B · COORD / DMS / ADDR' : 'TGT A · COORD / DMS / ADDR'
                 }
-                className={`w-full bg-void border px-2.5 py-1.5 text-[11px] font-mono text-ink outline-none placeholder:text-dim tracking-wider transition-colors ${
+                className={`w-full bg-void border rounded-md px-2.5 py-1.5 text-[11px] font-mono text-ink outline-none placeholder:text-dim tracking-wider transition-colors ${
                   activeSlot === 'b'
                     ? 'border-amber/50 focus:border-amber'
                     : 'border-edge focus:border-cyan'
@@ -326,7 +326,7 @@ export function LocationIntelCard({
             <button
               onClick={handleSubmit}
               disabled={searching}
-              className={`shrink-0 px-3 py-1.5 border bg-void text-[10px] font-mono uppercase tracking-widest transition-colors disabled:opacity-40 ${
+              className={`shrink-0 px-3 py-1.5 border rounded-md bg-void text-[10px] font-mono uppercase tracking-widest transition-colors disabled:opacity-40 ${
                 activeSlot === 'b'
                   ? 'border-amber/50 text-amber hover:border-amber hover:bg-amber/5'
                   : 'border-edge text-cyan hover:border-cyan hover:bg-cyan/5'
@@ -453,7 +453,7 @@ function SlotToggle({
   onSetSlot: (slot: Slot) => void;
 }) {
   return (
-    <div className="flex border border-edge text-[8px] font-mono uppercase tracking-widest">
+    <div className="flex border border-edge rounded-md overflow-hidden text-[8px] font-mono uppercase tracking-widest">
       <button
         onClick={() => onSetSlot('a')}
         className={`px-1.5 py-0.5 transition-colors ${
