@@ -43,12 +43,14 @@ interface Props {
   coordsB: Coordinates | null;
   compareMode: boolean;
   view: 'overview' | 'advanced';
+  resolvedA: string | null;
+  countryA: string | null;
   onToggleView: () => void;
   onSelect: (tab: TabId) => void;
   onDrillDown: (tab: TabId) => void;
 }
 
-export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, onToggleView, onSelect, onDrillDown }: Props) {
+export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resolvedA, countryA, onToggleView, onSelect, onDrillDown }: Props) {
   return (
     <aside className="h-full w-[560px] shrink-0 bg-panel border-l border-edge flex flex-col">
       {/* Mode bar: Overview/Advanced toggle + font/theme controls */}
@@ -87,7 +89,7 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, onTog
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            <ReportPanel coordsA={coordsA} onDrillDown={onDrillDown} />
+            <ReportPanel coordsA={coordsA} resolvedA={resolvedA} countryA={countryA} onDrillDown={onDrillDown} />
           </motion.div>
         ) : (
           <motion.div

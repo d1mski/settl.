@@ -119,6 +119,8 @@ export default function App() {
             coordsB={state.coordsB}
             compareMode={compareMode}
             view={viewMode}
+            resolvedA={geocodedA?.cleanAddress ?? null}
+            countryA={geocodedA?.countryCode ?? null}
             onToggleView={toggleView}
             onSelect={selectTab}
             onDrillDown={handleDrillDown}
