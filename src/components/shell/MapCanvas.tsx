@@ -63,10 +63,9 @@ function FitToCoords({
     const bChanged =
       (coordsB?.lat !== prevB.current?.lat || coordsB?.lon !== prevB.current?.lon) &&
       coordsB !== null;
-    const justAdded =
-      (aChanged && prevA.current === null) || (bChanged && prevB.current === null);
     const target = bChanged ? coordsB : aChanged ? coordsA : null;
-    if (target && justAdded && !map.getBounds().contains([target.lat, target.lon])) {
+    // ponytail: panTo on any coord change that lands outside current view — covers saved-location restore
+    if (target && !map.getBounds().contains([target.lat, target.lon])) {
       map.panTo([target.lat, target.lon], { animate: true });
     }
     prevA.current = coordsA;
