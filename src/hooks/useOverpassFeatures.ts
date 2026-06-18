@@ -59,7 +59,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const QUERY_VERSION = 'v2';
+const QUERY_VERSION = 'v3';
 
 function makeKey(coords: Coordinates): string {
   return `${QUERY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
@@ -272,8 +272,8 @@ export function useOverpassFeatures(
 }
 
 const NEAREST_ROWS: Array<{ label: string; match: (f: NearbyFeature) => boolean }> = [
-  // ponytail: hospital only — clinics (incl specialist facilities) excluded; add clinic row if needed
-  { label: 'hospital', match: (f) => f.subtype === 'hospital' },
+  // ponytail: hospital = way elements only — real hospitals are mapped as buildings, clinics are nodes
+  { label: 'hospital', match: (f) => f.subtype === 'hospital' && f.elementType === 'way' },
   { label: 'pharmacy', match: (f) => f.subtype === 'pharmacy' },
   {
     label: 'supermarket',
