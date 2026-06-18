@@ -223,7 +223,7 @@ export async function forwardGeocode(
   return throttled(async () => {
     const url =
       `${BASE}/search?q=${encodeURIComponent(query)}` +
-      `&format=json&limit=5&addressdetails=1&email=${CONTACT}`;
+      `&format=json&limit=6&addressdetails=1&email=${CONTACT}`;
     const res = await fetch(url, {
       signal,
       headers: { Accept: 'application/json' },

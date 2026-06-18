@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Crosshair, MapPin } from 'lucide-react';
 import type { Coordinates } from '../../types';
 import type { Slot } from '../../hooks/useUrlState';
 import { formatCoordinate, parseCoordinates } from '../../utils/coordinates';
-import { forwardGeocode, type GeocodeResult } from '../../hooks/useNominatim';
+import { forwardGeocode, reverseGeocode, type GeocodeResult } from '../../hooks/useNominatim';
 import { Panel } from '../hud/Panel';
 import { useTheme } from '../../contexts/ThemeContext';
 import type { ThemeMode } from '../../contexts/ThemeContext';
@@ -64,6 +65,10 @@ export function LocationIntelCard({
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<GeocodeResult[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [focusedIdx, setFocusedIdx] = useState(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [fixStatus, setFixStatus] = useState<'idle' | 'locating' | 'active' | 'denied' | 'nogps'>('idle');
 
   const { locations, isSaved, toggle, remove } = useSavedLocations();
   const [capWarning, setCapWarning] = useState(false);
@@ -85,6 +90,116 @@ export function LocationIntelCard({
   useEffect(() => {
     setRaw(currentValue ? formatCoordinate(currentValue) : '');
   }, [activeSlot, currentValue?.lat, currentValue?.lon]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setSuggestions([]);
+        setFocusedIdx(-1);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setRaw(value);
+    setSuggestions([]);
+    setFocusedIdx(-1);
+    setError(null);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 3) return;
+
+    debounceRef.current = setTimeout(async () => {
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      try {
+        const results = await forwardGeocode(value.trim(), ctrl.signal);
+        if (!ctrl.signal.aborted) {
+          setSuggestions(results);
+          setFocusedIdx(-1);
+        }
+      } catch {
+        // Silently swallow — user may still hit Enter for exact search
+      }
+    }, 400);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (suggestions.length === 0) {
+      if (e.key === 'Enter') handleSubmit();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocusedIdx(i => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedIdx(i => Math.max(i - 1, -1));
+    } else if (e.key === 'Escape') {
+      setSuggestions([]);
+      setFocusedIdx(-1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (focusedIdx >= 0 && suggestions[focusedIdx]) {
+        selectSuggestion(suggestions[focusedIdx]);
+      } else {
+        handleSubmit();
+      }
+    }
+  }
+
+  function selectSuggestion(s: GeocodeResult) {
+    const truncated = s.displayName.length > 70 ? s.displayName.slice(0, 70) + '...' : s.displayName;
+    setRaw(truncated);
+    setCurrent(s.coords);
+    setSuggestions([]);
+    setFocusedIdx(-1);
+  }
+
+  function handleGeolocate() {
+    if (!navigator.geolocation) {
+      setFixStatus('nogps');
+      return;
+    }
+    setFixStatus('locating');
+    setError(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        setCurrent(coords);
+        setFixStatus('active');
+        try {
+          const result = await reverseGeocode(coords);
+          setRaw(result.displayName.length > 70 ? result.displayName.slice(0, 70) + '...' : result.displayName);
+        } catch {
+          // Reverse geocode failed — coords are still set, just no display name
+        }
+      },
+      (err) => {
+        if (err.code === 1) {
+          setFixStatus('denied');
+          setError('Grant Location Access — click the crosshair button or enter coordinates manually');
+        } else if (err.code === 2) {
+          setFixStatus('denied');
+          setError('Location unavailable');
+        } else {
+          setFixStatus('denied');
+          setError('Location request timed out');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
 
   async function handleSubmit() {
     setError(null);
@@ -159,22 +274,56 @@ export function LocationIntelCard({
             )}
           </div>
           <div className="flex gap-1.5">
-            <input
-              type="text"
-              value={raw}
-              onChange={(e) => setRaw(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSubmit();
-              }}
-              placeholder={
-                activeSlot === 'b' ? 'TGT B · COORD / DMS / ADDR' : 'TGT A · COORD / DMS / ADDR'
-              }
-              className={`flex-1 min-w-0 bg-void border px-2.5 py-1.5 text-[11px] font-mono text-ink outline-none placeholder:text-dim tracking-wider transition-colors ${
-                activeSlot === 'b'
-                  ? 'border-amber/50 focus:border-amber'
-                  : 'border-edge focus:border-cyan'
+            <button
+              onClick={handleGeolocate}
+              title="Use current location"
+              aria-label="Use current location"
+              className={`shrink-0 w-8 h-8 flex items-center justify-center border bg-void transition-colors ${
+                fixStatus === 'active'
+                  ? 'border-cyan text-cyan'
+                  : fixStatus === 'locating'
+                  ? 'border-amber/50 text-amber'
+                  : fixStatus === 'denied' || fixStatus === 'nogps'
+                  ? 'border-risk/50 text-risk'
+                  : 'border-edge text-muted hover:border-cyan hover:text-cyan'
               }`}
-            />
+            >
+              <Crosshair size={14} />
+            </button>
+            <div ref={containerRef} className="relative flex-1 min-w-0">
+              <input
+                type="text"
+                value={raw}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  activeSlot === 'b' ? 'TGT B · COORD / DMS / ADDR' : 'TGT A · COORD / DMS / ADDR'
+                }
+                className={`w-full bg-void border px-2.5 py-1.5 text-[11px] font-mono text-ink outline-none placeholder:text-dim tracking-wider transition-colors ${
+                  activeSlot === 'b'
+                    ? 'border-amber/50 focus:border-amber'
+                    : 'border-edge focus:border-cyan'
+                }`}
+              />
+              {suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 mt-0.5 bg-void border border-edge rounded shadow-lg max-h-[200px] overflow-y-auto z-50">
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => selectSuggestion(s)}
+                      className={`w-full text-left px-2 py-1.5 flex items-center gap-2 transition-colors ${
+                        i === focusedIdx ? 'bg-cyan/10 text-ink' : 'hover:bg-cyan/5'
+                      }`}
+                    >
+                      <MapPin size={12} className="shrink-0 text-muted" />
+                      <span className="text-[10px] font-mono text-ink truncate">
+                        {s.displayName.length > 70 ? s.displayName.slice(0, 70) + '...' : s.displayName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               onClick={handleSubmit}
               disabled={searching}
@@ -184,7 +333,7 @@ export function LocationIntelCard({
                   : 'border-edge text-cyan hover:border-cyan hover:bg-cyan/5'
               }`}
             >
-              {searching ? '...' : 'EXEC'}
+              {searching ? '...' : 'GO'}
             </button>
             <div className="flex items-center gap-2">
               <ThemeToggle />
@@ -192,27 +341,22 @@ export function LocationIntelCard({
             </div>
           </div>
 
-          {error && (
-            <div className="mt-2 text-[9px] font-mono tracking-wider text-risk border-l border-risk pl-2">
-              {error}
+          {fixStatus !== 'idle' && (
+            <div className={`mt-1 text-[9px] font-mono tracking-wider ${
+              fixStatus === 'locating' ? 'text-amber' :
+              fixStatus === 'active' ? 'text-good' :
+              fixStatus === 'denied' || fixStatus === 'nogps' ? 'text-risk' : 'text-muted'
+            }`}>
+              {fixStatus === 'locating' && 'LOCATING...'}
+              {fixStatus === 'active' && 'ACTIVE'}
+              {fixStatus === 'denied' && 'DENIED'}
+              {fixStatus === 'nogps' && 'NO GPS'}
             </div>
           )}
 
-          {suggestions.length > 0 && (
-            <div className="mt-2 border border-edge divide-y divide-edge">
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setCurrent(s.coords);
-                    setSuggestions([]);
-                  }}
-                  className="w-full text-left px-2 py-1.5 hover:bg-cyan/5 transition-colors"
-                >
-                  <div className="text-[10px] font-mono text-ink truncate">{s.displayName}</div>
-                  <div className="text-[9px] font-mono text-muted">{formatCoordinate(s.coords)}</div>
-                </button>
-              ))}
+          {error && (
+            <div className="mt-2 text-[9px] font-mono tracking-wider text-risk border-l border-risk pl-2">
+              {error}
             </div>
           )}
         </div>
@@ -299,7 +443,7 @@ export function LocationIntelCard({
         )}
 
         <div className="text-[8px] font-mono uppercase tracking-widest text-dim pt-2 border-t border-edge">
-          ↩ EXEC · MAP CLICK = SET ACTIVE TGT · DRAG PIN = NUDGE
+          Map click . Drag pin . Enter coords
         </div>
       </div>
     </Panel>
