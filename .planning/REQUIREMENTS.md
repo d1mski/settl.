@@ -10,7 +10,7 @@
 ## UX
 
 - [x] **UX-01**: Section headers use plain English labels ("Climate", "Air Quality") instead of §XX codes
-- [ ] **UX-02**: Overview report panel displays scrollable chapters with data from all modules as the default view
+- [x] **UX-02**: Overview report panel displays scrollable chapters with data from all modules as the default view
 - [x] **UX-03**: User can toggle between Overview and Advanced (existing module detail) views
 - [ ] **UX-04**: User can increase/decrease font size via A-/A+ controls with 10% linear steps (rem-based, not CSS zoom)
 - [ ] **UX-05**: Theme defaults to OS preference (prefers-color-scheme), with 3-state manual toggle (Light / System / Dark) persisted to localStorage
@@ -42,7 +42,7 @@
 | SKIN-03 | Phase 1 | Pending |
 | SKIN-04 | Phase 5 | Complete |
 | UX-01 | Phase 3 | Complete |
-| UX-02 | Phase 6 | Pending |
+| UX-02 | Phase 6 | Complete |
 | UX-03 | Phase 5 + 6 | Complete |
 | UX-04 | Phase 2 | Pending |
 | UX-05 | Phase 2 | Pending |

@@ -106,7 +106,7 @@ Plans:
   3. Each card shows an OK / Watch / Alert status indicator derived from existing risk synthesis data
   4. Clicking the advanced toggle switches to the existing module-detail view; clicking back returns to overview without data reload
   5. ReportPanel renders inside ModuleSheet with no new z-index context that buries Leaflet popups
-**Plans:** 2 plans
+**Plans:** 0/2 plans executed
 Plans:
 - [ ] 06-01-PLAN.md — ChapterCard component + overviewSeverity utility (building blocks)
 - [ ] 06-02-PLAN.md — ReportPanel assembly, ModuleSheet view branching, App.tsx onDrillDown wiring
@@ -124,4 +124,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. LocationIntelCard Enhancements | 2/2 | Complete   | 2026-06-18 |
 | 4. Saved Locations | 0/1 | Planned | - |
 | 5. ModuleRail + Lucide Icons | 0/2 | Planned    |  |
-| 6. ReportPanel (Overview Mode) | 0/2 | Planned | - |
+| 6. ReportPanel (Overview Mode) | 0/2 | Planned    |  |
