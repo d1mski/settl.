@@ -54,7 +54,6 @@ export function ModuleRail({ active, onSelect, coordsReady, view, onToggleView }
               {isActive && (
                 <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-cyan" />
               )}
-              {/* ponytail: codes removed per UX-01, rail codes return with Lucide icons in Phase 5 */}
               <span className="w-5 h-5">{ICONS[id]}</span>
               <span className="text-[8px] font-mono tracking-widest">{LABELS[id]}</span>
             </button>

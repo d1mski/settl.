@@ -64,7 +64,6 @@ function FitToCoords({
       (coordsB?.lat !== prevB.current?.lat || coordsB?.lon !== prevB.current?.lon) &&
       coordsB !== null;
     const target = bChanged ? coordsB : aChanged ? coordsA : null;
-    // ponytail: flyTo on any coord change — zooms in from world view, pans if already close
     if (target) {
       map.flyTo([target.lat, target.lon], Math.max(map.getZoom(), CITY_ZOOM));
     }
@@ -105,7 +104,6 @@ function FlyToListener() {
     const handler = (e: Event) => {
       const { lat, lon, title, url } = (e as CustomEvent).detail;
       map.flyTo([lat, lon], Math.max(map.getZoom(), 16));
-      // ponytail: show popup with name + wiki link after fly animation settles
       if (title) {
         const link = url
           ? `<br/><a href="${url}" target="_blank" rel="noopener noreferrer" style="color:rgb(126,234,255);font-size:10px">Open Wikipedia &rarr;</a>`

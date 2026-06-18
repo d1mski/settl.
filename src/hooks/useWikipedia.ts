@@ -74,7 +74,7 @@ async function fetchBoth(
   _countryCode: string | null,
   signal: AbortSignal,
 ): Promise<WikiArticle[]> {
-  // ponytail: English only — local lang produced duplicate entries in different scripts
+  // English only — local lang produced duplicate entries in different scripts
   const langs = ['en'];
 
   const byLang = await Promise.all(

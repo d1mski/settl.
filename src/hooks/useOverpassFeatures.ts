@@ -116,7 +116,7 @@ function categorise(tags: Record<string, string>): {
   if (tags.highway === 'bus_stop') return { category: 'transit', subtype: 'bus_stop' };
   if (tags.natural === 'water') return { category: 'water', subtype: 'water' };
   if (tags.leisure === 'park') return { category: 'park', subtype: 'park' };
-  // ponytail: distinguish general hospitals from specialist clinics
+  // Distinguish general hospitals from specialist clinics
   if (tags.amenity === 'hospital' || tags.healthcare === 'hospital') {
     if (tags['healthcare:speciality']) return { category: 'amenity', subtype: 'clinic' };
     if (tags.healthcare === 'clinic') return { category: 'amenity', subtype: 'clinic' };
