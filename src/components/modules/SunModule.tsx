@@ -90,8 +90,8 @@ function SingleView({
       </Section>
 
       <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
-        <StatReadout label="WINTER DAYLIGHT" value={`${sun.winter.daylightHours.toFixed(1)} H`} hint={`MAX ${sun.winter.maxAltitude.toFixed(0)}°`} tone={sun.winter.daylightHours < 8 ? 'warn' : 'cyan'} compact />
-        <StatReadout label="SUMMER DAYLIGHT" value={`${sun.summer.daylightHours.toFixed(1)} H`} hint={`MAX ${sun.summer.maxAltitude.toFixed(0)}°`} tone="amber" compact />
+        <StatReadout label="WINTER DAYLIGHT" value={`${sun.winter.daylightHours.toFixed(1)} H`} hint={`PEAK ALT ${sun.winter.maxAltitude.toFixed(0)}°`} tone={sun.winter.daylightHours < 8 ? 'warn' : 'cyan'} compact />
+        <StatReadout label="SUMMER DAYLIGHT" value={`${sun.summer.daylightHours.toFixed(1)} H`} hint={`PEAK ALT ${sun.summer.maxAltitude.toFixed(0)}°`} tone="amber" compact />
         <StatReadout label="GOLDEN HR" value={formatTime(sun.todayGoldenHourStart)} hint={`END ${formatTime(sun.todayGoldenHourEnd)}`} compact />
         <StatReadout label="BLUE HR END" value={formatTime(sun.todayBlueHourEnd)} hint="TODAY" compact />
       </div>
