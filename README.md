@@ -4,6 +4,16 @@ Neighborhood-level intelligence for any location on Earth. Drop a pin and get cl
 
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 
+## Why this exists
+
+I built this after relocating to a new area. The house was great, the neighborhood looked fine — but nobody tells you what the wind is like in January, or whether your kid's bedroom faces direct sun all afternoon in July.
+
+The major blind spot was weather exposure. Could I leave the house with a small child in winter without getting drenched and blasted by wind? That one question turned into a broader one: what does a full year actually look like at this exact spot?
+
+When it rains, does it pour? When it's hot, is it bearable or relentless? How exposed is the building? What's nearby that you'd only discover after living there for six months?
+
+None of this information existed in one place. So I started stitching together free APIs — historical climate data, wind roses, sun path calculations, air quality, seismic activity, nearby amenities — anything that gives you real visibility into a location over a full year, before you commit to it.
+
 ## What it does
 
 - **Climate** — temperature, precipitation, and seasonal heatmaps via Open-Meteo
