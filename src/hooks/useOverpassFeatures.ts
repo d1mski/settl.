@@ -59,7 +59,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const QUERY_VERSION = 'v3';
+const QUERY_VERSION = 'v4';
 
 function makeKey(coords: Coordinates): string {
   return `${QUERY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
@@ -116,12 +116,18 @@ function categorise(tags: Record<string, string>): {
   if (tags.highway === 'bus_stop') return { category: 'transit', subtype: 'bus_stop' };
   if (tags.natural === 'water') return { category: 'water', subtype: 'water' };
   if (tags.leisure === 'park') return { category: 'park', subtype: 'park' };
-  // ponytail: split hospital vs specialist clinic — specialist facilities have healthcare:speciality tag
-  if (tags.amenity === 'hospital') {
+  // ponytail: distinguish general hospitals from specialist clinics
+  if (tags.amenity === 'hospital' || tags.healthcare === 'hospital') {
     if (tags['healthcare:speciality']) return { category: 'amenity', subtype: 'clinic' };
+    if (tags.healthcare === 'clinic') return { category: 'amenity', subtype: 'clinic' };
+    // Name-based: Greek κέντρο (center) + κλινική (clinic) often indicate specialist facilities
+    const name = (tags.name ?? '').toLowerCase();
+    if (name.includes('κέντρο') || name.includes('κλινικ') || name.includes('clinic')) {
+      return { category: 'amenity', subtype: 'clinic' };
+    }
     return { category: 'amenity', subtype: 'hospital' };
   }
-  if (tags.amenity === 'clinic' || tags.amenity === 'doctors') {
+  if (tags.amenity === 'clinic' || tags.amenity === 'doctors' || tags.healthcare === 'clinic') {
     return { category: 'amenity', subtype: 'clinic' };
   }
   if (tags.amenity === 'school') return { category: 'amenity', subtype: schoolSubtype(tags) };
@@ -272,8 +278,7 @@ export function useOverpassFeatures(
 }
 
 const NEAREST_ROWS: Array<{ label: string; match: (f: NearbyFeature) => boolean }> = [
-  // ponytail: hospital = way elements only — real hospitals are mapped as buildings, clinics are nodes
-  { label: 'hospital', match: (f) => f.subtype === 'hospital' && f.elementType === 'way' },
+  { label: 'hospital', match: (f) => f.subtype === 'hospital' },
   { label: 'pharmacy', match: (f) => f.subtype === 'pharmacy' },
   {
     label: 'supermarket',
