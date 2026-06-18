@@ -1,4 +1,4 @@
-# settl.  -  Location Intelligence.
+# settl. [Location Intelligence]
 
 Pin a location, see what it's actually like to live there. Climate, wind, sun, air quality, hazards, what's nearby. A full year of data on one screen. Free, no API keys.
 
