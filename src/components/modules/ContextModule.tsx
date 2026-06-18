@@ -1,4 +1,5 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useCallback, type ReactNode } from 'react';
+import { MapPin } from 'lucide-react';
 import type { Coordinates, WikiArticle } from '../../types';
 import { useWikipedia } from '../../hooks/useWikipedia';
 import { useReverseGeocode } from '../../hooks/useNominatim';
@@ -180,11 +181,27 @@ function CompareView({
                 return (
                   <tr key={label} className="border-b border-edge/50">
                     <td className="py-1.5 pr-2 text-ink uppercase">{label}</td>
-                    <td className="py-1.5 pr-2 text-cyan tabular-nums">
-                      {fA ? `${fA.distanceKm.toFixed(2)} KM` : '—'}
+                    <td
+                      className={`py-1.5 pr-2 text-cyan tabular-nums${fA ? ' cursor-pointer hover:bg-cyan/5' : ''}`}
+                      onClick={fA ? () => window.dispatchEvent(new CustomEvent('settl-flyto', { detail: { lat: fA.lat, lon: fA.lon } })) : undefined}
+                    >
+                      {fA ? (
+                        <span className="inline-flex items-center gap-1">
+                          {`${fA.distanceKm.toFixed(2)} KM`}
+                          <MapPin className="w-3 h-3 text-cyan/60" strokeWidth={1.4} />
+                        </span>
+                      ) : '—'}
                     </td>
-                    <td className="py-1.5 pr-2 text-amber tabular-nums">
-                      {fB ? `${fB.distanceKm.toFixed(2)} KM` : '—'}
+                    <td
+                      className={`py-1.5 pr-2 text-amber tabular-nums${fB ? ' cursor-pointer hover:bg-cyan/5' : ''}`}
+                      onClick={fB ? () => window.dispatchEvent(new CustomEvent('settl-flyto', { detail: { lat: fB.lat, lon: fB.lon } })) : undefined}
+                    >
+                      {fB ? (
+                        <span className="inline-flex items-center gap-1">
+                          {`${fB.distanceKm.toFixed(2)} KM`}
+                          <MapPin className="w-3 h-3 text-amber/60" strokeWidth={1.4} />
+                        </span>
+                      ) : '—'}
                     </td>
                   </tr>
                 );
@@ -348,6 +365,10 @@ function WikiList({
 }
 
 function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }) {
+  const flyTo = useCallback((lat: number, lon: number) => {
+    window.dispatchEvent(new CustomEvent('settl-flyto', { detail: { lat, lon } }));
+  }, []);
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-[10px] font-mono">
@@ -360,13 +381,22 @@ function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }
         </thead>
         <tbody>
           {nearest.map(({ label, feature }) => (
-            <tr key={label} className="border-b border-edge/50">
+            <tr
+              key={label}
+              className={`border-b border-edge/50${feature ? ' cursor-pointer hover:bg-cyan/5' : ''}`}
+              onClick={feature ? () => flyTo(feature.lat, feature.lon) : undefined}
+            >
               <td className="py-2 pr-3 text-ink uppercase">{label}</td>
               <td className="py-2 pr-3 text-muted truncate max-w-[220px]">
                 {feature ? feature.name ?? feature.subtype : '—'}
               </td>
               <td className="py-2 pr-3 text-cyan tabular-nums text-right">
-                {feature ? `${feature.distanceKm.toFixed(2)} KM` : 'NONE'}
+                {feature ? (
+                  <span className="inline-flex items-center gap-1">
+                    {`${feature.distanceKm.toFixed(2)} KM`}
+                    <MapPin className="w-3 h-3 text-cyan/60" strokeWidth={1.4} />
+                  </span>
+                ) : 'NONE'}
               </td>
             </tr>
           ))}

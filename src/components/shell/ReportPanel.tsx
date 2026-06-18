@@ -8,6 +8,7 @@ import {
   Globe,
   Microscope,
   ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Coordinates, TabId } from '../../types';
@@ -26,7 +27,7 @@ import { useOpenMeteo } from '../../hooks/useOpenMeteo';
 import { useAirQuality } from '../../hooks/useAirQuality';
 import { useEarthquakes } from '../../hooks/useEarthquakes';
 import { useWildfires } from '../../hooks/useWildfires';
-import { useOverpassFeatures } from '../../hooks/useOverpassFeatures';
+import { useOverpassFeatures, type NearbyFeature } from '../../hooks/useOverpassFeatures';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -90,6 +91,13 @@ function severityLabel(s: OverviewSeverity): string {
   return '';
 }
 
+function nearestBySubtype(features: NearbyFeature[] | null, subtype: string): NearbyFeature | null {
+  if (!features) return null;
+  return features
+    .filter(f => f.subtype === subtype)
+    .sort((a, b) => a.distanceKm - b.distanceKm)[0] ?? null;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -107,6 +115,23 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
   const hazardsResult = deriveHazardsSeverity(earthquakes, wildfires);
   const airResult = deriveAirSeverity(aqi);
   const contextResult = deriveContextSeverity(features);
+
+  const emergency = useMemo(() => {
+    const featData = features.data;
+    const hospital = nearestBySubtype(featData, 'hospital');
+    const police = nearestBySubtype(featData, 'police');
+    const fireStation = nearestBySubtype(featData, 'fire_station');
+    const allFound = hospital !== null && police !== null && fireStation !== null;
+    const severity: OverviewSeverity = featData === null ? 'unavailable' : allFound ? 'ok' : 'watch';
+    return {
+      severity,
+      metrics: [
+        { value: hospital ? `${hospital.distanceKm.toFixed(1)} km` : 'None nearby', label: 'Hospital' },
+        { value: police ? `${police.distanceKm.toFixed(1)} km` : 'None nearby', label: 'Police' },
+        { value: fireStation ? `${fireStation.distanceKm.toFixed(1)} km` : 'None nearby', label: 'Fire Station' },
+      ],
+    };
+  }, [features.data]);
 
   const chapters = useMemo<Chapter[]>(() => {
     const d = climate.data?.daily;
@@ -268,6 +293,13 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
         className="px-6 pb-3 flex gap-3 overflow-x-auto border-b border-edge"
         style={{ scrollbarWidth: 'none' }}
       >
+        <a
+          href="#report-emergency"
+          className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted hover:text-ink transition-colors whitespace-nowrap"
+        >
+          <ShieldCheck className="w-3.5 h-3.5" strokeWidth={1.4} />
+          Emergency
+        </a>
         {chapters.map(ch => (
           <a
             key={ch.id}
@@ -279,6 +311,44 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
           </a>
         ))}
       </nav>
+
+      {/* Emergency section */}
+      <section
+        id="report-emergency"
+        className="px-6 py-5 border-b border-edge cursor-pointer hover:bg-edge/20 transition-colors"
+        onClick={() => onDrillDown('context')}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <ShieldCheck className="w-4 h-4 text-muted" strokeWidth={1.4} />
+          <span className="text-[10px] font-mono uppercase tracking-widest text-muted">
+            Emergency
+          </span>
+          {emergency.severity !== 'unavailable' && (
+            <StatusDot
+              tone={SEVERITY_TONE[emergency.severity as keyof typeof SEVERITY_TONE]}
+              label={severityLabel(emergency.severity)}
+            />
+          )}
+        </div>
+        <h2 className="text-[1.05rem] font-body font-semibold text-ink leading-snug">
+          How close are emergency services?
+        </h2>
+        <p className="text-[0.85rem] text-muted font-body mt-1">
+          Distance to the nearest hospital, police station, and fire station.
+        </p>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          {emergency.metrics.map((m, i) => (
+            <div key={i} className="bg-void border border-edge rounded-[10px] px-3 py-2">
+              <span className="text-[1.25rem] font-mono font-semibold text-ink">
+                {m.value}
+              </span>
+              <span className="block text-[10px] font-mono text-muted mt-0.5">
+                {m.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Chapter sections */}
       {chapters.map(ch => (

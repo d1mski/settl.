@@ -99,6 +99,19 @@ function UserLocationInitial({
   return null;
 }
 
+function FlyToListener() {
+  const map = useMap();
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { lat, lon } = (e as CustomEvent).detail;
+      map.flyTo([lat, lon], Math.max(map.getZoom(), 16));
+    };
+    window.addEventListener('settl-flyto', handler);
+    return () => window.removeEventListener('settl-flyto', handler);
+  }, [map]);
+  return null;
+}
+
 function MapInvalidator() {
   const map = useMap();
   useEffect(() => {
@@ -171,6 +184,7 @@ export function MapCanvas({
           onChangeB={onChangeB}
         />
         <FitToCoords coordsA={coordsA} coordsB={coordsB} />
+        <FlyToListener />
         <UserLocationInitial initialHasCoords={initial.hadCoords} />
         <MapInvalidator />
 
