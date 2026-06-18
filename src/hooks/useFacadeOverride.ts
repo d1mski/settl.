@@ -4,8 +4,27 @@ import type { BuildingFacade, Coordinates } from '../types';
 type FacadeLabel = BuildingFacade['label'];
 type Slot = 'A' | 'B';
 
-const store = new Map<string, FacadeLabel>();
+const STORAGE_KEY = 'settl-facade-overrides-v1';
+
+const store = new Map<string, FacadeLabel>(loadFromStorage());
 const listeners = new Set<() => void>();
+
+function loadFromStorage(): [string, FacadeLabel][] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...store.entries()]));
+  } catch { /* fail silently */ }
+}
 
 function emit() {
   listeners.forEach((l) => l());
@@ -43,6 +62,7 @@ export function useFacadeOverride(
         if (store.get(k) === v) return;
         store.set(k, v);
       }
+      persist();
       emit();
     },
     [k],
