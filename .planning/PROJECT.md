@@ -25,6 +25,7 @@ Give anyone instant, trustworthy, data-backed insight into what it's really like
 - ✓ Dark/light theme toggle — v0.1
 - ✓ Leaflet map with CARTO tiles — v0.1
 - ✓ URL state persistence (coords, tab, compare mode) — v0.1
+- ✓ Saved locations (heart toggle, localStorage, 10-item cap, one-click restore) — Phase 4
 
 ### Active
 
@@ -83,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-17 after initial GSD setup*
+*Last updated: 2026-06-18 after Phase 4 (Saved Locations) completion*
