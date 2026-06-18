@@ -288,25 +288,25 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
         )}
       </div>
 
-      {/* Chapter nav */}
+      {/* Chapter nav — icon on top, label below */}
       <nav
-        className="px-6 pb-3 flex gap-3 overflow-x-auto border-b border-edge"
+        className="px-4 py-3 flex gap-2 overflow-x-auto border-b border-edge"
         style={{ scrollbarWidth: 'none' }}
       >
         <a
           href="#report-emergency"
-          className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted hover:text-ink transition-colors whitespace-nowrap"
+          className="flex flex-col items-center gap-1 px-4 py-2 rounded-md text-[9px] font-mono font-semibold uppercase tracking-wider text-muted hover:text-ink hover:bg-edge/40 transition-colors whitespace-nowrap min-w-[60px]"
         >
-          <ShieldCheck className="w-3.5 h-3.5" strokeWidth={1.4} />
+          <ShieldCheck className="w-5 h-5" strokeWidth={1.4} />
           Emergency
         </a>
         {chapters.map(ch => (
           <a
             key={ch.id}
             href={`#report-${ch.id}`}
-            className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted hover:text-ink transition-colors whitespace-nowrap"
+            className="flex flex-col items-center gap-1 px-4 py-2 rounded-md text-[9px] font-mono font-semibold uppercase tracking-wider text-muted hover:text-ink hover:bg-edge/40 transition-colors whitespace-nowrap min-w-[60px]"
           >
-            <ch.icon className="w-3.5 h-3.5" strokeWidth={1.4} />
+            <ch.icon className="w-5 h-5" strokeWidth={1.4} />
             {ch.label}
           </a>
         ))}
