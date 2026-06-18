@@ -108,8 +108,8 @@ Plans:
   5. ReportPanel renders inside ModuleSheet with no new z-index context that buries Leaflet popups
 **Plans:** 0/2 plans executed
 Plans:
-- [ ] 06-01-PLAN.md — ChapterCard component + overviewSeverity utility (building blocks)
-- [ ] 06-02-PLAN.md — ReportPanel assembly, ModuleSheet view branching, App.tsx onDrillDown wiring
+- [x] 06-01-PLAN.md — ChapterCard component + overviewSeverity utility (building blocks)
+- [x] 06-02-PLAN.md — ReportPanel assembly, ModuleSheet view branching, App.tsx onDrillDown wiring
 **UI hint**: yes
 
 ## Progress
