@@ -79,7 +79,7 @@ Plans:
   4. Saving an 11th location is rejected gracefully (10-item cap enforced, user informed)
 **Plans:** 0/1 plans executed
 Plans:
-- [ ] 04-01-PLAN.md — SavedLocation type, useSavedLocations hook, heart toggle + saved list in LocationIntelCard
+- [x] 04-01-PLAN.md — SavedLocation type, useSavedLocations hook, heart toggle + saved list in LocationIntelCard
 **UI hint**: yes
 
 ### Phase 5: ModuleRail + Lucide Icons
