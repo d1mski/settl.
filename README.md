@@ -26,9 +26,12 @@ Temperature, precipitation, and seasonal heatmaps from Open-Meteo historical dat
 Recent earthquakes from USGS and active wildfires from NASA FIRMS. Schools, hospitals, transit stops, and parks pulled from OpenStreetMap. Building orientation and facade analysis. Everything gets rolled into a risk overview with severity scoring.
 
 You can compare two locations side by side and bookmark spots you're considering.
-<img width="551" height="563" alt="image" src="https://github.com/user-attachments/assets/438311c8-d907-4d21-8845-9b09f5702f60" />
-<img width="558" height="598" alt="image" src="https://github.com/user-attachments/assets/6a060b4a-5260-453a-9d99-7edc7506262d" />
-<img width="553" height="329" alt="image" src="https://github.com/user-attachments/assets/bb541a10-15c1-4e50-b6df-f50e388b08da" />
+<p align="center">
+  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/438311c8-d907-4d21-8845-9b09f5702f60" />
+  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/6a060b4a-5260-453a-9d99-7edc7506262d" />
+  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/bb541a10-15c1-4e50-b6df-f50e388b08da" />
+  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/c486a4c9-e52f-46a5-aedb-519a4c526d3d" />
+</p>
 
 
 ## Modules
