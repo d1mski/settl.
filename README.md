@@ -27,10 +27,11 @@ Recent earthquakes from USGS and active wildfires from NASA FIRMS. Schools, hosp
 
 You can compare two locations side by side and bookmark spots you're considering.
 <p align="center">
-  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/438311c8-d907-4d21-8845-9b09f5702f60" />
-  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/6a060b4a-5260-453a-9d99-7edc7506262d" />
-  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/bb541a10-15c1-4e50-b6df-f50e388b08da" />
-  <img width="24%" alt="image" src="https://github.com/user-attachments/assets/c486a4c9-e52f-46a5-aedb-519a4c526d3d" />
+  <img width="45%" src="https://github.com/user-attachments/assets/438311c8-d907-4d21-8845-9b09f5702f60" />
+  <img width="45%" src="https://github.com/user-attachments/assets/6a060b4a-5260-453a-9d99-7edc7506262d" />
+  <br/>
+  <img width="45%" src="https://github.com/user-attachments/assets/bb541a10-15c1-4e50-b6df-f50e388b08da" />
+  <img width="45%" src="https://github.com/user-attachments/assets/c486a4c9-e52f-46a5-aedb-519a4c526d3d" />
 </p>
 
 
