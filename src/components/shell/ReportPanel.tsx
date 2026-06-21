@@ -23,6 +23,8 @@ import {
   deriveContextSeverity,
 } from '../../utils/overviewSeverity';
 import { StatusDot } from '../hud/StatusDot';
+import { BuildingCard } from './BuildingCard';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useOpenMeteo } from '../../hooks/useOpenMeteo';
 import { useAirQuality } from '../../hooks/useAirQuality';
 import { useEarthquakes } from '../../hooks/useEarthquakes';
@@ -103,6 +105,10 @@ function nearestBySubtype(features: NearbyFeature[] | null, subtype: string): Ne
 /* ------------------------------------------------------------------ */
 
 export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: ReportPanelProps) {
+  // The building facade selector floats beside the map on desktop. On mobile
+  // that floating HUD is hidden, so surface it here as the first, required
+  // Overview step — downstream Sun & Wind accuracy depends on it.
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const climate = useOpenMeteo(coordsA);
   const aqi = useAirQuality(coordsA);
   const earthquakes = useEarthquakes(coordsA);
@@ -287,6 +293,28 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
           <span className="text-[0.85rem] text-muted font-body">{countryA}</span>
         )}
       </div>
+
+      {/* Mobile-only: confirm the building front facade first — Sun & Wind
+          accuracy depends on it. On desktop this lives in the floating HUD. */}
+      {isMobile && coordsA && (
+        <div className="px-4 pb-5 border-b border-edge">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="flex items-center justify-center w-[18px] h-[18px] rounded-full bg-cyan text-void text-[10px] font-mono font-bold leading-none">
+              1
+            </span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-cyan font-semibold">
+              Confirm front facade
+            </span>
+            <span className="ml-auto text-[8px] font-mono uppercase tracking-widest text-amber border border-amber/40 rounded px-1.5 py-0.5">
+              Do first
+            </span>
+          </div>
+          <p className="text-[0.8rem] text-muted font-body mb-2.5 leading-snug">
+            Tap the wall facing the street. Sun &amp; wind accuracy below depend on it.
+          </p>
+          <BuildingCard coords={coordsA} slot="A" className="w-full" />
+        </div>
+      )}
 
       {/* Chapter nav — icon on top, label below */}
       <nav

@@ -230,7 +230,7 @@ export function LocationIntelCard({
   }
 
   return (
-    <Panel className="w-[360px]">
+    <Panel className="w-full md:w-[360px]">
       {/* Wordmark */}
       <div className="px-4 pt-3 pb-2 border-b border-edge flex items-center justify-between">
         <div>

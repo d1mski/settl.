@@ -11,9 +11,10 @@ import { Panel } from '../hud/Panel';
 interface Props {
   coords: Coordinates | null;
   slot: 'A' | 'B';
+  className?: string;
 }
 
-export function BuildingCard({ coords, slot }: Props) {
+export function BuildingCard({ coords, slot, className = 'w-[360px]' }: Props) {
   const state = useOverpassBuilding(coords);
   const [frontOverride, setFrontOverride] = useFacadeOverride(coords, slot);
 
@@ -32,7 +33,7 @@ export function BuildingCard({ coords, slot }: Props) {
   const bg = slot === 'A' ? 'bg-cyan' : 'bg-amber';
 
   return (
-    <Panel className="w-[360px]">
+    <Panel className={className}>
       <div className="px-4 py-2 border-b border-edge flex items-center gap-2">
         <span className={`inline-block w-1.5 h-1.5 ${bg}`} />
         <span className="text-[9px] font-mono uppercase tracking-widest text-muted">
