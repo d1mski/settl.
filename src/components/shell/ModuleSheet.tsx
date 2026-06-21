@@ -74,7 +74,10 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resol
           </button>
         </div>
         <div className="flex-1" />
-        <FontScaleControl />
+        {/* Font scale is desktop-only — too cramped in the mobile sheet bar */}
+        <div className="hidden md:flex">
+          <FontScaleControl />
+        </div>
         <ThemeToggle />
       </div>
 
