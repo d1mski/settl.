@@ -229,8 +229,16 @@ export function LocationIntelCard({
     }
   }
 
+  // On mobile, collapse the location detail once a fix is set so the map keeps
+  // its room; expand again when the fix is cleared. Desktop ignores this — the
+  // detail is always shown there (md:block).
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    setCollapsed(!!coordsA);
+  }, [coordsA]);
+
   return (
-    <Panel className="w-[360px]">
+    <Panel className="w-full md:w-[360px]">
       {/* Wordmark */}
       <div className="px-4 pt-3 pb-2 border-b border-edge flex items-center justify-between">
         <div>
@@ -259,6 +267,16 @@ export function LocationIntelCard({
               × CMP
             </button>
           )}
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            aria-label={collapsed ? 'Expand location details' : 'Collapse location details'}
+            aria-expanded={!collapsed}
+            className="md:hidden shrink-0 w-7 h-7 flex items-center justify-center border border-edge bg-void rounded-md text-muted hover:text-cyan transition-colors"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${collapsed ? '' : 'rotate-180'}`}>
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -356,6 +374,7 @@ export function LocationIntelCard({
           )}
         </div>
 
+        <div className={`space-y-3 ${collapsed ? 'hidden md:block' : ''}`}>
         <FixBlock
           label="FIX A"
           coords={coordsA}
@@ -439,6 +458,7 @@ export function LocationIntelCard({
 
         <div className="text-[8px] font-mono uppercase tracking-widest text-dim pt-2 border-t border-edge">
           Map click . Drag pin . Enter coords
+        </div>
         </div>
       </div>
     </Panel>

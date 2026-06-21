@@ -52,7 +52,7 @@ interface Props {
 
 export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resolvedA, countryA, onToggleView, onSelect, onDrillDown }: Props) {
   return (
-    <aside className="h-full w-[560px] shrink-0 bg-panel border-l border-edge flex flex-col">
+    <aside className="h-full w-full bg-panel flex flex-col">
       {/* Mode bar: Overview/Advanced toggle + font/theme controls */}
       <div className="px-4 py-2.5 border-b border-edge flex items-center gap-3 shrink-0">
         <div className="flex bg-void border border-edge rounded-md p-0.5">
@@ -74,7 +74,10 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resol
           </button>
         </div>
         <div className="flex-1" />
-        <FontScaleControl />
+        {/* Font scale is desktop-only — too cramped in the mobile sheet bar */}
+        <div className="hidden md:flex">
+          <FontScaleControl />
+        </div>
         <ThemeToggle />
       </div>
 

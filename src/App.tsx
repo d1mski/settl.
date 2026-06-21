@@ -6,17 +6,20 @@ import { MapHud } from './components/shell/MapHud';
 import { LocationIntelCard } from './components/shell/LocationIntelCard';
 import { BuildingCard } from './components/shell/BuildingCard';
 import { ModuleSheet } from './components/shell/ModuleSheet';
+import { MobileSheet } from './components/shell/MobileSheet';
 import { BottomStrip } from './components/shell/BottomStrip';
 import { RiskPanel } from './components/hud/RiskPanel';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { useUrlState } from './hooks/useUrlState';
 import { useReverseGeocode } from './hooks/useNominatim';
+import { useMediaQuery } from './hooks/useMediaQuery';
 
 export default function App() {
   const { state, update } = useUrlState();
   const { result: geocodedA, loading: resolvingA } = useReverseGeocode(state.coordsA);
   const { result: geocodedB, loading: resolvingB } = useReverseGeocode(state.coordsB);
   const [viewMode, setViewMode] = useState<'overview' | 'advanced'>('overview');
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const compareMode = state.coordsB !== null;
 
@@ -64,6 +67,23 @@ export default function App() {
     setViewMode('advanced');
   }, [update]);
 
+  // Single ModuleSheet element, placed in the docked aside (desktop) or the
+  // draggable bottom sheet (mobile) — never both, so child data hooks fire once.
+  const moduleSheet = (
+    <ModuleSheet
+      active={state.tab}
+      coordsA={state.coordsA}
+      coordsB={state.coordsB}
+      compareMode={compareMode}
+      view={viewMode}
+      resolvedA={geocodedA?.cleanAddress ?? null}
+      countryA={geocodedA?.countryCode ?? null}
+      onToggleView={toggleView}
+      onSelect={selectTab}
+      onDrillDown={handleDrillDown}
+    />
+  );
+
   return (
     <ErrorBoundary>
       <div className="h-screen w-screen flex flex-col bg-void overflow-hidden">
@@ -84,8 +104,11 @@ export default function App() {
               activeSlot={state.slot}
             />
 
-            <div className="absolute top-6 bottom-14 left-6 z-30 pointer-events-auto w-[360px] flex flex-col justify-between gap-3">
-              <div className="flex flex-col gap-3">
+            {/* Floating HUD. Desktop: 360px column down the left, room left
+                for the bottom strip. Mobile: input pinned to the top edge
+                (Google-Maps style); building + risk cards move into the sheet. */}
+            <div className="absolute z-30 top-3 left-3 right-3 md:top-6 md:bottom-14 md:left-6 md:right-auto md:w-[360px] flex flex-col md:justify-between gap-3 pointer-events-none">
+              <div className="flex flex-col gap-3 pointer-events-auto">
                 <LocationIntelCard
                   coordsA={state.coordsA}
                   coordsB={state.coordsB}
@@ -104,36 +127,41 @@ export default function App() {
                   onDisableCompare={disableCompare}
                 />
 
-                <BuildingCard coords={state.coordsA} slot="A" />
-                {compareMode && <BuildingCard coords={state.coordsB} slot="B" />}
+                <div className="hidden md:flex md:flex-col gap-3">
+                  <BuildingCard coords={state.coordsA} slot="A" />
+                  {compareMode && <BuildingCard coords={state.coordsB} slot="B" />}
+                </div>
               </div>
 
-              <RiskPanel coords={state.coordsA} />
+              <div className="hidden md:block pointer-events-auto">
+                <RiskPanel coords={state.coordsA} />
+              </div>
             </div>
           </div>
 
-          {/* Right panel — always visible */}
-          <ModuleSheet
-            active={state.tab}
-            coordsA={state.coordsA}
-            coordsB={state.coordsB}
-            compareMode={compareMode}
-            view={viewMode}
-            resolvedA={geocodedA?.cleanAddress ?? null}
-            countryA={geocodedA?.countryCode ?? null}
-            onToggleView={toggleView}
-            onSelect={selectTab}
-            onDrillDown={handleDrillDown}
-          />
+          {/* Report panel. Desktop: docked 560px aside on the right. Mobile:
+              draggable bottom sheet over the map (rendered below, outside the
+              flex row). Single instance per breakpoint — no double data fetch. */}
+          {!isMobile && (
+            <div className="w-[560px] shrink-0 border-l border-edge">
+              {moduleSheet}
+            </div>
+          )}
         </div>
 
-        <BottomStrip
-          coordsA={state.coordsA}
-          coordsB={state.coordsB}
-          resolvingA={resolvingA}
-          resolvedA={geocodedA?.cleanAddress ?? null}
-          compareMode={compareMode}
-        />
+        {isMobile ? (
+          // Sheet only appears once a location is dropped — until then the
+          // map + input own the screen.
+          state.coordsA && <MobileSheet>{moduleSheet}</MobileSheet>
+        ) : (
+          <BottomStrip
+            coordsA={state.coordsA}
+            coordsB={state.coordsB}
+            resolvingA={resolvingA}
+            resolvedA={geocodedA?.cleanAddress ?? null}
+            compareMode={compareMode}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );
