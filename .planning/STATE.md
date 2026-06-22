@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
-status: Ready to execute
-stopped_at: Completed 07-02-PLAN.md — flood data layer
-last_updated: "2026-06-22T11:31:11.464Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 07-03-PLAN.md — flood + pollen ReportPanel UI; Phase 07 ready for verification
+last_updated: "2026-06-22T12:10:32.333Z"
 progress:
   total_phases: 10
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -48,6 +48,7 @@ Plan: 3 of 3
 | Phase 06-reportpanel-overview-mode P02 | 30 | 4 tasks | 3 files |
 | Phase 07 P01 | 10 | 2 tasks | 2 files |
 | Phase 07 P02 | 6 | 3 tasks | 3 files |
+| Phase 07 P03 | 12 | 4 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Plan: 3 of 3
 - [Phase 07]: Desert pins (HTTP 200, all-zero) and ocean pins (HTTP 200, all-null) both resolve to notApplicable=true — never a false green OK for flood
 - [Phase 07]: Absolute flood severity bands 500/2000 m³/s — p25/p75 not used (equal river_discharge on past reanalysis days)
 - [Phase 07]: FloodSample type stays in useFlood.ts (not types/index.ts) to keep 07-01 and 07-02 parallel-safe
+- [Phase 07]: deriveHazardsSeverity composes via rank-max; flood not-applicable ranks -1 (ignored), never degrades EQ/WF; final rank maps severity AND badge metric together
+- [Phase 07]: Not-applicable surfaces as muted metric text (No river), NOT a chapter StatusDot — no not-applicable dot branch in Phase 7 (would be dead code)
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ Plan: 3 of 3
 
 ## Session Continuity
 
-Last session: 2026-06-22T11:31:11.459Z
-Stopped at: Completed 07-02-PLAN.md — flood data layer
+Last session: 2026-06-22T12:10:32.327Z
+Stopped at: Completed 07-03-PLAN.md — flood + pollen ReportPanel UI; Phase 07 ready for verification
 Resume file: None

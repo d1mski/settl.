@@ -140,7 +140,7 @@ Plans:
 Plans:
 - [x] 07-01-PLAN.md — Pollen: add 6 CAMS vars to useAirQuality HOURLY_VARS + AqiSample (nullable), bump cache key to aqv2| [DATA-02]
 - [x] 07-02-PLAN.md — Flood data layer: useFlood.ts hook, all-zero-or-null not-applicable guard, deriveFloodSeverity (500/2000 bands), 'not-applicable' severity + TTL [DATA-01]
-- [ ] 07-03-PLAN.md — ReportPanel wiring: Flood Risk metric + hazards composition, muted N/A StatusDot, gated pollen sub-block (CAMS European model), human-verify checkpoint [DATA-01, DATA-02]
+- [x] 07-03-PLAN.md — ReportPanel wiring: Flood Risk metric + hazards composition, muted N/A StatusDot, gated pollen sub-block (CAMS European model), human-verify checkpoint [DATA-01, DATA-02]
 **Research notes**: Pollen: add 6 vars to HOURLY_VARS in useAirQuality.ts, bump cache key to aqv2|... prefix. Pollen null-guard: show section only when at least one species value is non-null and > 0; heuristic lon -25 to 45 / lat 30 to 75 for Europe guard. Flood: new hook useFlood.ts mirroring useAirQuality.ts pattern; GloFAS null-filled arrays map to not-applicable, never to ok.
 **UI hint**: yes
 
