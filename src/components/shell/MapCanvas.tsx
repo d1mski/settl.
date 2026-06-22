@@ -9,6 +9,7 @@ import {
 } from 'react-leaflet';
 import type { Coordinates, TabId } from '../../types';
 import { iconA, iconB } from '../../utils/mapIcons';
+import { fetchIpLocation } from '../../utils/ipLocation';
 import { ContextMapLayer } from './layers/ContextMapLayer';
 import { HazardsMapLayer } from './layers/HazardsMapLayer';
 import { ClimateCellLayer } from './layers/ClimateCellLayer';
@@ -83,17 +84,19 @@ function UserLocationInitial({
   useEffect(() => {
     if (firedRef.current) return;
     if (initialHasCoords) return;
-    if (!('geolocation' in navigator)) return;
     firedRef.current = true;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        map.setView([pos.coords.latitude, pos.coords.longitude], CITY_ZOOM, {
-          animate: true,
-        });
-      },
-      undefined,
-      { timeout: 10000, maximumAge: 5 * 60 * 1000, enableHighAccuracy: false },
-    );
+    // Center on the visitor's coarse IP location — no permission prompt. The
+    // OS geolocation popup is reserved for the explicit crosshair button.
+    const ctrl = new AbortController();
+    let cancelled = false;
+    fetchIpLocation(ctrl.signal).then((loc) => {
+      if (cancelled || !loc) return;
+      map.setView([loc.lat, loc.lon], CITY_ZOOM, { animate: true });
+    });
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+    };
   }, [map, initialHasCoords]);
   return null;
 }
