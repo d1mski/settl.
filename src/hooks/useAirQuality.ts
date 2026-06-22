@@ -12,6 +12,12 @@ const HOURLY_VARS = [
   'pm2_5',
   'nitrogen_dioxide',
   'ozone',
+  'alder_pollen',
+  'birch_pollen',
+  'grass_pollen',
+  'mugwort_pollen',
+  'olive_pollen',
+  'ragweed_pollen',
 ];
 
 interface AirQualityResponse {
@@ -22,13 +28,19 @@ interface AirQualityResponse {
     pm2_5: number[];
     nitrogen_dioxide: number[];
     ozone: number[];
+    alder_pollen: (number | null)[];
+    birch_pollen: (number | null)[];
+    grass_pollen: (number | null)[];
+    mugwort_pollen: (number | null)[];
+    olive_pollen: (number | null)[];
+    ragweed_pollen: (number | null)[];
   };
 }
 
 const cache = new Map<string, AqiSample[]>();
 
 function makeKey(coords: Coordinates): string {
-  return `${coords.lat.toFixed(4)}|${coords.lon.toFixed(4)}`;
+  return `aqv2|${coords.lat.toFixed(4)}|${coords.lon.toFixed(4)}`;
 }
 
 function buildUrl(coords: Coordinates): string {
@@ -48,7 +60,7 @@ async function fetchAqi(
 ): Promise<AqiSample[]> {
   const url = buildUrl(coords);
   const raw = await fetchJson<AirQualityResponse>(url, { signal, timeoutMs: 20000 });
-  const { time, european_aqi, pm10, pm2_5, nitrogen_dioxide, ozone } = raw.hourly;
+  const { time, european_aqi, pm10, pm2_5, nitrogen_dioxide, ozone, alder_pollen, birch_pollen, grass_pollen, mugwort_pollen, olive_pollen, ragweed_pollen } = raw.hourly;
   const samples: AqiSample[] = [];
   for (let i = 0; i < time.length; i++) {
     samples.push({
@@ -58,6 +70,12 @@ async function fetchAqi(
       pm25: pm2_5[i] ?? 0,
       no2: nitrogen_dioxide[i] ?? 0,
       o3: ozone[i] ?? 0,
+      alderPollen: alder_pollen[i] ?? null,
+      birchPollen: birch_pollen[i] ?? null,
+      grassPollen: grass_pollen[i] ?? null,
+      mugwortPollen: mugwort_pollen[i] ?? null,
+      olivePollen: olive_pollen[i] ?? null,
+      ragweedPollen: ragweed_pollen[i] ?? null,
     });
   }
   return samples;

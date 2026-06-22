@@ -133,6 +133,12 @@ export interface AqiSample {
   pm25: number;
   no2: number;
   o3: number;
+  alderPollen: number | null;
+  birchPollen: number | null;
+  grassPollen: number | null;
+  mugwortPollen: number | null;
+  olivePollen: number | null;
+  ragweedPollen: number | null;
 }
 
 export interface WikiArticle {
