@@ -14,7 +14,7 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 
 - [x] **HAZ-01**: User sees nearby hazard/infrastructure features — military areas, power substations, wastewater plants, quarries/landfills, data centers — each with distance, under a new "hazard" category
 - [x] **HAZ-02**: User sees nearby golf courses with distance
-- [ ] **HAZ-03**: Hazard proximity contributes to Overview severity (hazard within 1km → Context card Watch; military or wastewater within 500m → Alert)
+- [x] **HAZ-03**: Hazard proximity contributes to Overview severity (hazard within 1km → Context card Watch; military or wastewater within 500m → Alert)
 
 ## Live Webcams (CAM)
 
@@ -48,7 +48,7 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 | DATA-02 | Phase 7 | Complete |
 | HAZ-01 | Phase 8 | Complete |
 | HAZ-02 | Phase 8 | Complete |
-| HAZ-03 | Phase 8 | Pending |
+| HAZ-03 | Phase 8 | Complete |
 | FIX-01 | Phase 8 | Complete |
 | FIX-02 | Phase 8 | Complete |
 | FIX-03 | Phase 8 | Complete |

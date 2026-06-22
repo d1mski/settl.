@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
-status: Ready to execute
-stopped_at: Completed 08-03-PLAN.md (code tasks; visual verify deferred to end of phase)
-last_updated: "2026-06-22T22:22:14.029Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-06-22T22:26:08.734Z"
 progress:
   total_phases: 10
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
 ---
 
 # Project State
@@ -51,6 +51,7 @@ Plan: 3 of 3
 | Phase 07 P03 | 12 | 4 tasks | 2 files |
 | Phase 08 P01 | 3 | 4 tasks | 3 files |
 | Phase 08-overpass-expansion-bug-fixes P03 | 20 | 2 tasks | 2 files |
+| Phase 08 P02 | 5 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,7 @@ Plan: 3 of 3
 - [Phase 08]: FIX-02: deleted Greek name-substring heuristic entirely; FIX-03: schoolSubtype uses exact === matching with multi-value TODO
 - [Phase 08-overpass-expansion-bug-fixes]: [Phase 08-03] HUD cards moved out of the map box (DOM move required, not class-only) — stacks below map on mobile; lg:absolute floats over map on desktop
 - [Phase 08-overpass-expansion-bug-fixes]: [Phase 08-03] FIX-01 visual verify (Task 3) deferred to end of phase — code complete, tsc clean, mobile rendering unconfirmed
+- [Phase 08]: deriveContextSeverity returns nearest hazard km as metric; alert subtype literals 'military'/'wastewater' match categorise() exactly
 
 ### Pending Todos
 
@@ -102,6 +104,6 @@ Plan: 3 of 3
 
 ## Session Continuity
 
-Last session: 2026-06-22T22:22:14.024Z
-Stopped at: Completed 08-03-PLAN.md (code tasks; visual verify deferred to end of phase)
+Last session: 2026-06-22T22:26:08.729Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
