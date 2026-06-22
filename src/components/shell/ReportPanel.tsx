@@ -267,8 +267,16 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
         ];
 
     /* Context */
+    const nearestHazard = featData
+      ? [...featData].filter((f) => f.category === 'hazard').sort((a, b) => a.distanceKm - b.distanceKm)[0] ?? null
+      : null;
     const contextMetrics: Metric[] = [
       { value: featData ? String(featData.length) : '--', label: 'Places nearby' },
+      {
+        value: nearestHazard ? `${nearestHazard.distanceKm.toFixed(1)} km` : 'None',
+        label: 'Nearest hazard',
+        muted: nearestHazard === null,
+      },
     ];
 
     return [
