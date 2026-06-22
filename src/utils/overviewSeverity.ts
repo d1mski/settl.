@@ -1,14 +1,16 @@
 import type { ModuleState, ClimateData, AqiSample, EarthquakeEvent, WildfireEvent } from '../types';
 import type { NearbyFeature } from '../hooks/useOverpassFeatures';
+import type { FloodSample } from '../hooks/useFlood';
 import { countExtremeDays } from './climateAggregation';
 
-export type OverviewSeverity = 'ok' | 'watch' | 'alert' | 'unavailable';
+export type OverviewSeverity = 'ok' | 'watch' | 'alert' | 'unavailable' | 'not-applicable';
 
 export const SEVERITY_TONE = {
   ok: 'good',
   watch: 'warn',
   alert: 'risk',
-} as const satisfies Record<string, 'good' | 'warn' | 'risk'>;
+  'not-applicable': 'muted',
+} as const satisfies Record<Exclude<OverviewSeverity, 'unavailable'>, 'good' | 'warn' | 'risk' | 'muted'>;
 
 export interface SeverityResult {
   severity: OverviewSeverity;
@@ -126,4 +128,30 @@ export function deriveContextSeverity(state: ModuleState<NearbyFeature[]>): Seve
   }
   const count = state.data.length;
   return { severity: 'ok', metric: `${count}`, unit: 'places' };
+}
+
+// Absolute m³/s bands per Phase 7 ROADMAP. p25/p75 are ensemble forecast
+// spread (identical to river_discharge on past reanalysis days) — NOT
+// historical percentiles, so they are not used for severity.
+export function deriveFloodSeverity(
+  state: ModuleState<FloodSample[]>,
+  notApplicable: boolean,
+): SeverityResult {
+  if (notApplicable) {
+    return { severity: 'not-applicable', metric: 'No major river within 5km' };
+  }
+  if (state.status !== 'success' || state.data === null || state.data.length === 0) {
+    return { severity: 'unavailable', metric: null };
+  }
+  const discharges = state.data
+    .map(s => s.riverDischarge)
+    .filter((v): v is number => v !== null && Number.isFinite(v));
+  if (discharges.length === 0) {
+    return { severity: 'not-applicable', metric: 'No major river within 5km' };
+  }
+  const maxDischarge = Math.max(...discharges);
+  const metric = `${maxDischarge.toFixed(0)}`;
+  if (maxDischarge > 2000) return { severity: 'alert', metric, unit: 'm³/s' };
+  if (maxDischarge >= 500) return { severity: 'watch', metric, unit: 'm³/s' };
+  return { severity: 'ok', metric, unit: 'm³/s' };
 }
