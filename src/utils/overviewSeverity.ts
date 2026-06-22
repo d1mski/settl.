@@ -68,6 +68,8 @@ export function deriveSunSeverity(state: ModuleState<ClimateData>): SeverityResu
 export function deriveHazardsSeverity(
   earthquakes: ModuleState<EarthquakeEvent[]>,
   wildfires: ModuleState<WildfireEvent[]>,
+  flood: ModuleState<FloodSample[]>,
+  floodNotApplicable: boolean,
 ): SeverityResult {
   const eqError = earthquakes.status === 'error';
   const wfError = wildfires.status === 'error';
@@ -104,9 +106,30 @@ export function deriveHazardsSeverity(
     else hasWatchWf = true;
   }
 
-  if (hasCriticalEq || hasCriticalWf) return { severity: 'alert', metric: 'HIGH', unit: '' };
-  if (hasWatchEq || hasWatchWf) return { severity: 'watch', metric: 'MOD', unit: '' };
-  return { severity: 'ok', metric: 'LOW', unit: '' };
+  // Compute EQ/wildfire base severity rank (ok=0, watch=1, alert=2)
+  let baseRank = 0;
+  if (hasWatchEq || hasWatchWf) baseRank = 1;
+  if (hasCriticalEq || hasCriticalWf) baseRank = 2;
+
+  // Fold flood contribution — not-applicable does NOT change EQ/WF outcome
+  // (flood not-applicable = no river, irrelevant to hazards chapter severity)
+  let floodRank = -1; // -1 = ignored (not-applicable or unavailable)
+  if (!floodNotApplicable) {
+    const floodSev = deriveFloodSeverity(flood, floodNotApplicable).severity;
+    if (floodSev === 'alert') floodRank = 2;
+    else if (floodSev === 'watch') floodRank = 1;
+    else if (floodSev === 'ok') floodRank = 0;
+    // 'unavailable' stays -1 (no contribution)
+  }
+
+  const finalRank = Math.max(baseRank, floodRank);
+  const RANK_TO_SEVERITY: Record<number, [OverviewSeverity, string]> = {
+    0: ['ok', 'LOW'],
+    1: ['watch', 'MOD'],
+    2: ['alert', 'HIGH'],
+  };
+  const [severity, metric] = RANK_TO_SEVERITY[finalRank] ?? ['ok', 'LOW'];
+  return { severity, metric, unit: '' };
 }
 
 export function deriveAirSeverity(state: ModuleState<AqiSample[]>): SeverityResult {
