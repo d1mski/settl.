@@ -69,4 +69,5 @@ export const TTL = {
   elevation: 365 * 24 * 60 * 60 * 1000,
   wikipedia: 14 * 24 * 60 * 60 * 1000,
   nominatim: 30 * 24 * 60 * 60 * 1000,
+  openMeteoFlood: 6 * 60 * 60 * 1000,  // 6 hours — GloFAS reanalysis updates daily
 } as const;
