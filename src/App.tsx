@@ -66,10 +66,10 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen w-screen flex flex-col bg-void overflow-hidden">
-        <div className="flex-1 relative flex overflow-hidden">
+      <div className="h-[100dvh] w-screen flex flex-col bg-void">
+        <div className="flex-1 relative flex flex-col lg:flex-row min-h-0">
           {/* Map area */}
-          <div className="flex-1 relative">
+          <div className="h-[45vh] lg:h-auto lg:flex-1 relative shrink-0">
             <MapCanvas
               coordsA={state.coordsA}
               coordsB={state.coordsB}
@@ -83,33 +83,34 @@ export default function App() {
               compareMode={compareMode}
               activeSlot={state.slot}
             />
+          </div>
 
-            <div className="absolute top-6 bottom-14 left-6 z-30 pointer-events-auto w-[360px] flex flex-col justify-between gap-3">
-              <div className="flex flex-col gap-3">
-                <LocationIntelCard
-                  coordsA={state.coordsA}
-                  coordsB={state.coordsB}
-                  resolvedA={geocodedA?.cleanAddress ?? null}
-                  countryA={geocodedA?.countryCode ?? null}
-                  resolvingA={resolvingA}
-                  resolvedB={geocodedB?.cleanAddress ?? null}
-                  countryB={geocodedB?.countryCode ?? null}
-                  resolvingB={resolvingB}
-                  activeSlot={state.slot}
-                  compareMode={compareMode}
-                  onSetSlot={setSlot}
-                  onChangeA={setCoordsA}
-                  onChangeB={setCoordsB}
-                  onEnableCompare={enableCompare}
-                  onDisableCompare={disableCompare}
-                />
+          {/* HUD cards — static below map on mobile, absolute over map on desktop */}
+          <div className="lg:absolute lg:top-6 lg:bottom-14 lg:left-6 z-30 pointer-events-auto w-full lg:w-[360px] flex flex-col lg:justify-between gap-3 p-4 lg:p-0">
+            <div className="flex flex-col gap-3">
+              <LocationIntelCard
+                coordsA={state.coordsA}
+                coordsB={state.coordsB}
+                resolvedA={geocodedA?.cleanAddress ?? null}
+                countryA={geocodedA?.countryCode ?? null}
+                resolvingA={resolvingA}
+                resolvedB={geocodedB?.cleanAddress ?? null}
+                countryB={geocodedB?.countryCode ?? null}
+                resolvingB={resolvingB}
+                activeSlot={state.slot}
+                compareMode={compareMode}
+                onSetSlot={setSlot}
+                onChangeA={setCoordsA}
+                onChangeB={setCoordsB}
+                onEnableCompare={enableCompare}
+                onDisableCompare={disableCompare}
+              />
 
-                <BuildingCard coords={state.coordsA} slot="A" />
-                {compareMode && <BuildingCard coords={state.coordsB} slot="B" />}
-              </div>
-
-              <RiskPanel coords={state.coordsA} />
+              <BuildingCard coords={state.coordsA} slot="A" />
+              {compareMode && <BuildingCard coords={state.coordsB} slot="B" />}
             </div>
+
+            <RiskPanel coords={state.coordsA} />
           </div>
 
           {/* Right panel — always visible */}
