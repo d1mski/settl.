@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
-status: Ready to plan
-stopped_at: Phase 8 context gathered
-last_updated: "2026-06-22T21:16:12.802Z"
+status: Ready to execute
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-06-22T22:08:44.460Z"
 progress:
   total_phases: 10
   completed_phases: 7
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 18
+  completed_plans: 16
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-22)
 
 **Core value:** Instant, trustworthy, data-backed insight into what it's really like to live somewhere — before you commit
-**Current focus:** Phase 07 — zero-risk-data-additions-pollen-flood
+**Current focus:** Phase 08 — overpass-expansion-bug-fixes
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
+Phase: 08 (overpass-expansion-bug-fixes) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: Not started
 | Phase 07 P01 | 10 | 2 tasks | 2 files |
 | Phase 07 P02 | 6 | 3 tasks | 3 files |
 | Phase 07 P03 | 12 | 4 tasks | 2 files |
+| Phase 08 P01 | 3 | 4 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,11 @@ Plan: Not started
 - [Phase 07]: FloodSample type stays in useFlood.ts (not types/index.ts) to keep 07-01 and 07-02 parallel-safe
 - [Phase 07]: deriveHazardsSeverity composes via rank-max; flood not-applicable ranks -1 (ignored), never degrades EQ/WF; final rank maps severity AND badge metric together
 - [Phase 07]: Not-applicable surfaces as muted metric text (No river), NOT a chapter StatusDot — no not-applicable dot branch in Phase 7 (would be dead code)
+- [Phase 08]: QUERY_VERSION bumped v4→v5 to invalidate stale Overpass cache entries lacking hazard categorisation
+- [Phase 08]: power=substation node-only (locked) — ways cause Overpass geometry explosion + timeout; captures ~20% of substations
+- [Phase 08]: Hazard query radius 5km — HAZ-03 proximity bands (500m/1km) applied in code, not query
+- [Phase 08]: Golf joins park category (subtype golf_course) not hazard per D-03; no NEAREST_ROWS golf row
+- [Phase 08]: FIX-02: deleted Greek name-substring heuristic entirely; FIX-03: schoolSubtype uses exact === matching with multi-value TODO
 
 ### Pending Todos
 
@@ -93,6 +99,6 @@ Plan: Not started
 
 ## Session Continuity
 
-Last session: 2026-06-22T21:16:12.797Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-overpass-expansion-bug-fixes/08-CONTEXT.md
+Last session: 2026-06-22T22:08:44.456Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None

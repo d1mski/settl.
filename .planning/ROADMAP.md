@@ -154,7 +154,11 @@ Plans:
   3. On a mobile viewport the app stacks map above panel vertically, all content scrolls, and no panel is trapped off-screen (root fix: h-[100dvh] + responsive stack, not h-screen + overflow-hidden)
   4. A Greek hospital tagged healthcare=hospital labels as "Hospital"; a Greek clinic tagged healthcare=clinic labels as "Clinic" — name-string heuristics are absent
   5. A primary school tagged school:level=primary labels as "Primary School"; a high school tagged school:level=secondary labels as "High School" — substring matching on "1" is absent
-**Plans**: TBD
+**Plans:** 1/3 plans executed
+Plans:
+- [x] 08-01-PLAN.md — Overpass expansion + bug fixes: QUERY_VERSION v5, buildQuery hazard+golf, categorise hazard branches, FIX-02 healthcare + FIX-03 school fixes, both CATEGORY_COLORS maps [HAZ-01, HAZ-02, FIX-02, FIX-03]
+- [ ] 08-02-PLAN.md — HAZ-03 severity: replace deriveContextSeverity stub with proximity bands (1km Watch / 500m military+wastewater Alert), Nearest hazard metric in ReportPanel [HAZ-03]
+- [ ] 08-03-PLAN.md — FIX-01 mobile layout: h-[100dvh] + responsive flex stack + min-h-0 in App.tsx, responsive ModuleSheet width, human-verify checkpoint [FIX-01]
 **Research notes**: QUERY_VERSION must bump from v4 to v5 before any Overpass changes merge. power=substation nodes only — drop power=line ways entirely (geometry explosion + timeout risk). Add [maxsize:32000000] to Overpass query header. HAZ categorise() and FIX-02/FIX-03 are in the same useOverpassFeatures.ts function; FIX-01 mobile fix is in App.tsx.
 **UI hint**: yes
 
@@ -199,6 +203,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. ReportPanel (Overview Mode) | 0/2 | Planned    |  |
 | **v1.1 — Free Data Expansion + Live Webcams** | | | |
 | 7. Zero-Risk Data Additions (Pollen + Flood) | 3/3 | Complete | 2026-06-22 |
-| 8. Overpass Expansion + Bug Fixes | 0/? | Not started | - |
+| 8. Overpass Expansion + Bug Fixes | 1/3 | In Progress|  |
 | 9. Live Webcams (Windy) | 0/? | Not started | - |
 | 10. Marine + Climate Selector | 0/? | Not started | - |
