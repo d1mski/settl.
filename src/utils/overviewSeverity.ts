@@ -149,8 +149,25 @@ export function deriveContextSeverity(state: ModuleState<NearbyFeature[]>): Seve
   if (state.status !== 'success' || state.data === null) {
     return { severity: 'unavailable', metric: null };
   }
-  const count = state.data.length;
-  return { severity: 'ok', metric: `${count}`, unit: 'places' };
+  const hazards = state.data.filter((f) => f.category === 'hazard');
+  if (hazards.length === 0) {
+    return { severity: 'ok', metric: null };
+  }
+  const nearest = hazards.reduce((a, b) => (a.distanceKm < b.distanceKm ? a : b));
+
+  // Alert: military OR wastewater within 500m (subtype strings match categorise())
+  const hasAlert = hazards.some(
+    (f) => (f.subtype === 'military' || f.subtype === 'wastewater') && f.distanceKm <= 0.5,
+  );
+  // Watch: any hazard within 1km
+  const hasWatch = hazards.some((f) => f.distanceKm <= 1.0);
+
+  let severity: OverviewSeverity;
+  if (hasAlert) severity = 'alert';
+  else if (hasWatch) severity = 'watch';
+  else severity = 'ok';
+
+  return { severity, metric: nearest.distanceKm.toFixed(1), unit: 'km' };
 }
 
 // Absolute m³/s bands per Phase 7 ROADMAP. p25/p75 are ensemble forecast
