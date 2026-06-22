@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
 status: Ready to execute
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-06-22T22:08:44.460Z"
+stopped_at: Completed 08-03-PLAN.md (code tasks; visual verify deferred to end of phase)
+last_updated: "2026-06-22T22:22:14.029Z"
 progress:
   total_phases: 10
   completed_phases: 7
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 08 (overpass-expansion-bug-fixes) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Plan: 2 of 3
 | Phase 07 P02 | 6 | 3 tasks | 3 files |
 | Phase 07 P03 | 12 | 4 tasks | 2 files |
 | Phase 08 P01 | 3 | 4 tasks | 3 files |
+| Phase 08-overpass-expansion-bug-fixes P03 | 20 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Plan: 2 of 3
 - [Phase 08]: Hazard query radius 5km — HAZ-03 proximity bands (500m/1km) applied in code, not query
 - [Phase 08]: Golf joins park category (subtype golf_course) not hazard per D-03; no NEAREST_ROWS golf row
 - [Phase 08]: FIX-02: deleted Greek name-substring heuristic entirely; FIX-03: schoolSubtype uses exact === matching with multi-value TODO
+- [Phase 08-overpass-expansion-bug-fixes]: [Phase 08-03] HUD cards moved out of the map box (DOM move required, not class-only) — stacks below map on mobile; lg:absolute floats over map on desktop
+- [Phase 08-overpass-expansion-bug-fixes]: [Phase 08-03] FIX-01 visual verify (Task 3) deferred to end of phase — code complete, tsc clean, mobile rendering unconfirmed
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ Plan: 2 of 3
 
 ## Session Continuity
 
-Last session: 2026-06-22T22:08:44.456Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-06-22T22:22:14.024Z
+Stopped at: Completed 08-03-PLAN.md (code tasks; visual verify deferred to end of phase)
 Resume file: None

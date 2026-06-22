@@ -22,7 +22,7 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 
 ## Fixes (FIX)
 
-- [ ] **FIX-01**: The app is usable on mobile — content scrolls, map and panel stack vertically below the small breakpoint, and no content is trapped off-screen (root cause: `h-screen` + `overflow-hidden` + fixed `w-[560px]`)
+- [x] **FIX-01**: The app is usable on mobile — content scrolls, map and panel stack vertically below the small breakpoint, and no content is trapped off-screen (root cause: `h-screen` + `overflow-hidden` + fixed `w-[560px]`)
 - [x] **FIX-02**: Hospitals and specialist clinics are classified by OSM `healthcare=*` tags, not name-substring heuristics, so general hospitals and clinics label correctly across locales
 - [x] **FIX-03**: School levels (primary vs secondary/high) are derived by exact level matching, not substring matching, fixing mislabeled school types
 
@@ -49,7 +49,7 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 | HAZ-01 | Phase 8 | Complete |
 | HAZ-02 | Phase 8 | Complete |
 | HAZ-03 | Phase 8 | Pending |
-| FIX-01 | Phase 8 | Pending |
+| FIX-01 | Phase 8 | Complete |
 | FIX-02 | Phase 8 | Complete |
 | FIX-03 | Phase 8 | Complete |
 | CAM-01 | Phase 9 | Pending |
