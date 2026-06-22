@@ -59,14 +59,14 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const QUERY_VERSION = 'v4';
+const QUERY_VERSION = 'v5';
 
 function makeKey(coords: Coordinates): string {
   return `${QUERY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
 }
 
 function buildQuery(lat: number, lon: number): string {
-  return `[out:json][timeout:50];(
+  return `[out:json][timeout:50][maxsize:32000000];(
 nwr["amenity"](around:3000,${lat},${lon});
 nwr["shop"](around:2000,${lat},${lon});
 nwr["public_transport"](around:3000,${lat},${lon});
@@ -80,6 +80,15 @@ way["landuse"="commercial"](around:2500,${lat},${lon});
 nwr["aeroway"="aerodrome"](around:12000,${lat},${lon});
 way["natural"="water"](around:2000,${lat},${lon});
 way["leisure"="park"](around:1500,${lat},${lon});
+// power=substation: node-only is intentional — ways cause Overpass geometry explosion + timeout. Captures ~20% of substations (locked tradeoff).
+node["power"="substation"](around:5000,${lat},${lon});
+nwr["landuse"="military"](around:5000,${lat},${lon});
+nwr["military"](around:5000,${lat},${lon});
+nwr["man_made"="wastewater_plant"](around:5000,${lat},${lon});
+nwr["landuse"="quarry"](around:5000,${lat},${lon});
+nwr["landuse"="landfill"](around:5000,${lat},${lon});
+nwr["telecom"="data_center"](around:5000,${lat},${lon});
+nwr["leisure"="golf_course"](around:2000,${lat},${lon});
 );out center tags;`;
 }
 
