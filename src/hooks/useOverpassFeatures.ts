@@ -21,6 +21,7 @@ export type FeatureCategory =
   | 'park'
   | 'place'
   | 'transit'
+  | 'hazard'
   | 'other';
 
 export interface NearbyFeature {
@@ -93,18 +94,10 @@ nwr["leisure"="golf_course"](around:2000,${lat},${lon});
 }
 
 function schoolSubtype(tags: Record<string, string>): string {
-  const level = (tags['school:level'] ?? tags['isced:level'] ?? '').toLowerCase();
-  if (level.includes('primary') || level.includes('1') || level.includes('elementary')) {
-    return 'school:primary';
-  }
-  if (
-    level.includes('secondary') ||
-    level.includes('high') ||
-    level.includes('2') ||
-    level.includes('3')
-  ) {
-    return 'school:secondary';
-  }
+  const level = (tags['school:level'] ?? tags['isced:level'] ?? '').toLowerCase().trim();
+  // TODO: multi-value levels ("1;2", "0-4") fall through to generic 'school' — future improvement.
+  if (level === 'primary' || level === 'elementary' || level === '1') return 'school:primary';
+  if (level === 'secondary' || level === 'high' || level === '2' || level === '3') return 'school:secondary';
   return 'school';
 }
 
@@ -113,6 +106,13 @@ function categorise(tags: Record<string, string>): {
   subtype: string;
 } {
   if (tags.aeroway === 'aerodrome') return { category: 'airport', subtype: 'aerodrome' };
+  // HAZ-01: hazard category — must precede landuse=industrial check
+  if (tags.landuse === 'military' || tags.military) return { category: 'hazard', subtype: 'military' };
+  if (tags.power === 'substation') return { category: 'hazard', subtype: 'substation' };
+  if (tags.man_made === 'wastewater_plant') return { category: 'hazard', subtype: 'wastewater' };
+  if (tags.landuse === 'quarry') return { category: 'hazard', subtype: 'quarry' };
+  if (tags.landuse === 'landfill') return { category: 'hazard', subtype: 'landfill' };
+  if (tags.telecom === 'data_center') return { category: 'hazard', subtype: 'data_center' };
   if (tags.landuse === 'industrial') return { category: 'industrial', subtype: 'industrial' };
   if (tags.landuse === 'commercial') return { category: 'industrial', subtype: 'commercial' };
   if (tags.landuse === 'harbour') return { category: 'transit', subtype: 'harbour' };
@@ -124,16 +124,12 @@ function categorise(tags: Record<string, string>): {
   if (tags.railway === 'tram_stop') return { category: 'transit', subtype: 'railway:tram_stop' };
   if (tags.highway === 'bus_stop') return { category: 'transit', subtype: 'bus_stop' };
   if (tags.natural === 'water') return { category: 'water', subtype: 'water' };
+  if (tags.leisure === 'golf_course') return { category: 'park', subtype: 'golf_course' };
   if (tags.leisure === 'park') return { category: 'park', subtype: 'park' };
   // Distinguish general hospitals from specialist clinics
   if (tags.amenity === 'hospital' || tags.healthcare === 'hospital') {
     if (tags['healthcare:speciality']) return { category: 'amenity', subtype: 'clinic' };
     if (tags.healthcare === 'clinic') return { category: 'amenity', subtype: 'clinic' };
-    // Name-based: Greek κέντρο (center) + κλινική (clinic) often indicate specialist facilities
-    const name = (tags.name ?? '').toLowerCase();
-    if (name.includes('κέντρο') || name.includes('κλινικ') || name.includes('clinic')) {
-      return { category: 'amenity', subtype: 'clinic' };
-    }
     return { category: 'amenity', subtype: 'hospital' };
   }
   if (tags.amenity === 'clinic' || tags.amenity === 'doctors' || tags.healthcare === 'clinic') {
@@ -316,6 +312,11 @@ const NEAREST_ROWS: Array<{ label: string; match: (f: NearbyFeature) => boolean 
     label: 'port / ferry',
     match: (f) => f.subtype === 'ferry_terminal' || f.subtype === 'harbour',
   },
+  { label: 'military', match: (f) => f.subtype === 'military' },
+  { label: 'substation', match: (f) => f.subtype === 'substation' },
+  { label: 'wastewater plant', match: (f) => f.subtype === 'wastewater' },
+  { label: 'quarry / landfill', match: (f) => f.subtype === 'quarry' || f.subtype === 'landfill' },
+  { label: 'data center', match: (f) => f.subtype === 'data_center' },
 ];
 
 export function nearestByType(
