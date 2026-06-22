@@ -101,6 +101,10 @@ function nearestBySubtype(features: NearbyFeature[] | null, subtype: string): Ne
     .sort((a, b) => a.distanceKm - b.distanceKm)[0] ?? null;
 }
 
+function isEuropeHeuristic(c: Coordinates): boolean {
+  return c.lon >= -25 && c.lon <= 45 && c.lat >= 30 && c.lat <= 75;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -120,6 +124,55 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
   const floodResult = deriveFloodSeverity(flood, flood.notApplicable);
   const airResult = deriveAirSeverity(aqi);
   const contextResult = deriveContextSeverity(features);
+
+  // Pollen sub-block: only shown for European pins with at least one species >= 1 grain/m³.
+  // >= 1 threshold suppresses CAMS out-of-season noise (Pitfall 7).
+  // !== null guards prevent coercing null to 0 (Pitfall 2 — null means no data).
+  const pollenData = useMemo(() => {
+    const hasPollen =
+      coordsA !== null &&
+      isEuropeHeuristic(coordsA) &&
+      aqi.data !== null &&
+      aqi.data.some(s =>
+        (s.grassPollen !== null && s.grassPollen >= 1) ||
+        (s.birchPollen !== null && s.birchPollen >= 1) ||
+        (s.alderPollen !== null && s.alderPollen >= 1) ||
+        (s.mugwortPollen !== null && s.mugwortPollen >= 1) ||
+        (s.olivePollen !== null && s.olivePollen >= 1) ||
+        (s.ragweedPollen !== null && s.ragweedPollen >= 1)
+      );
+
+    if (!hasPollen || aqi.data === null) return { hasPollen: false, species: [] as { label: string; peak: number }[] };
+
+    function peakPollen(vals: (number | null)[]): number | null {
+      const valid = vals.filter((v): v is number => v !== null && Number.isFinite(v));
+      if (valid.length === 0) return null;
+      return Math.max(...valid);
+    }
+
+    const grass = peakPollen(aqi.data.map(s => s.grassPollen));
+    const birch = peakPollen(aqi.data.map(s => s.birchPollen));
+    const alder = peakPollen(aqi.data.map(s => s.alderPollen));
+    const mugwort = peakPollen(aqi.data.map(s => s.mugwortPollen));
+    const olive = peakPollen(aqi.data.map(s => s.olivePollen));
+    const ragweed = peakPollen(aqi.data.map(s => s.ragweedPollen));
+
+    const allSpecies: { label: string; peak: number | null }[] = [
+      { label: 'Grass', peak: grass },
+      { label: 'Birch', peak: birch },
+      { label: 'Alder', peak: alder },
+      { label: 'Mugwort', peak: mugwort },
+      { label: 'Olive', peak: olive },
+      { label: 'Ragweed', peak: ragweed },
+    ];
+
+    // Skip species whose peak is null or 0
+    const species = allSpecies
+      .filter((s): s is { label: string; peak: number } => s.peak !== null && s.peak > 0)
+      .map(s => ({ label: s.label, peak: s.peak }));
+
+    return { hasPollen: species.length > 0, species };
+  }, [aqi.data, coordsA]);
 
   const emergency = useMemo(() => {
     const featData = features.data;
@@ -395,6 +448,23 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
               </div>
             ))}
           </div>
+          {ch.id === 'air' && pollenData.hasPollen && (
+            <div className="mt-3">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-muted">Pollen · CAMS European model</span>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {pollenData.species.map((s, i) => (
+                  <div key={i} className="bg-void border border-edge rounded-[10px] px-3 py-2">
+                    <span className="text-[1.25rem] font-mono font-semibold text-ink">
+                      {s.peak} grains/m³
+                    </span>
+                    <span className="block text-[10px] font-mono text-muted mt-0.5">
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       ))}
 
