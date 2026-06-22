@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Milestone v1.1 — Free Data Expansion + Live Webcams**
 
-- [ ] **Phase 7: Zero-Risk Data Additions (Pollen + Flood)** - Global flood risk (GloFAS) + pollen on the existing AQ call; establishes the not-applicable neutral state
+- [x] **Phase 7: Zero-Risk Data Additions (Pollen + Flood)** - Global flood risk (GloFAS) + pollen on the existing AQ call; establishes the not-applicable neutral state (completed 2026-06-22)
 - [ ] **Phase 8: Overpass Expansion + Bug Fixes** - Hazard infrastructure layers, QUERY_VERSION v5, mobile layout, hospital/clinic + school classification fixes
 - [ ] **Phase 9: Live Webcams (Windy)** - Windy V3 webcam thumbnail/embed grid in context tab; gated on VITE_WINDY_KEY
 - [ ] **Phase 10: Marine + Climate Selector** - Coastal wave/SST conditions + 1-/5-/10-year ERA5 climate averages selector
@@ -136,7 +136,7 @@ Plans:
   2. Pinning a location in Europe shows pollen levels (tree, grass, weed species) with a "CAMS European model" source label; pinning in Sydney, Toronto, or Nairobi hides the pollen section entirely — zero values are never displayed
   3. The flood and pollen states are visually distinct from loading (spinner), error (red), and OK (green) — a muted "not applicable" row covers the coverage-gap case
   4. Flood severity feeds the existing Hazards chapter in the Overview panel (ok / watch / alert derived from GloFAS discharge values)
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 07-01-PLAN.md — Pollen: add 6 CAMS vars to useAirQuality HOURLY_VARS + AqiSample (nullable), bump cache key to aqv2| [DATA-02]
 - [x] 07-02-PLAN.md — Flood data layer: useFlood.ts hook, all-zero-or-null not-applicable guard, deriveFloodSeverity (500/2000 bands), 'not-applicable' severity + TTL [DATA-01]
@@ -198,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. ModuleRail + Lucide Icons | 0/2 | Planned    |  |
 | 6. ReportPanel (Overview Mode) | 0/2 | Planned    |  |
 | **v1.1 — Free Data Expansion + Live Webcams** | | | |
-| 7. Zero-Risk Data Additions (Pollen + Flood) | 2/3 | In Progress|  |
+| 7. Zero-Risk Data Additions (Pollen + Flood) | 3/3 | Complete | 2026-06-22 |
 | 8. Overpass Expansion + Bug Fixes | 0/? | Not started | - |
 | 9. Live Webcams (Windy) | 0/? | Not started | - |
 | 10. Marine + Climate Selector | 0/? | Not started | - |
