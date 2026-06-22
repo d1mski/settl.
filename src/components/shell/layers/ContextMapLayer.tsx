@@ -18,6 +18,7 @@ const CATEGORY_COLORS: Record<FeatureCategory, string> = {
   place: '#e8eef5',
   transit: '#a5d8ff',
   other: '#6a768b',
+  hazard: '#ff6b35',
 };
 
 interface Props {
