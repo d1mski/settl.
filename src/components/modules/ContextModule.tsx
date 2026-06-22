@@ -227,6 +227,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   water: '#7eeaff',
   park: '#66ffa3',
   transit: '#a5d8ff',
+  hazard: '#ff6b35',
 };
 
 function summariseFeatures(features: NearbyFeature[]): FeatureCountRow[] {
