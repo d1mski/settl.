@@ -21,7 +21,9 @@ import {
   deriveHazardsSeverity,
   deriveAirSeverity,
   deriveContextSeverity,
+  deriveFloodSeverity,
 } from '../../utils/overviewSeverity';
+import { useFlood } from '../../hooks/useFlood';
 import { StatusDot } from '../hud/StatusDot';
 import { useOpenMeteo } from '../../hooks/useOpenMeteo';
 import { useAirQuality } from '../../hooks/useAirQuality';
@@ -43,6 +45,7 @@ interface ReportPanelProps {
 interface Metric {
   value: string;
   label: string;
+  muted?: boolean;
 }
 
 interface Chapter {
@@ -108,11 +111,13 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
   const earthquakes = useEarthquakes(coordsA);
   const wildfires = useWildfires(coordsA);
   const features = useOverpassFeatures(coordsA);
+  const flood = useFlood(coordsA);
 
   const climateResult = deriveClimateSeverity(climate);
   const windResult = deriveWindSeverity(climate);
   const sunResult = deriveSunSeverity(climate);
-  const hazardsResult = deriveHazardsSeverity(earthquakes, wildfires);
+  const hazardsResult = deriveHazardsSeverity(earthquakes, wildfires, flood, flood.notApplicable);
+  const floodResult = deriveFloodSeverity(flood, flood.notApplicable);
   const airResult = deriveAirSeverity(aqi);
   const contextResult = deriveContextSeverity(features);
 
@@ -183,10 +188,14 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
     const maxMag = eqData && eqData.length > 0
       ? Math.max(...eqData.map(e => e.magnitude))
       : NaN;
+    const floodMetricValue = flood.notApplicable
+      ? 'No river'
+      : (floodResult.metric ? `${floodResult.metric} m³/s` : '--');
     const hazardsMetrics: Metric[] = [
       { value: eqData ? String(eqCount) : '--', label: 'Quakes nearby' },
       { value: wfData ? String(wfCount) : '--', label: 'Active fires' },
       ...(Number.isFinite(maxMag) ? [{ value: fmt(maxMag, 1), label: 'Max magnitude' }] : []),
+      { value: floodMetricValue, label: 'Flood Risk', muted: flood.notApplicable },
     ];
 
     /* Air Quality */
@@ -245,7 +254,7 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
         icon: TriangleAlert,
         label: 'Hazards',
         question: 'What about seismic and wildfire risk?',
-        answer: 'Earthquake history from USGS, active fires from NASA satellite data.',
+        answer: 'Earthquake history from USGS, active fires from NASA satellite data. River flood risk from Copernicus GloFAS.',
         severity: hazardsResult.severity,
         severityLabel: severityLabel(hazardsResult.severity),
         metrics: hazardsMetrics,
@@ -271,7 +280,7 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
         metrics: contextMetrics,
       },
     ];
-  }, [climate.data, aqi.data, earthquakes.data, wildfires.data, features.data, climateResult, windResult, sunResult, hazardsResult, airResult, contextResult]);
+  }, [climate.data, aqi.data, earthquakes.data, wildfires.data, features.data, flood.data, flood.notApplicable, climateResult, windResult, sunResult, hazardsResult, airResult, contextResult, floodResult]);
 
   return (
     <div className="flex flex-col">
@@ -315,7 +324,7 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
       {/* Emergency section */}
       <section
         id="report-emergency"
-        className="px-6 py-5 border-b border-edge cursor-pointer hover:bg-edge/20 transition-colors"
+        className="px-6 py-7 border-b border-edge cursor-pointer hover:bg-edge/20 transition-colors"
         onClick={() => onDrillDown('context')}
       >
         <div className="flex items-center gap-2 mb-1">
@@ -355,7 +364,7 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
         <section
           key={ch.id}
           id={`report-${ch.id}`}
-          className="px-6 py-5 border-b border-edge cursor-pointer hover:bg-edge/20 transition-colors"
+          className="px-6 py-7 border-b border-edge cursor-pointer hover:bg-edge/20 transition-colors"
           onClick={() => onDrillDown(ch.id)}
         >
           <div className="flex items-center gap-2 mb-1">
@@ -377,7 +386,7 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
           <div className="grid grid-cols-2 gap-3 mt-3">
             {ch.metrics.map((m, i) => (
               <div key={i} className="bg-void border border-edge rounded-[10px] px-3 py-2">
-                <span className="text-[1.25rem] font-mono font-semibold text-ink">
+                <span className={`text-[1.25rem] font-mono font-semibold ${m.muted ? 'text-muted' : 'text-ink'}`}>
                   {m.value}
                 </span>
                 <span className="block text-[10px] font-mono text-muted mt-0.5">
