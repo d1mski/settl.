@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 7: Zero-Risk Data Additions (Pollen + Flood)** - Global flood risk (GloFAS) + pollen on the existing AQ call; establishes the not-applicable neutral state (completed 2026-06-22)
 - [x] **Phase 8: Overpass Expansion + Bug Fixes** - Hazard infrastructure layers, QUERY_VERSION v5, mobile layout, hospital/clinic + school classification fixes (completed 2026-06-22)
-- [ ] **Phase 9: Live Webcams (Windy)** - Windy V3 webcam thumbnail/embed grid in context tab; gated on VITE_WINDY_KEY
+- [x] **Phase 9: Live Webcams (Windy)** - Windy V3 webcam thumbnail/embed grid in context tab; gated on VITE_WINDY_KEY (completed 2026-06-23)
 - [ ] **Phase 10: Marine + Climate Selector** - Coastal wave/SST conditions + 1-/5-/10-year ERA5 climate averages selector
 
 ## Phase Details
