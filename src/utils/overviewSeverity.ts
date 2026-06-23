@@ -155,9 +155,9 @@ export function deriveContextSeverity(state: ModuleState<NearbyFeature[]>): Seve
   }
   const nearest = hazards.reduce((a, b) => (a.distanceKm < b.distanceKm ? a : b));
 
-  // Alert: military OR wastewater within 500m (subtype strings match categorise())
+  // Alert: wastewater within 500m (military is its own category now, not a hazard)
   const hasAlert = hazards.some(
-    (f) => (f.subtype === 'military' || f.subtype === 'wastewater') && f.distanceKm <= 0.5,
+    (f) => f.subtype === 'wastewater' && f.distanceKm <= 0.5,
   );
   // Watch: any hazard within 1km
   const hasWatch = hazards.some((f) => f.distanceKm <= 1.0);

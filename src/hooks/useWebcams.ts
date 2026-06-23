@@ -53,6 +53,11 @@ interface WindyApiResponse {
 interface CacheEntry { data: WindyWebcam[]; fetchedAt: number }
 const cache = new Map<string, CacheEntry>();
 
+// Bridges a map-marker "view footage" click to the panel. When the Advanced panel is
+// closed, it mounts AFTER the click, so the grid reads this on mount; the live
+// 'settl-webcam-select' event covers the already-open case.
+export const pendingWebcam: { id: number | null } = { id: null };
+
 function makeKey(coords: Coordinates): string {
   return `webcams|${coords.lat.toFixed(3)}|${coords.lon.toFixed(3)}`;
 }

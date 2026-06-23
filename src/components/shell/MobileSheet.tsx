@@ -29,6 +29,14 @@ export function MobileSheet({ hasLocation, children }: { hasLocation: boolean; c
   // settle to snap target when not dragging
   useEffect(() => { if (!dragging && h) setY(targetY(pos, h)); }, [pos, h, dragging]);
 
+  // Tapping a webcam map marker should reveal the player — slide the sheet fully up.
+  // 'settl-webcam-select' fires only from map markers (panel clicks don't dispatch it).
+  useEffect(() => {
+    const handler = () => setPos('full');
+    window.addEventListener('settl-webcam-select', handler);
+    return () => window.removeEventListener('settl-webcam-select', handler);
+  }, []);
+
   const onPointerDown = (e: React.PointerEvent) => {
     drag.current = { startY: e.clientY, startTrans: y, moved: 0 };
     setDragging(true);

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import type { Coordinates, TabId } from './types';
 import type { Slot } from './hooks/useUrlState';
 import { MapCanvas } from './components/shell/MapCanvas';
@@ -64,6 +64,14 @@ export default function App() {
     update({ tab });
     setViewMode('advanced');
   }, [update]);
+
+  // A webcam map marker's "VIEW FOOTAGE" opens the Advanced sidebar on the Context tab,
+  // where the panel grid expands the selected cam's player.
+  useEffect(() => {
+    const handler = () => handleDrillDown('context');
+    window.addEventListener('settl-webcam-select', handler);
+    return () => window.removeEventListener('settl-webcam-select', handler);
+  }, [handleDrillDown]);
 
   const moduleSheetProps = {
     active: state.tab,

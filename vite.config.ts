@@ -4,6 +4,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'node:path';
 
 export default defineConfig({
+  base: '/experiments/settl/',
   plugins: [
     react(),
     visualizer({

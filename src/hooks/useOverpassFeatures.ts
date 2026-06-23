@@ -22,6 +22,7 @@ export type FeatureCategory =
   | 'place'
   | 'transit'
   | 'hazard'
+  | 'military'
   | 'other';
 
 export interface NearbyFeature {
@@ -106,8 +107,10 @@ function categorise(tags: Record<string, string>): {
   subtype: string;
 } {
   if (tags.aeroway === 'aerodrome') return { category: 'airport', subtype: 'aerodrome' };
+  // Military gets its own category (not hazard) — bases/offices aren't inherently hazardous,
+  // so they get a distinct colour and stay out of hazard severity/nearest-hazard scoring.
+  if (tags.landuse === 'military' || tags.military) return { category: 'military', subtype: 'military' };
   // HAZ-01: hazard category — must precede landuse=industrial check
-  if (tags.landuse === 'military' || tags.military) return { category: 'hazard', subtype: 'military' };
   if (tags.power === 'substation') return { category: 'hazard', subtype: 'substation' };
   if (tags.man_made === 'wastewater_plant') return { category: 'hazard', subtype: 'wastewater' };
   if (tags.landuse === 'quarry') return { category: 'hazard', subtype: 'quarry' };
