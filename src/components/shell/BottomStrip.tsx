@@ -9,6 +9,7 @@ interface Props {
   resolvingA: boolean;
   resolvedA: string | null;
   compareMode: boolean;
+  className?: string;
 }
 
 function useClock() {
@@ -46,6 +47,7 @@ export function BottomStrip({
   resolvingA,
   resolvedA,
   compareMode,
+  className,
 }: Props) {
   const now = useClock();
   const sessionId = (
@@ -64,7 +66,7 @@ export function BottomStrip({
     : null;
 
   return (
-    <footer className="h-8 border-t border-edge bg-void/95 backdrop-blur-md flex items-center text-[9px] font-mono uppercase tracking-widest select-none shrink-0">
+    <footer className={`h-8 border-t border-edge bg-void/95 backdrop-blur-md flex items-center text-[9px] font-mono uppercase tracking-widest select-none shrink-0${className ? ` ${className}` : ''}`}>
       <div className="px-4 flex items-center gap-3 border-r border-edge h-full">
         <StatusDot tone="good" label="ONLINE" />
       </div>
