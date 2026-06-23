@@ -53,7 +53,7 @@ interface Props {
 
 export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resolvedA, countryA, onToggleView, onSelect, onDrillDown, embedded }: Props) {
   return (
-    <aside className={embedded ? "h-full w-full bg-panel flex flex-col" : "hidden md:flex h-full md:w-[560px] shrink-0 bg-panel border-l border-edge flex-col"}>
+    <aside className={embedded ? "h-full w-full bg-panel flex flex-col" : "hidden md:flex h-full md:w-[392px] lg:w-[560px] shrink-0 bg-panel border-l border-edge flex-col"}>
       {/* Mode bar: Overview/Advanced toggle + font/theme controls */}
       <div className="px-4 py-2.5 border-b border-edge flex items-center gap-3 shrink-0">
         <div className="flex bg-void border border-edge rounded-md p-0.5">
