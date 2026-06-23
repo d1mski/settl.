@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crosshair, MapPin } from 'lucide-react';
+import { Crosshair, MapPin, ChevronDown } from 'lucide-react';
 import type { Coordinates } from '../../types';
 import type { Slot } from '../../hooks/useUrlState';
 import { formatCoordinate, parseCoordinates } from '../../utils/coordinates';
@@ -69,6 +69,7 @@ export function LocationIntelCard({
 
   const { locations, isSaved, toggle, remove } = useSavedLocations();
   const [capWarning, setCapWarning] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const currentSaved = coordsA ? isSaved(coordsA.lat, coordsA.lon) : false;
 
@@ -259,6 +260,16 @@ export function LocationIntelCard({
               × CMP
             </button>
           )}
+          <button
+            onClick={() => setExpanded(v => !v)}
+            aria-label={expanded ? 'Collapse location details' : 'Expand location details'}
+            className="md:hidden shrink-0 w-7 h-7 flex items-center justify-center border border-edge bg-void rounded-md"
+          >
+            <ChevronDown
+              size={14}
+              className={`text-muted transition-transform ${expanded ? 'rotate-180' : ''}`}
+            />
+          </button>
         </div>
       </div>
 
@@ -356,89 +367,91 @@ export function LocationIntelCard({
           )}
         </div>
 
-        <FixBlock
-          label="FIX A"
-          coords={coordsA}
-          resolved={resolvedA}
-          country={countryA}
-          resolving={resolvingA}
-          tone="cyan"
-          active={activeSlot === 'a'}
-          onActivate={() => onSetSlot('a')}
-        />
-
-        {coordsA && (
-          <div className="flex items-center gap-2 -mt-1">
-            <button
-              onClick={handleHeartToggle}
-              disabled={resolvingA}
-              aria-label={currentSaved ? 'Remove saved location' : 'Save location'}
-              aria-pressed={currentSaved}
-              className={`p-1 rounded transition-colors ${
-                currentSaved
-                  ? 'text-rose-400 hover:text-rose-300'
-                  : 'text-muted hover:text-ink'
-              } disabled:opacity-30 disabled:cursor-not-allowed`}
-            >
-              {currentSaved ? <HeartFilled /> : <HeartOutline />}
-            </button>
-            <span className="text-[8px] font-mono uppercase tracking-widest text-muted">
-              {currentSaved ? 'SAVED' : 'SAVE LOCATION'}
-            </span>
-            {capWarning && (
-              <span className="text-[8px] font-mono uppercase tracking-widest text-risk">
-                MAX 10 REACHED
-              </span>
-            )}
-          </div>
-        )}
-
-        {compareMode && (
+        <div className={expanded ? '' : 'hidden md:block'}>
           <FixBlock
-            label="FIX B"
-            coords={coordsB}
-            resolved={resolvedB}
-            country={countryB}
-            resolving={resolvingB}
-            tone="amber"
-            active={activeSlot === 'b'}
-            onActivate={() => onSetSlot('b')}
+            label="FIX A"
+            coords={coordsA}
+            resolved={resolvedA}
+            country={countryA}
+            resolving={resolvingA}
+            tone="cyan"
+            active={activeSlot === 'a'}
+            onActivate={() => onSetSlot('a')}
           />
-        )}
 
-        {locations.length > 0 && (
-          <div>
-            <div className="text-[9px] font-mono uppercase tracking-widest text-muted mb-1.5 flex items-center gap-2">
-              <span>SAVED · {locations.length}/10</span>
-              <span className="flex-1 h-px bg-edge" />
+          {coordsA && (
+            <div className="flex items-center gap-2 -mt-1">
+              <button
+                onClick={handleHeartToggle}
+                disabled={resolvingA}
+                aria-label={currentSaved ? 'Remove saved location' : 'Save location'}
+                aria-pressed={currentSaved}
+                className={`p-1 rounded transition-colors ${
+                  currentSaved
+                    ? 'text-rose-400 hover:text-rose-300'
+                    : 'text-muted hover:text-ink'
+                } disabled:opacity-30 disabled:cursor-not-allowed`}
+              >
+                {currentSaved ? <HeartFilled /> : <HeartOutline />}
+              </button>
+              <span className="text-[8px] font-mono uppercase tracking-widest text-muted">
+                {currentSaved ? 'SAVED' : 'SAVE LOCATION'}
+              </span>
+              {capWarning && (
+                <span className="text-[8px] font-mono uppercase tracking-widest text-risk">
+                  MAX 10 REACHED
+                </span>
+              )}
             </div>
-            <div className="space-y-0.5">
-              {locations.map(loc => (
-                <div key={loc.id} className="flex items-center gap-1 group">
-                  <button
-                    onClick={() => onChangeA({ lat: loc.lat, lon: loc.lon })}
-                    className="flex-1 text-left px-2 py-1 text-[10px] font-mono text-ink truncate rounded hover:bg-cyan/5 transition-colors"
-                    title={`${loc.label} (${loc.lat.toFixed(5)}, ${loc.lon.toFixed(5)})`}
-                  >
-                    {loc.label}
-                  </button>
-                  <button
-                    onClick={() => remove(loc.id)}
-                    aria-label={`Remove ${loc.label}`}
-                    className="shrink-0 p-1 text-muted opacity-0 group-hover:opacity-100 hover:text-risk transition-all"
-                  >
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
+          )}
+
+          {compareMode && (
+            <FixBlock
+              label="FIX B"
+              coords={coordsB}
+              resolved={resolvedB}
+              country={countryB}
+              resolving={resolvingB}
+              tone="amber"
+              active={activeSlot === 'b'}
+              onActivate={() => onSetSlot('b')}
+            />
+          )}
+
+          {locations.length > 0 && (
+            <div>
+              <div className="text-[9px] font-mono uppercase tracking-widest text-muted mb-1.5 flex items-center gap-2">
+                <span>SAVED · {locations.length}/10</span>
+                <span className="flex-1 h-px bg-edge" />
+              </div>
+              <div className="space-y-0.5">
+                {locations.map(loc => (
+                  <div key={loc.id} className="flex items-center gap-1 group">
+                    <button
+                      onClick={() => onChangeA({ lat: loc.lat, lon: loc.lon })}
+                      className="flex-1 text-left px-2 py-1 text-[10px] font-mono text-ink truncate rounded hover:bg-cyan/5 transition-colors"
+                      title={`${loc.label} (${loc.lat.toFixed(5)}, ${loc.lon.toFixed(5)})`}
+                    >
+                      {loc.label}
+                    </button>
+                    <button
+                      onClick={() => remove(loc.id)}
+                      aria-label={`Remove ${loc.label}`}
+                      className="shrink-0 p-1 text-muted opacity-0 group-hover:opacity-100 hover:text-risk transition-all"
+                    >
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+
+          <div className="text-[8px] font-mono uppercase tracking-widest text-dim pt-2 border-t border-edge">
+            Map click . Drag pin . Enter coords
           </div>
-        )}
-
-        <div className="text-[8px] font-mono uppercase tracking-widest text-dim pt-2 border-t border-edge">
-          Map click . Drag pin . Enter coords
         </div>
       </div>
     </Panel>
