@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { BuildingCard } from './BuildingCard';
 import {
   Sun,
   Wind,
@@ -356,6 +357,11 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
         {countryA && (
           <span className="text-[0.85rem] text-muted font-body">{countryA}</span>
         )}
+      </div>
+
+      {/* Building footprint — MOBILE ONLY (desktop has it in the HUD column) */}
+      <div className="md:hidden mb-4">
+        <BuildingCard coords={coordsA} slot="A" />
       </div>
 
       {/* Chapter nav — icon on top, label below */}
