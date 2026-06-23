@@ -21,5 +21,7 @@ mockups/
 mempalace.yaml
 entities.json
 vite.config.js
+vite.config.js.timestamp-*.mjs
 vite.config.d.ts
 *.tsbuildinfo
+.firecrawl/

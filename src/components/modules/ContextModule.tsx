@@ -1,5 +1,5 @@
-import { useMemo, useCallback, useState, type ReactNode } from 'react';
-import { MapPin } from 'lucide-react';
+import { useMemo, useCallback, useState, useEffect, useRef, type ReactNode } from 'react';
+import { MapPin, X } from 'lucide-react';
 import type { Coordinates, WikiArticle } from '../../types';
 import { useWikipedia } from '../../hooks/useWikipedia';
 import { useReverseGeocode } from '../../hooks/useNominatim';
@@ -8,7 +8,7 @@ import {
   useOverpassFeatures,
   type NearbyFeature,
 } from '../../hooks/useOverpassFeatures';
-import { useWebcams, type WindyWebcam } from '../../hooks/useWebcams';
+import { useWebcams, pendingWebcam, type WindyWebcam } from '../../hooks/useWebcams';
 import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 
@@ -247,6 +247,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   park: '#66ffa3',
   transit: '#a5d8ff',
   hazard: '#ff6b35',
+  military: '#bdb76b', // khaki — distinct from orange hazard
 };
 
 function summariseFeatures(features: NearbyFeature[]): FeatureCountRow[] {
@@ -430,21 +431,73 @@ function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }
 }
 
 function WebcamGrid({ webcams }: { webcams: WindyWebcam[] }) {
+  // Consume a pending map-marker selection on mount (panel was closed when the marker was clicked)
+  const [selectedId, setSelectedId] = useState<number | null>(() => {
+    const pending = pendingWebcam.id;
+    pendingWebcam.id = null;
+    return pending;
+  });
+
+  // Drop selection only once a cam list is loaded and the chosen cam isn't in it (location changed).
+  // Guarded on length so it never clears a freshly-consumed pending id before data settles.
+  useEffect(() => {
+    if (selectedId !== null && webcams.length > 0 && !webcams.some((c) => c.webcamId === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [webcams, selectedId]);
+
+  // Map marker "VIEW FOOTAGE" → expand the matching card here (panel already open case)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent<{ webcamId: number }>).detail?.webcamId;
+      if (typeof id === 'number') {
+        pendingWebcam.id = null;
+        setSelectedId(id);
+      }
+    };
+    window.addEventListener('settl-webcam-select', handler);
+    return () => window.removeEventListener('settl-webcam-select', handler);
+  }, []);
+
+  const selected = webcams.find((c) => c.webcamId === selectedId) ?? null;
+
   return (
-    <div className="grid grid-cols-2 gap-2">
-      {webcams.map((cam) => <WebcamCard key={cam.webcamId} cam={cam} />)}
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        {webcams.map((cam) => (
+          <WebcamThumb
+            key={cam.webcamId}
+            cam={cam}
+            active={cam.webcamId === selectedId}
+            onSelect={() =>
+              setSelectedId((prev) => (prev === cam.webcamId ? null : cam.webcamId))
+            }
+          />
+        ))}
+      </div>
+      {selected && <WebcamPlayer cam={selected} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }
 
-function WebcamCard({ cam }: { cam: WindyWebcam }) {
+function WebcamThumb({
+  cam,
+  active,
+  onSelect,
+}: {
+  cam: WindyWebcam;
+  active: boolean;
+  onSelect: () => void;
+}) {
   const [imgError, setImgError] = useState(false);
   return (
-    <a
-      href={cam.detailUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block border border-edge bg-void/40 hover:border-cyan/60 transition-colors rounded-md overflow-hidden"
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-expanded={active}
+      className={`block w-full text-left bg-void/40 transition-colors rounded-md overflow-hidden border ${
+        active ? 'border-cyan' : 'border-edge hover:border-cyan/60'
+      }`}
     >
       <div className="relative aspect-video bg-void/60 overflow-hidden">
         {!imgError ? (
@@ -464,7 +517,74 @@ function WebcamCard({ cam }: { cam: WindyWebcam }) {
         <div className="text-[10px] font-mono text-ink truncate">{cam.title}</div>
         <div className="text-[9px] font-mono text-cyan tabular-nums">{cam.distanceKm.toFixed(1)} KM</div>
       </div>
-    </a>
+    </button>
+  );
+}
+
+function WebcamPlayer({ cam, onClose }: { cam: WindyWebcam; onClose: () => void }) {
+  const baseSrc = cam.playerLiveUrl ?? cam.playerDayUrl;
+  // Best-effort autoplay: undocumented param on Windy's cross-origin player. If their
+  // player.js ignores it the timelapse stays click-to-play (can't be forced cross-origin).
+  const src = baseSrc ? `${baseSrc}${baseSrc.includes('?') ? '&' : '?'}autoplay=1` : '';
+  const ref = useRef<HTMLDivElement>(null);
+
+  const revealPlayer = useCallback(() => {
+    ref.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, []);
+
+  // Scroll twice: once shortly after mount (fast path), and again on the iframe's onLoad
+  // — the authoritative "panel has finished laying out" signal. The mount-only scroll
+  // under-shot when async sections reflowed after it fired, which needed a second click.
+  useEffect(() => {
+    const t = setTimeout(revealPlayer, 150);
+    return () => clearTimeout(t);
+  }, [cam.webcamId, revealPlayer]);
+
+  return (
+    <div ref={ref} className="border border-cyan/50 bg-void/40 rounded-md overflow-hidden">
+      <div className="flex items-center justify-between px-2 py-1 border-b border-edge gap-2">
+        <div className="min-w-0">
+          <div className="text-[10px] font-mono text-ink truncate">{cam.title}</div>
+          <div className="text-[9px] font-mono text-cyan tabular-nums">
+            {cam.distanceKm.toFixed(1)} KM · {cam.playerLiveUrl ? 'LIVE' : 'TIMELAPSE'}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close webcam player"
+          className="shrink-0 text-dim hover:text-ink transition-colors"
+        >
+          <X className="w-3.5 h-3.5" strokeWidth={1.6} />
+        </button>
+      </div>
+      {src ? (
+        <div className="relative aspect-video bg-void/60">
+          <iframe
+            src={src}
+            title={cam.title}
+            className="absolute inset-0 w-full h-full border-0"
+            allow="autoplay; fullscreen"
+            loading="lazy"
+            onLoad={revealPlayer}
+          />
+        </div>
+      ) : (
+        <div className="aspect-video flex items-center justify-center text-[9px] font-mono uppercase tracking-widest text-dim">
+          NO PLAYER AVAILABLE
+        </div>
+      )}
+      <div className="px-2 py-1 border-t border-edge">
+        <a
+          href={cam.detailUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[9px] font-mono uppercase tracking-widest text-cyan/80 hover:text-cyan"
+        >
+          Open on Windy ↗
+        </a>
+      </div>
+    </div>
   );
 }
 

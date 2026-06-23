@@ -1,4 +1,5 @@
-import { CircleMarker, Popup } from 'react-leaflet';
+import { CircleMarker, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import type { Coordinates } from '../../../types';
 import { useWikipedia } from '../../../hooks/useWikipedia';
 import {
@@ -7,7 +8,16 @@ import {
   type NearbyFeature,
 } from '../../../hooks/useOverpassFeatures';
 import { useReverseGeocode } from '../../../hooks/useNominatim';
+import { useWebcams, pendingWebcam, type WindyWebcam } from '../../../hooks/useWebcams';
 import type { WikiArticle } from '../../../types';
+
+// Camera glyph marker — distinct from the circular feature/wiki pins
+const webcamIcon = L.divIcon({
+  className: 'settl-webcam-pin',
+  html: '<div style="font-size:15px;line-height:1;filter:drop-shadow(0 0 2px rgba(0,0,0,.9))">📷</div>',
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+});
 
 const CATEGORY_COLORS: Record<FeatureCategory, string> = {
   amenity: '#66ffa3',
@@ -19,6 +29,7 @@ const CATEGORY_COLORS: Record<FeatureCategory, string> = {
   transit: '#a5d8ff',
   other: '#6a768b',
   hazard: '#ff6b35',
+  military: '#bdb76b', // khaki — distinct from orange hazard
 };
 
 interface Props {
@@ -33,6 +44,8 @@ export function ContextMapLayer({ coordsA, coordsB }: Props) {
   const wikiB = useWikipedia(coordsB, geoB.result?.countryCode ?? null);
   const featuresA = useOverpassFeatures(coordsA);
   const featuresB = useOverpassFeatures(coordsB);
+  // Shares the module-level cache with the panel's useWebcams(coordsA) — no extra fetch
+  const webcamsA = useWebcams(coordsA);
 
   return (
     <>
@@ -44,6 +57,49 @@ export function ContextMapLayer({ coordsA, coordsB }: Props) {
       )}
       {wikiA.data && <WikiPins articles={wikiA.data} slot="A" color="#7eeaff" />}
       {wikiB.data && <WikiPins articles={wikiB.data} slot="B" color="#ffb347" />}
+      {webcamsA.data && <WebcamPins webcams={webcamsA.data} />}
+    </>
+  );
+}
+
+function WebcamPins({ webcams }: { webcams: WindyWebcam[] }) {
+  return (
+    <>
+      {webcams
+        .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lon))
+        .map((cam) => (
+          <Marker key={`cam-${cam.webcamId}`} position={[cam.lat, cam.lon]} icon={webcamIcon}>
+            <Popup>
+              <div className="font-mono text-[10px] leading-snug" style={{ maxWidth: 200 }}>
+                <div className="font-bold truncate">{cam.title}</div>
+                <div className="uppercase text-gray-500">
+                  {cam.distanceKm.toFixed(1)} KM · WEBCAM
+                </div>
+                {cam.thumbnailUrl && (
+                  <img
+                    src={cam.thumbnailUrl}
+                    alt={cam.title}
+                    style={{ width: '100%', marginTop: 4, borderRadius: 2 }}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Set first so a fresh-mounting panel reads it; event opens the panel + handles the already-open case
+                    pendingWebcam.id = cam.webcamId;
+                    window.dispatchEvent(
+                      new CustomEvent('settl-webcam-select', { detail: { webcamId: cam.webcamId } }),
+                    );
+                  }}
+                  className="block mt-1.5 underline"
+                  style={{ color: '#e879f9', background: 'none', border: 0, padding: 0, cursor: 'pointer' }}
+                >
+                  VIEW FOOTAGE →
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
     </>
   );
 }
