@@ -18,7 +18,7 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 
 ## Live Webcams (CAM)
 
-- [ ] **CAM-01**: User sees live nearby webcams (Windy) as a thumbnail/embed grid in the context area, fetched fresh (image tokens expire ~10min) with graceful fallback for broken images; the section is absent gracefully when no API key is configured
+- [x] **CAM-01**: User sees live nearby webcams (Windy) as a thumbnail/embed grid in the context area, fetched fresh (image tokens expire ~10min) with graceful fallback for broken images; the section is absent gracefully when no API key is configured
 
 ## Fixes (FIX)
 
@@ -52,6 +52,6 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 | FIX-01 | Phase 8 | Complete |
 | FIX-02 | Phase 8 | Complete |
 | FIX-03 | Phase 8 | Complete |
-| CAM-01 | Phase 9 | Pending |
+| CAM-01 | Phase 9 | Complete |
 | DATA-03 | Phase 10 | Pending |
 | DATA-04 | Phase 10 | Pending |

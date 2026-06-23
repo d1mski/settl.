@@ -167,11 +167,15 @@ Plans:
 **Depends on**: Phase 7 (neutral/empty-state pattern reuse). External precondition: VITE_WINDY_KEY must be procured from api.windy.com/keys and domain-restricted — this phase is blocked until the key is available.
 **Requirements**: CAM-01
 **Success Criteria** (what must be TRUE):
-  1. With VITE_WINDY_KEY configured, the context tab shows a grid of nearby webcam thumbnails or embed players; clicking a camera loads the live stream
+  1. With VITE_WINDY_KEY configured, the context tab shows a grid of nearby webcam thumbnails; clicking a camera opens its windy.com detail page in a new tab (reinterpreted per 09-RESEARCH — `player.live` is absent on ~99% of cameras, so no embedded live stream; the detail page shows current image + timelapse + live where available)
   2. When a webcam image token expires (images older than ~10min), onError triggers graceful fallback (placeholder or silent re-fetch) — no broken-image icons persist
   3. With no VITE_WINDY_KEY set (e.g. a fresh clone), the webcam section is absent from the UI with no error state — the rest of the context tab is unaffected
   4. Webcam data is never stored in persistent cache — each panel open fetches fresh; TTL <= 8min to respect 10-min token expiry
-**Plans**: TBD
+**Plans:** 1/3 plans executed
+Plans:
+- [ ] 09-01-PLAN.md — Pre-condition gate: whitelist localhost + production domain for VITE_WINDY_KEY (human-action checkpoint) [CAM-01]
+- [x] 09-02-PLAN.md — useWebcams.ts hook: Windy V3 header auth, daylight-first thumbnails, haversine distance, 8-min in-memory TTL, NO idb cache [CAM-01]
+- [ ] 09-03-PLAN.md — WebcamsSection + WebcamCard in ContextModule SingleView, detail-page link, onError placeholder, gated on key, human-verify [CAM-01]
 **Research notes**: Windy V3 only (V2 query-param auth is deprecated and breaks). Header auth: x-windy-api-key. VITE_WINDY_KEY is plaintext in the JS bundle — accepted under no-backend constraint; document exposure in code comment; domain-restrict at Windy dashboard. TTL.webcams = 8min. No persistent cache for image URLs. Windy V3 response field paths (images.current.thumbnail, player.live.embed) need live-API validation on first integration test. Nearby param format (comma-separated vs separate) also unresolved — resolve against live API.
 **UI hint**: yes
 
@@ -204,5 +208,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | **v1.1 — Free Data Expansion + Live Webcams** | | | |
 | 7. Zero-Risk Data Additions (Pollen + Flood) | 3/3 | Complete | 2026-06-22 |
 | 8. Overpass Expansion + Bug Fixes | 4/3 | Complete   | 2026-06-23 |
-| 9. Live Webcams (Windy) | 0/? | Not started | - |
+| 9. Live Webcams (Windy) | 1/3 | In Progress|  |
 | 10. Marine + Climate Selector | 0/? | Not started | - |

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
-status: Phase complete — ready for verification
-stopped_at: Completed 08-04-mobile-sheet-SPEC.md
-last_updated: "2026-06-23T06:07:33.663Z"
+status: Ready to execute
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-06-23T11:08:14.230Z"
 progress:
   total_phases: 10
   completed_phases: 8
-  total_plans: 18
-  completed_plans: 19
+  total_plans: 21
+  completed_plans: 20
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-22)
 
 **Core value:** Instant, trustworthy, data-backed insight into what it's really like to live somewhere — before you commit
-**Current focus:** Phase 08 — overpass-expansion-bug-fixes
+**Current focus:** Phase 09 — live-webcams-windy
 
 ## Current Position
 
-Phase: 08 (overpass-expansion-bug-fixes) — EXECUTING
-Plan: 3 of 3
+Phase: 09 (live-webcams-windy) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Plan: 3 of 3
 | Phase 08 P01 | 3 | 4 tasks | 3 files |
 | Phase 08-overpass-expansion-bug-fixes P03 | 20 | 2 tasks | 2 files |
 | Phase 08 P02 | 5 | 2 tasks | 2 files |
+| Phase 09 P02 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Plan: 3 of 3
 - [Phase 08]: deriveContextSeverity returns nearest hazard km as metric; alert subtype literals 'military'/'wastewater' match categorise() exactly
 - [Phase 08]: Render ModuleSheet twice (desktop aside + embedded in MobileSheet) — cheapest faithful port, no logic duplication
 - [Phase 08]: Breakpoint split at md (768px) not lg — reverts 08-03 lg: choices throughout App.tsx
+- [Phase 09]: location field made required in WindyApiResponse — always present when include=location passed; avoids ?? 0 fallback producing garbage haversine distances
+- [Phase 09]: playerLiveUrl typed string | null — absent on ~99% of tested cameras; component must null-check before rendering live stream UI
 
 ### Pending Todos
 
@@ -106,6 +109,6 @@ Plan: 3 of 3
 
 ## Session Continuity
 
-Last session: 2026-06-23T06:07:22.054Z
-Stopped at: Completed 08-04-mobile-sheet-SPEC.md
+Last session: 2026-06-23T11:08:14.225Z
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
