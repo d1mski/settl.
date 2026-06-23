@@ -66,6 +66,7 @@ export function LocationIntelCard({
   const [focusedIdx, setFocusedIdx] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const [fixStatus, setFixStatus] = useState<'idle' | 'locating' | 'active' | 'denied' | 'nogps'>('idle');
+  const [accuracyM, setAccuracyM] = useState<number | null>(null); // GPS fix radius in metres
 
   const { locations, isSaved, toggle, remove } = useSavedLocations();
   const [capWarning, setCapWarning] = useState(false);
@@ -175,6 +176,7 @@ export function LocationIntelCard({
       async (pos) => {
         const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
         setCurrent(coords);
+        setAccuracyM(pos.coords.accuracy);
         setFixStatus('active');
         try {
           const result = await reverseGeocode(coords);
@@ -354,7 +356,17 @@ export function LocationIntelCard({
               fixStatus === 'denied' || fixStatus === 'nogps' ? 'text-risk' : 'text-muted'
             }`}>
               {fixStatus === 'locating' && 'LOCATING...'}
-              {fixStatus === 'active' && 'ACTIVE'}
+              {fixStatus === 'active' && (
+                <>
+                  ACTIVE
+                  {accuracyM != null && (
+                    <span className={accuracyM > 1000 ? 'text-amber' : 'text-muted'}>
+                      {' · '}±{accuracyM >= 1000 ? `${(accuracyM / 1000).toFixed(1)} km` : `${Math.round(accuracyM)} m`}
+                      {accuracyM > 1000 && ' (approx — no GPS/WiFi)'}
+                    </span>
+                  )}
+                </>
+              )}
               {fixStatus === 'denied' && 'DENIED'}
               {fixStatus === 'nogps' && 'NO GPS'}
             </div>
