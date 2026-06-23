@@ -73,31 +73,6 @@ function FitToCoords({
   return null;
 }
 
-function UserLocationInitial({
-  initialHasCoords,
-}: {
-  initialHasCoords: boolean;
-}) {
-  const map = useMap();
-  const firedRef = useRef(false);
-  useEffect(() => {
-    if (firedRef.current) return;
-    if (initialHasCoords) return;
-    if (!('geolocation' in navigator)) return;
-    firedRef.current = true;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        map.setView([pos.coords.latitude, pos.coords.longitude], CITY_ZOOM, {
-          animate: true,
-        });
-      },
-      undefined,
-      { timeout: 10000, maximumAge: 5 * 60 * 1000, enableHighAccuracy: false },
-    );
-  }, [map, initialHasCoords]);
-  return null;
-}
-
 function FlyToListener() {
   const map = useMap();
   useEffect(() => {
@@ -195,7 +170,6 @@ export function MapCanvas({
         />
         <FitToCoords coordsA={coordsA} coordsB={coordsB} />
         <FlyToListener />
-        <UserLocationInitial initialHasCoords={initial.hadCoords} />
         <MapInvalidator />
 
         {activeTab === 'context' && (
