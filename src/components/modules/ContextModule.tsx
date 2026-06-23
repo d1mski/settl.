@@ -1,4 +1,4 @@
-import { useMemo, useCallback, type ReactNode } from 'react';
+import { useMemo, useCallback, useState, type ReactNode } from 'react';
 import { MapPin } from 'lucide-react';
 import type { Coordinates, WikiArticle } from '../../types';
 import { useWikipedia } from '../../hooks/useWikipedia';
@@ -8,6 +8,7 @@ import {
   useOverpassFeatures,
   type NearbyFeature,
 } from '../../hooks/useOverpassFeatures';
+import { useWebcams, type WindyWebcam } from '../../hooks/useWebcams';
 import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 
@@ -26,6 +27,7 @@ export function ContextModule({ coordsA, coordsB, compareMode }: Props) {
   const wikiB = useWikipedia(coordsB, geoB.result?.countryCode ?? null);
   const featuresA = useOverpassFeatures(coordsA);
   const featuresB = useOverpassFeatures(coordsB);
+  const webcamsA = useWebcams(coordsA);
 
   if (!coordsA) return <EmptyState />;
 
@@ -54,6 +56,8 @@ export function ContextModule({ coordsA, coordsB, compareMode }: Props) {
       features={featuresA.data ?? []}
       featuresStatus={featuresA.status}
       featuresError={featuresA.error}
+      webcams={webcamsA.data ?? []}
+      webcamsStatus={webcamsA.status}
     />
   );
 }
@@ -65,6 +69,8 @@ function SingleView({
   features,
   featuresStatus,
   featuresError,
+  webcams,
+  webcamsStatus,
 }: {
   wiki: WikiArticle[];
   wikiStatus: string;
@@ -72,6 +78,8 @@ function SingleView({
   features: NearbyFeature[];
   featuresStatus: string;
   featuresError: string | null;
+  webcams: WindyWebcam[];
+  webcamsStatus: string;
 }) {
   const hazardMentions = useMemo(() => collectHazards(wiki), [wiki]);
   const nearest = useMemo(() => nearestByType(features), [features]);
@@ -100,6 +108,17 @@ function SingleView({
       {nearest.length > 0 && featuresStatus === 'success' && (
         <Section code="03" title="DISTANCE TO NEAREST" subtitle="ESSENTIAL SERVICES · ≤12KM">
           <NearestTable nearest={nearest} />
+        </Section>
+      )}
+
+      {!!import.meta.env.VITE_WINDY_KEY && webcamsStatus === 'success' && webcams.length > 0 && (
+        <Section code="04" title="LIVE WEBCAMS" subtitle="WINDY · NEAREST · OPENS DETAIL PAGE">
+          <WebcamGrid webcams={webcams} />
+        </Section>
+      )}
+      {!!import.meta.env.VITE_WINDY_KEY && webcamsStatus === 'loading' && (
+        <Section code="04" title="LIVE WEBCAMS" subtitle="WINDY">
+          <LoadingSkeleton />
         </Section>
       )}
     </div>
@@ -407,6 +426,45 @@ function NearestTable({ nearest }: { nearest: ReturnType<typeof nearestByType> }
         Source: OpenStreetMap · Data may be outdated
       </div>
     </div>
+  );
+}
+
+function WebcamGrid({ webcams }: { webcams: WindyWebcam[] }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {webcams.map((cam) => <WebcamCard key={cam.webcamId} cam={cam} />)}
+    </div>
+  );
+}
+
+function WebcamCard({ cam }: { cam: WindyWebcam }) {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <a
+      href={cam.detailUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block border border-edge bg-void/40 hover:border-cyan/60 transition-colors rounded-md overflow-hidden"
+    >
+      <div className="relative aspect-video bg-void/60 overflow-hidden">
+        {!imgError ? (
+          <img
+            src={cam.thumbnailUrl}
+            alt={cam.title}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-dim">IMAGE EXPIRED</span>
+          </div>
+        )}
+      </div>
+      <div className="px-2 py-1">
+        <div className="text-[10px] font-mono text-ink truncate">{cam.title}</div>
+        <div className="text-[9px] font-mono text-cyan tabular-nums">{cam.distanceKm.toFixed(1)} KM</div>
+      </div>
+    </a>
   );
 }
 
