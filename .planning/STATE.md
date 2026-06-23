@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
 status: Phase complete — ready for verification
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-06-22T22:26:08.734Z"
+stopped_at: Completed 08-04-mobile-sheet-SPEC.md
+last_updated: "2026-06-23T06:07:33.663Z"
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 18
-  completed_plans: 18
+  completed_plans: 19
 ---
 
 # Project State
@@ -92,6 +92,8 @@ Plan: 3 of 3
 - [Phase 08-overpass-expansion-bug-fixes]: [Phase 08-03] HUD cards moved out of the map box (DOM move required, not class-only) — stacks below map on mobile; lg:absolute floats over map on desktop
 - [Phase 08-overpass-expansion-bug-fixes]: [Phase 08-03] FIX-01 visual verify (Task 3) deferred to end of phase — code complete, tsc clean, mobile rendering unconfirmed
 - [Phase 08]: deriveContextSeverity returns nearest hazard km as metric; alert subtype literals 'military'/'wastewater' match categorise() exactly
+- [Phase 08]: Render ModuleSheet twice (desktop aside + embedded in MobileSheet) — cheapest faithful port, no logic duplication
+- [Phase 08]: Breakpoint split at md (768px) not lg — reverts 08-03 lg: choices throughout App.tsx
 
 ### Pending Todos
 
@@ -104,6 +106,6 @@ Plan: 3 of 3
 
 ## Session Continuity
 
-Last session: 2026-06-22T22:26:08.729Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-06-23T06:07:22.054Z
+Stopped at: Completed 08-04-mobile-sheet-SPEC.md
 Resume file: None

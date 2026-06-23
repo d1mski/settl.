@@ -154,7 +154,7 @@ Plans:
   3. On a mobile viewport the app stacks map above panel vertically, all content scrolls, and no panel is trapped off-screen (root fix: h-[100dvh] + responsive stack, not h-screen + overflow-hidden)
   4. A Greek hospital tagged healthcare=hospital labels as "Hospital"; a Greek clinic tagged healthcare=clinic labels as "Clinic" — name-string heuristics are absent
   5. A primary school tagged school:level=primary labels as "Primary School"; a high school tagged school:level=secondary labels as "High School" — substring matching on "1" is absent
-**Plans:** 3/3 plans complete
+**Plans:** 4/3 plans complete
 Plans:
 - [x] 08-01-PLAN.md — Overpass expansion + bug fixes: QUERY_VERSION v5, buildQuery hazard+golf, categorise hazard branches, FIX-02 healthcare + FIX-03 school fixes, both CATEGORY_COLORS maps [HAZ-01, HAZ-02, FIX-02, FIX-03]
 - [x] 08-02-PLAN.md — HAZ-03 severity: replace deriveContextSeverity stub with proximity bands (1km Watch / 500m military+wastewater Alert), Nearest hazard metric in ReportPanel [HAZ-03]
@@ -203,6 +203,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. ReportPanel (Overview Mode) | 0/2 | Planned    |  |
 | **v1.1 — Free Data Expansion + Live Webcams** | | | |
 | 7. Zero-Risk Data Additions (Pollen + Flood) | 3/3 | Complete | 2026-06-22 |
-| 8. Overpass Expansion + Bug Fixes | 3/3 | Complete   | 2026-06-22 |
+| 8. Overpass Expansion + Bug Fixes | 4/3 | Complete   | 2026-06-23 |
 | 9. Live Webcams (Windy) | 0/? | Not started | - |
 | 10. Marine + Climate Selector | 0/? | Not started | - |
