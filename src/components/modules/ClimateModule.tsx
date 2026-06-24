@@ -154,7 +154,7 @@ function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10
       </div>
       <GridResolutionWarning resolved={d.data.resolved} />
 
-      <SectionContainer code="01" title="ANNUAL READOUT" subtitle={years === 1 ? '12-MONTH ROLLUP' : `${years}-YR AVG`}>
+      <SectionContainer code="01" title={years === 1 ? 'ANNUAL READOUT' : `${years}-YEAR READOUT`} subtitle={years === 1 ? '12-MONTH ROLLUP' : `${years}-YR AVG`}>
         <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
           <StatReadout label="MEAN TEMP" value={`${meanT.toFixed(1)}°C`} tone="cyan" compact />
           <StatReadout label="TOTAL PRECIP" value={`${totalR.toFixed(0)} mm`} compact />
@@ -354,7 +354,7 @@ function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; y
         ]}
       />
 
-      <SectionContainer code="01" title="ANNUAL READOUT" subtitle={years === 1 ? 'A ↔ B · 12 MO ROLLUP' : `A ↔ B · ${years}-YR AVG`}>
+      <SectionContainer code="01" title={years === 1 ? 'ANNUAL READOUT' : `${years}-YEAR READOUT`} subtitle={years === 1 ? 'A ↔ B · 12 MO ROLLUP' : `A ↔ B · ${years}-YR AVG`}>
         <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
           <DualReadout
             label="MEAN TEMP"

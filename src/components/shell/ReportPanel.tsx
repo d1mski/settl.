@@ -327,7 +327,10 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown, climate
         icon: Sun,
         label: 'Climate',
         question: "What's the climate like?",
-        answer: 'Annual averages from historical weather model data.',
+        answer:
+          climateYears === 1
+            ? 'Annual averages from historical weather model data.'
+            : `${climateYears}-year averages from historical weather model data.`,
         severity: climateResult.severity,
         severityLabel: severityLabel(climateResult.severity),
         metrics: climateMetrics,
