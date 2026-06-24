@@ -104,6 +104,7 @@ function FeaturePins({
     <>
       {features
         .filter((f) => Number.isFinite(f.lat) && Number.isFinite(f.lon))
+        .filter((f) => f.subtype !== 'bench')
         .slice(0, 160)
         .map((f) => {
           const dist = typeof f.distanceKm === 'number' ? f.distanceKm.toFixed(2) : '—';
