@@ -5,7 +5,7 @@ import { StatReadout } from '../hud/StatReadout';
 import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 
-// SingleView only — no CompareView, no DualReadout (D-03; mirrors Phase 09 webcams precedent)
+// SingleView only — no dual/compare rendering (D-03; mirrors Phase 09 webcams precedent)
 
 interface Props {
   coordsA: Coordinates | null;
