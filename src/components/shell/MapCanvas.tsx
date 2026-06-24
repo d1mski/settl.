@@ -200,7 +200,9 @@ export function MapCanvas({
         <FlyToListener />
         <MapInvalidator />
 
-        {activeTab === 'context' && (
+        {/* Context markers (nearby features / places / wiki / webcams) show
+            whenever a pin exists — not gated to the context tab. */}
+        {(coordsA || coordsB) && (
           <ContextMapLayer coordsA={coordsA} coordsB={coordsB} />
         )}
         {activeTab === 'hazards' && (
