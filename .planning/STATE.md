@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
-status: Ready to plan
-stopped_at: Completed 09-03-PLAN.md Task 1; human-verify checkpoint pending
-last_updated: "2026-06-23T21:42:17.415Z"
+status: Ready to execute
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-06-24T07:21:05.577Z"
 progress:
   total_phases: 10
   completed_phases: 9
-  total_plans: 21
-  completed_plans: 22
+  total_plans: 25
+  completed_plans: 23
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-22)
 
 **Core value:** Instant, trustworthy, data-backed insight into what it's really like to live somewhere — before you commit
-**Current focus:** Phase 09 — live-webcams-windy
+**Current focus:** Phase 10 — marine-climate-selector
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
+Phase: 10 (marine-climate-selector) — EXECUTING
+Plan: 2 of 4
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Plan: Not started
 | Phase 08-overpass-expansion-bug-fixes P03 | 20 | 2 tasks | 2 files |
 | Phase 08 P02 | 5 | 2 tasks | 2 files |
 | Phase 09 P02 | 5 | 1 tasks | 1 files |
+| Phase 10 P01 | 15 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ Plan: Not started
 - [Phase 09]: location field made required in WindyApiResponse — always present when include=location passed; avoids ?? 0 fallback producing garbage haversine distances
 - [Phase 09]: playerLiveUrl typed string | null — absent on ~99% of tested cameras; component must null-check before rendering live stream UI
 - [Phase 09-live-webcams-windy]: WebcamsSection absent on idle/error/empty — detail-page link (not embedded stream); SingleView only, no CompareView webcams
+- [Phase 10]: useMarine sharedFetch owns no external AbortSignal — one unmounting caller cannot abort concurrent callers' in-flight request
+- [Phase 10]: Marine coastal detection: null-check on response body (waveHeight/SST), NOT HTTP status — inland returns HTTP 200 with nulls
+- [Phase 10]: useMarine uses in-memory Map cache only (no idb) — current-condition data; stale values across sessions would be misleading
 
 ### Pending Todos
 
@@ -110,6 +114,6 @@ Plan: Not started
 
 ## Session Continuity
 
-Last session: 2026-06-23T11:13:57.109Z
-Stopped at: Completed 09-03-PLAN.md Task 1; human-verify checkpoint pending
+Last session: 2026-06-24T07:20:54.973Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
