@@ -4,7 +4,6 @@ import type { Coordinates } from '../../../types';
 import { useWikipedia } from '../../../hooks/useWikipedia';
 import {
   useOverpassFeatures,
-  type FeatureCategory,
   type NearbyFeature,
 } from '../../../hooks/useOverpassFeatures';
 import { useReverseGeocode } from '../../../hooks/useNominatim';
@@ -19,19 +18,6 @@ const webcamIcon = L.divIcon({
   iconSize: [20, 20],
   iconAnchor: [10, 10],
 });
-
-const CATEGORY_COLORS: Record<FeatureCategory, string> = {
-  amenity: '#66ffa3',
-  industrial: '#ffb347',
-  airport: '#ff4d5e',
-  water: '#7eeaff',
-  park: '#66ffa3',
-  place: '#e8eef5',
-  transit: '#a5d8ff',
-  other: '#6a768b',
-  hazard: '#ff6b35',
-  military: '#bdb76b', // khaki — distinct from orange hazard
-};
 
 interface Props {
   coordsA: Coordinates | null;
@@ -120,13 +106,12 @@ function FeaturePins({
         .filter((f) => Number.isFinite(f.lat) && Number.isFinite(f.lon))
         .slice(0, 160)
         .map((f) => {
-          const color = CATEGORY_COLORS[f.category];
           const dist = typeof f.distanceKm === 'number' ? f.distanceKm.toFixed(2) : '—';
           return (
             <Marker
               key={`feat-${slot}-${f.elementType}-${f.id}`}
               position={[f.lat, f.lon]}
-              icon={featureDivIcon(f.subtype, f.category, color, slot === 'B')}
+              icon={featureDivIcon(f.subtype, f.category, slot === 'B')}
             >
               <Popup>
                 <div className="font-mono text-[10px] leading-snug">

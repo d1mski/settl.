@@ -86,28 +86,60 @@ function pickIcon(subtype: string, category: FeatureCategory): LucideIcon {
   return CATEGORY_ICONS[category] ?? MapPin;
 }
 
-// Memoised per (subtype, color, dim) — renderToStaticMarkup runs at most once
-// per distinct glyph variant (~30), not per marker.
+// All badge colours are mid/bright so the dark glyph stays legible on every fill.
+const HEALTH = new Set(['hospital', 'clinic', 'pharmacy', 'doctors', 'dentist']);
+const FOOD = new Set(['restaurant', 'fast_food', 'cafe', 'bar', 'pub', 'food_court', 'biergarten']);
+const EDUCATION = new Set(['school', 'school:primary', 'school:secondary', 'university', 'college', 'library', 'kindergarten']);
+const CULTURE = new Set(['theatre', 'cinema', 'arts_centre', 'place_of_worship', 'nightclub', 'museum']);
+
+// Category-only colour spreads most POIs onto one hue (amenity was the catch-all).
+// Sub-group amenities so different points read differently; green is parks only.
+export function featureColor(subtype: string, category: FeatureCategory): string {
+  switch (category) {
+    case 'hazard': return '#fb923c';     // orange
+    case 'military': return '#bdb76b';   // khaki (app's existing military tone)
+    case 'airport': return '#ef4444';    // red
+    case 'water': return '#22d3ee';      // cyan
+    case 'transit': return '#3b82f6';    // blue
+    case 'industrial': return '#cbd5e1'; // light slate
+    case 'park': return '#22c55e';       // green
+    case 'place': return '#9ca3af';      // gray
+    case 'amenity':
+      if (HEALTH.has(subtype)) return '#fb7185';     // rose
+      if (FOOD.has(subtype)) return '#fbbf24';       // amber
+      if (EDUCATION.has(subtype)) return '#c084fc';  // purple
+      if (CULTURE.has(subtype)) return '#e879f9';    // fuchsia
+      if (subtype.startsWith('shop:')) return '#2dd4bf'; // teal
+      return '#9ca3af';                              // civic/other amenity — gray
+    default: return '#9ca3af';
+  }
+}
+
+// Memoised per (subtype, dim) — renderToStaticMarkup runs at most once per
+// distinct glyph variant (~30), not per marker. Colour is derived from subtype.
 const iconCache = new Map<string, L.DivIcon>();
 
 export function featureDivIcon(
   subtype: string,
   category: FeatureCategory,
-  color: string,
   dim: boolean,
 ): L.DivIcon {
-  const key = `${subtype}|${color}|${dim ? 'd' : 'f'}`;
+  const key = `${subtype}|${category}|${dim ? 'd' : 'f'}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
 
   const Icon = pickIcon(subtype, category);
-  const svg = renderToStaticMarkup(<Icon size={15} color={color} strokeWidth={2.25} />);
-  const html = `<div style="opacity:${dim ? 0.6 : 1};filter:drop-shadow(0 0 1.5px rgba(0,0,0,.95))">${svg}</div>`;
+  const color = featureColor(subtype, category);
+  const glyph = renderToStaticMarkup(<Icon size={11} color="#11161c" strokeWidth={2.5} />);
+  const html =
+    `<div style="width:18px;height:18px;border-radius:50%;background:${color};` +
+    `display:flex;align-items:center;justify-content:center;opacity:${dim ? 0.6 : 1};` +
+    `box-shadow:0 0 0 1.5px rgba(255,255,255,.75),0 1px 2px rgba(0,0,0,.6)">${glyph}</div>`;
   const icon = L.divIcon({
     className: 'settl-feature-pin',
     html,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
   });
   iconCache.set(key, icon);
   return icon;
