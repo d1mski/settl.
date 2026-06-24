@@ -188,11 +188,11 @@ Plans:
   2. The climate module shows a 1-yr / 5-yr / 10-yr selector; selecting 1-yr produces output identical to the current app (no regression); selecting 5-yr or 10-yr fetches ERA5 archive data and updates all climate figures
   3. The default selector position is 1-year — no existing user behavior changes without deliberate interaction
   4. ERA5 data comes from archive-api.open-meteo.com (1940+ coverage), NOT historical-forecast-api.open-meteo.com (2021+ only) — multi-year averages are real historical data, not short-range model output
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 Plans:
 - [x] 10-01-PLAN.md — Marine data layer: useMarine (coastal via null-check + dedup) + MarineModule (badge/cards/legend) + TTL [DATA-03]
 - [x] 10-02-PLAN.md — Climate archive layer: useClimateArchive (ERA5 daily, sum÷N normalize) + useOpenMeteo KEY_VERSION v8 + years param [DATA-04]
-- [ ] 10-03-PLAN.md — Shell integration: marine TabId, App coastal flag + visibleTabs + C-02 fallback + climateYears lift, ModuleSheet Marine case (human-verify) [DATA-03, DATA-04]
+- [x] 10-03-PLAN.md — Shell integration: marine TabId, App coastal flag + visibleTabs + C-02 fallback + climateYears lift, ModuleSheet Marine case (human-verify) [DATA-03, DATA-04]
 - [ ] 10-04-PLAN.md — Climate selector UI: 1/5/10YR pill, dual-hook gating, per-year count normalize, N/A degrade for thermal/humidity/UV (human-verify) [DATA-04]
 **Research notes (corrected by 10-RESEARCH):** Marine API returns HTTP 200 with NULL wave/SST for inland pins (NOT 400) — coastal detection via null-check; useMarine is a single fetch reused for App coastal flag + module. Coastal status resolves at App level (visibleTabs) since the marine TAB existence is conditional (C-01). useClimateArchive.ts is a NEW hook against archive-api.open-meteo.com, daily-only (hourly 7.4MB deferred to v1.2) — humidity/thermal-matrix/UV show N/A on 5/10yr. useOpenMeteo adds inert years=1 param; KEY_VERSION bumps v7→v8 — coastal guard is in the display layer (hide section), not the hook (always fetch). useClimateArchive.ts is a NEW hook against archive-api.open-meteo.com — distinct base URL. Existing useOpenMeteo.ts adds years: 1|5|10 = 1 default param only; all existing callers remain unaffected. KEY_VERSION bumps to v8. ERA5 10-year payload parse on low-end devices is v1.2 concern (Web Worker).
 **UI hint**: yes
@@ -214,4 +214,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Zero-Risk Data Additions (Pollen + Flood) | 3/3 | Complete | 2026-06-22 |
 | 8. Overpass Expansion + Bug Fixes | 4/3 | Complete   | 2026-06-23 |
 | 9. Live Webcams (Windy) | 2/3 | In Progress|  |
-| 10. Marine + Climate Selector | 2/4 | In Progress|  |
+| 10. Marine + Climate Selector | 3/4 | In Progress|  |
