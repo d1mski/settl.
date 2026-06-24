@@ -28,6 +28,8 @@ import { useFlood } from '../../hooks/useFlood';
 import { StatusDot } from '../hud/StatusDot';
 import { YearSelector } from '../hud/YearSelector';
 import { useOpenMeteo } from '../../hooks/useOpenMeteo';
+import { useClimateArchive } from '../../hooks/useClimateArchive';
+import { buildMonthlyAggregates } from '../../utils/climateAggregation';
 import { useAirQuality } from '../../hooks/useAirQuality';
 import { useEarthquakes } from '../../hooks/useEarthquakes';
 import { useWildfires } from '../../hooks/useWildfires';
@@ -114,16 +116,30 @@ function isEuropeHeuristic(c: Coordinates): boolean {
 /* ------------------------------------------------------------------ */
 
 export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown, climateYears, onClimateYearsChange }: ReportPanelProps) {
-  const climate = useOpenMeteo(coordsA);
+  // 1yr hook: always fetched — used for severity badges (climate/wind/sun) and wind/sun metric values.
+  // Must stay on useOpenMeteo so severity derivations are unaffected by the year selector (scope guard).
+  const climate1yr = useOpenMeteo(coordsA);
+
+  // Archive hook: null-gated — only fetches on 5/10y; provides climate card display values.
+  // Both calls are unconditional (Rules of Hooks) with null-gating to control fetch.
+  const climateArchive = useClimateArchive(
+    climateYears > 1 ? coordsA : null,
+    (climateYears === 1 ? 5 : climateYears) as 5 | 10,
+  );
+
+  // climateDisplay drives climate card VALUE display only — not severity.
+  const climateDisplay = climateYears === 1 ? climate1yr : climateArchive;
+
   const aqi = useAirQuality(coordsA);
   const earthquakes = useEarthquakes(coordsA);
   const wildfires = useWildfires(coordsA);
   const features = useOverpassFeatures(coordsA);
   const flood = useFlood(coordsA);
 
-  const climateResult = deriveClimateSeverity(climate);
-  const windResult = deriveWindSeverity(climate);
-  const sunResult = deriveSunSeverity(climate);
+  // Severity derivations always use 1yr climate — unchanged by the year selector.
+  const climateResult = deriveClimateSeverity(climate1yr);
+  const windResult = deriveWindSeverity(climate1yr);
+  const sunResult = deriveSunSeverity(climate1yr);
   const hazardsResult = deriveHazardsSeverity(earthquakes, wildfires, flood, flood.notApplicable);
   const floodResult = deriveFloodSeverity(flood, flood.notApplicable);
   const airResult = deriveAirSeverity(aqi);
@@ -196,43 +212,65 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown, climate
   }, [features.data]);
 
   const chapters = useMemo<Chapter[]>(() => {
-    const d = climate.data?.daily;
+    // 1yr daily: used for wind + sun metric values (scope guard \u2014 year selector doesn't affect these).
+    const d1yr = climate1yr.data?.daily;
+    // Display daily: used for climate card values \u2014 follows the year selector.
+    const dDisplay = climateDisplay.data?.daily;
     const aqiData = aqi.data;
     const eqData = earthquakes.data;
     const wfData = wildfires.data;
     const featData = features.data;
 
-    /* Climate */
-    const climateMetrics: Metric[] = d
-      ? [
-          { value: fmt(avg(d.temperatureMean), 1) + '\u00B0', label: 'Mean temp' },
-          { value: fmt(sum(d.precipitationSum), 0) + ' mm', label: 'Total precip' },
-          { value: fmt(maxVal(d.uvIndexMax), 0), label: 'Peak UV' },
-          { value: fmt(sum(d.sunshineDuration) / 3600, 0) + ' h', label: 'Sunshine hrs' },
-        ]
-      : [
-          { value: '--', label: 'Mean temp' },
-          { value: '--', label: 'Total precip' },
-          { value: '--', label: 'Peak UV' },
-          { value: '--', label: 'Sunshine hrs' },
-        ];
+    // Active-window suffix for climate card labels on 5/10y.
+    const winSuffix = climateYears > 1 ? ` \u00B7 ${climateYears}-YR AVG` : '';
 
-    /* Wind */
-    const windMetrics: Metric[] = d
+    /* Climate \u2014 values from climateDisplay (1yr or archive); UV swap on 5/10y */
+    let climateMetrics: Metric[];
+    if (dDisplay) {
+      if (climateYears === 1) {
+        climateMetrics = [
+          { value: fmt(avg(dDisplay.temperatureMean), 1) + '\u00B0', label: 'Mean temp' },
+          { value: fmt(sum(dDisplay.precipitationSum), 0) + ' mm', label: 'Total precip' },
+          { value: fmt(maxVal(dDisplay.uvIndexMax), 0), label: 'Peak UV' },
+          { value: fmt(sum(dDisplay.sunshineDuration) / 3600, 0) + ' h', label: 'Sunshine hrs' },
+        ];
+      } else {
+        // 5/10y: archive has no UV \u2014 derive avgHigh/avgLow from monthly aggregates instead.
+        const monthly = buildMonthlyAggregates(climateDisplay.data!);
+        const avgHighVal = monthly.reduce((s, m) => s + m.avgHigh, 0) / monthly.length;
+        const avgLowVal = monthly.reduce((s, m) => s + m.avgLow, 0) / monthly.length;
+        climateMetrics = [
+          { value: fmt(avg(dDisplay.temperatureMean), 1) + '\u00B0', label: `Mean temp${winSuffix}` },
+          { value: fmt(sum(dDisplay.precipitationSum), 0) + ' mm', label: `Total precip${winSuffix}` },
+          { value: fmt(avgHighVal, 1) + '\u00B0', label: `Avg high${winSuffix}` },
+          { value: fmt(avgLowVal, 1) + '\u00B0', label: `Avg low${winSuffix}` },
+        ];
+      }
+    } else {
+      climateMetrics = [
+        { value: '--', label: 'Mean temp' },
+        { value: '--', label: 'Total precip' },
+        { value: climateYears === 1 ? '--' : '--', label: climateYears === 1 ? 'Peak UV' : 'Avg high' },
+        { value: climateYears === 1 ? '--' : '--', label: climateYears === 1 ? 'Sunshine hrs' : 'Avg low' },
+      ];
+    }
+
+    /* Wind \u2014 always 1yr (scope guard) */
+    const windMetrics: Metric[] = d1yr
       ? [
-          { value: fmt(maxVal(d.windGustsMax), 0) + ' km/h', label: 'Max gust' },
-          { value: fmt(avg(d.windSpeedMax), 1) + ' km/h', label: 'Avg wind speed' },
+          { value: fmt(maxVal(d1yr.windGustsMax), 0) + ' km/h', label: 'Max gust' },
+          { value: fmt(avg(d1yr.windSpeedMax), 1) + ' km/h', label: 'Avg wind speed' },
         ]
       : [
           { value: '--', label: 'Max gust' },
           { value: '--', label: 'Avg wind speed' },
         ];
 
-    /* Sun Exposure */
-    const sunMetrics: Metric[] = d
+    /* Sun Exposure \u2014 always 1yr (scope guard) */
+    const sunMetrics: Metric[] = d1yr
       ? [
-          { value: fmt(maxVal(d.uvIndexMax), 0), label: 'Peak UV index' },
-          { value: fmt(avg(d.sunshineDuration) / 3600, 1) + ' h', label: 'Daily sunshine avg' },
+          { value: fmt(maxVal(d1yr.uvIndexMax), 0), label: 'Peak UV index' },
+          { value: fmt(avg(d1yr.sunshineDuration) / 3600, 1) + ' h', label: 'Daily sunshine avg' },
         ]
       : [
           { value: '--', label: 'Peak UV index' },
@@ -345,7 +383,7 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown, climate
         metrics: contextMetrics,
       },
     ];
-  }, [climate.data, aqi.data, earthquakes.data, wildfires.data, features.data, flood.data, flood.notApplicable, climateResult, windResult, sunResult, hazardsResult, airResult, contextResult, floodResult]);
+  }, [climate1yr.data, climateDisplay.data, climateYears, aqi.data, earthquakes.data, wildfires.data, features.data, flood.data, flood.notApplicable, climateResult, windResult, sunResult, hazardsResult, airResult, contextResult, floodResult]);
 
   return (
     <div className="flex flex-col">
