@@ -340,11 +340,17 @@ function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; y
             text: `${signedFixed(sunB - sunA, 0)}h`,
             tone: deltaTone(sunB - sunA, 'higher-good', 100),
           },
-          {
-            label: 'ΔPEAK UV',
-            text: years === 1 ? signedFixed(uvB - uvA, 1) : '--',
-            tone: years === 1 ? deltaTone(uvB - uvA, 'higher-bad', 0.5) : 'neutral',
-          },
+          years === 1
+            ? {
+                label: 'ΔPEAK UV',
+                text: signedFixed(uvB - uvA, 1),
+                tone: deltaTone(uvB - uvA, 'higher-bad', 0.5),
+              }
+            : {
+                label: 'ΔAVG HIGH',
+                text: `${signedFixed(avgHighB - avgHighA)}°C`,
+                tone: deltaTone(avgHighB - avgHighA, 'higher-bad', 0.5),
+              },
         ]}
       />
 
