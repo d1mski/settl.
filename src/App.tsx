@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
 import type { Coordinates, TabId } from './types';
+import { TAB_ORDER } from './types';
 import type { Slot } from './hooks/useUrlState';
 import { MapCanvas } from './components/shell/MapCanvas';
 import { MapHud } from './components/shell/MapHud';
@@ -12,6 +13,7 @@ import { RiskPanel } from './components/hud/RiskPanel';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { useUrlState } from './hooks/useUrlState';
 import { useReverseGeocode } from './hooks/useNominatim';
+import { useMarine } from './hooks/useMarine';
 
 export default function App() {
   const { state, update } = useUrlState();
@@ -20,6 +22,13 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'overview' | 'advanced'>('overview');
 
   const compareMode = state.coordsB !== null;
+
+  const marineState = useMarine(state.coordsA);
+  const isCoastal = marineState.data?.isCoastal ?? false;
+  const marineResolved = marineState.status === 'success' || marineState.status === 'error';
+  const visibleTabs = isCoastal ? TAB_ORDER : TAB_ORDER.filter(id => id !== 'marine');
+
+  const [climateYears, setClimateYears] = useState<1 | 5 | 10>(1);
 
   const setCoordsA = useCallback(
     (coords: Coordinates | null) => {
@@ -73,6 +82,13 @@ export default function App() {
     return () => window.removeEventListener('settl-webcam-select', handler);
   }, [handleDrillDown]);
 
+  // C-02: marine tab vanishes when an active-marine pin becomes inland — revert to climate
+  useEffect(() => {
+    if (state.tab === 'marine' && !isCoastal && marineResolved) {
+      update({ tab: 'climate' });
+    }
+  }, [isCoastal, marineResolved, state.tab, update]);
+
   const moduleSheetProps = {
     active: state.tab,
     coordsA: state.coordsA,
@@ -84,6 +100,9 @@ export default function App() {
     onToggleView: toggleView,
     onSelect: selectTab,
     onDrillDown: handleDrillDown,
+    visibleTabs,
+    climateYears,
+    onClimateYearsChange: setClimateYears,
   };
 
   return (
