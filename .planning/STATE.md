@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
 status: Ready to execute
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-06-24T07:21:05.577Z"
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-06-24T07:29:47.591Z"
 progress:
   total_phases: 10
   completed_phases: 9
   total_plans: 25
-  completed_plans: 23
+  completed_plans: 24
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 10 (marine-climate-selector) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Plan: 2 of 4
 | Phase 08 P02 | 5 | 2 tasks | 2 files |
 | Phase 09 P02 | 5 | 1 tasks | 1 files |
 | Phase 10 P01 | 15 | 3 tasks | 3 files |
+| Phase 10 P02 | 20 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,10 @@ Plan: 2 of 4
 - [Phase 10]: useMarine sharedFetch owns no external AbortSignal — one unmounting caller cannot abort concurrent callers' in-flight request
 - [Phase 10]: Marine coastal detection: null-check on response body (waveHeight/SST), NOT HTTP status — inland returns HTTP 200 with nulls
 - [Phase 10]: useMarine uses in-memory Map cache only (no idb) — current-condition data; stale values across sessions would be misleading
+- [Phase Phase 10]: useOpenMeteo _years param uses underscore prefix — noUnusedParameters:true in tsconfig; _view precedent; Plan 04 doesn't pass the param positionally
+- [Phase Phase 10]: precipitationSum not divided in useClimateArchive — countExtremeDays >20mm per-day threshold must not be scaled; per-year extreme-day counts divided in Plan 04
+- [Phase Phase 10]: rainSum ÷N at source (per plan must_have) deflates rainDays count — known limitation; Plan 04 must recompute rainDays from raw precipitationSum or apply ÷N post-aggregation
+- [Phase Phase 10]: ARCHIVE_KEY_VERSION = 'era5v1' independent of KEY_VERSION — new hook, no stale entries, namespaces never collide
 
 ### Pending Todos
 
@@ -114,6 +119,6 @@ Plan: 2 of 4
 
 ## Session Continuity
 
-Last session: 2026-06-24T07:20:54.973Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-06-24T07:29:47.587Z
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None

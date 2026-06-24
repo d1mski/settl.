@@ -7,8 +7,8 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 
 - [x] **DATA-01**: User sees global river-flood risk (Open-Meteo GloFAS discharge with p25/p75 severity bands) for the pinned location; pins with no river within ~5km show an explicit "no major river in range" state, never a false "OK"
 - [x] **DATA-02**: User sees pollen levels (CAMS species) where coverage exists (Europe-primary), with a source/resolution label; the pollen section is hidden — not shown as zero — where the API returns no data
-- [ ] **DATA-03**: User sees marine conditions (wave height → WMO sea-state severity, sea-surface temp) for coastal pins; the section is absent for inland pins
-- [ ] **DATA-04**: User can switch climate figures between 1-, 5-, and 10-year averages (Open-Meteo ERA5 archive), defaulting to 1-year so existing behavior is unchanged
+- [x] **DATA-03**: User sees marine conditions (wave height → WMO sea-state severity, sea-surface temp) for coastal pins; the section is absent for inland pins
+- [x] **DATA-04**: User can switch climate figures between 1-, 5-, and 10-year averages (Open-Meteo ERA5 archive), defaulting to 1-year so existing behavior is unchanged
 
 ## Hazard Context (HAZ)
 
@@ -53,5 +53,5 @@ Constraint: free / no-hoops public data, client-side only, every metric attribut
 | FIX-02 | Phase 8 | Complete |
 | FIX-03 | Phase 8 | Complete |
 | CAM-01 | Phase 9 | Complete |
-| DATA-03 | Phase 10 | Pending |
-| DATA-04 | Phase 10 | Pending |
+| DATA-03 | Phase 10 | Complete |
+| DATA-04 | Phase 10 | Complete |
