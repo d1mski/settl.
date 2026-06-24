@@ -35,6 +35,9 @@ interface Props {
   coordsA: Coordinates | null;
   coordsB: Coordinates | null;
   compareMode: boolean;
+  // forward-declared for Plan 04 — behaviour implemented there
+  years?: 1 | 5 | 10;
+  onYearsChange?: (years: 1 | 5 | 10) => void;
 }
 
 const AXIS_PROPS = { stroke: '#3d4759', fontSize: 9, fontFamily: 'JetBrains Mono, monospace', tickLine: false };

@@ -2,7 +2,7 @@ import { Suspense, lazy } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sun as SunLucide, Sunrise, Wind, TriangleAlert, Gauge, Globe, Waves } from 'lucide-react';
 import type { Coordinates, TabId } from '../../types';
-import { TAB_ORDER, TAB_LABELS } from '../../types';
+import { TAB_LABELS } from '../../types';
 import { ReportPanel } from './ReportPanel';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
@@ -27,6 +27,9 @@ const AirQualityModule = lazy(() =>
 const ContextModule = lazy(() =>
   import('../modules/ContextModule').then((m) => ({ default: m.ContextModule })),
 );
+const MarineModule = lazy(() =>
+  import('../modules/MarineModule').then((m) => ({ default: m.MarineModule })),
+);
 
 const TAB_ICONS: Record<TabId, JSX.Element> = {
   climate: <SunLucide className="w-5 h-5" strokeWidth={1.4} />,
@@ -49,10 +52,13 @@ interface Props {
   onToggleView: () => void;
   onSelect: (tab: TabId) => void;
   onDrillDown: (tab: TabId) => void;
+  visibleTabs: TabId[];
+  climateYears: 1 | 5 | 10;
+  onClimateYearsChange: (years: 1 | 5 | 10) => void;
   embedded?: boolean;
 }
 
-export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resolvedA, countryA, onToggleView, onSelect, onDrillDown, embedded }: Props) {
+export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resolvedA, countryA, onToggleView, onSelect, onDrillDown, visibleTabs, climateYears, onClimateYearsChange, embedded }: Props) {
   return (
     <aside className={embedded ? "h-full w-full bg-panel flex flex-col" : "hidden md:flex h-full md:w-[392px] min-[1200px]:w-[560px] shrink-0 bg-panel border-l border-edge flex-col"}>
       {/* Mode bar: Overview/Advanced toggle + font/theme controls */}
@@ -104,7 +110,7 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resol
           >
             {/* Horizontal module tabs — icon on top, label below */}
             <div className="px-4 py-3 border-b border-edge flex gap-2 shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              {TAB_ORDER.map(id => (
+              {visibleTabs.map(id => (
                 <button
                   key={id}
                   onClick={() => onSelect(id)}
@@ -125,12 +131,13 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resol
             <div className="flex-1 overflow-y-auto p-5 stagger">
               <ErrorBoundary>
                 <Suspense fallback={<LoadingSkeleton />}>
-                  {active === 'climate' && <ClimateModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+                  {active === 'climate' && <ClimateModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} years={climateYears} onYearsChange={onClimateYearsChange} />}
                   {active === 'wind' && <WindModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
                   {active === 'sun' && <SunModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
                   {active === 'hazards' && <HazardsModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
                   {active === 'air' && <AirQualityModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
                   {active === 'context' && <ContextModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+                  {active === 'marine' && <MarineModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
                 </Suspense>
               </ErrorBoundary>
             </div>
