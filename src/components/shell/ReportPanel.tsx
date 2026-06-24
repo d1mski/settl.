@@ -26,6 +26,7 @@ import {
 } from '../../utils/overviewSeverity';
 import { useFlood } from '../../hooks/useFlood';
 import { StatusDot } from '../hud/StatusDot';
+import { YearSelector } from '../hud/YearSelector';
 import { useOpenMeteo } from '../../hooks/useOpenMeteo';
 import { useAirQuality } from '../../hooks/useAirQuality';
 import { useEarthquakes } from '../../hooks/useEarthquakes';
@@ -41,6 +42,8 @@ interface ReportPanelProps {
   resolvedA: string | null;
   countryA: string | null;
   onDrillDown: (tab: TabId) => void;
+  climateYears: 1 | 5 | 10;
+  onClimateYearsChange: (years: 1 | 5 | 10) => void;
 }
 
 interface Metric {
@@ -110,7 +113,7 @@ function isEuropeHeuristic(c: Coordinates): boolean {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: ReportPanelProps) {
+export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown, climateYears, onClimateYearsChange }: ReportPanelProps) {
   const climate = useOpenMeteo(coordsA);
   const aqi = useAirQuality(coordsA);
   const earthquakes = useEarthquakes(coordsA);
@@ -348,7 +351,8 @@ export function ReportPanel({ coordsA, resolvedA, countryA, onDrillDown }: Repor
     <div className="flex flex-col">
       {/* Hero */}
       <div className="px-6 pt-6 pb-4">
-        <span className="text-[9px] font-mono uppercase tracking-widest text-muted">
+        <YearSelector years={climateYears} onYearsChange={onClimateYearsChange} />
+        <span className="block text-[9px] font-mono uppercase tracking-widest text-muted mt-4">
           Location Report
         </span>
         <h1 className="text-[1.5rem] font-body font-semibold text-ink mt-1 leading-tight">

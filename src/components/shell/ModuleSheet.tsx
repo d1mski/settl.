@@ -97,7 +97,7 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resol
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
-            <ReportPanel coordsA={coordsA} resolvedA={resolvedA} countryA={countryA} onDrillDown={onDrillDown} />
+            <ReportPanel coordsA={coordsA} resolvedA={resolvedA} countryA={countryA} onDrillDown={onDrillDown} climateYears={climateYears} onClimateYearsChange={onClimateYearsChange} />
           </motion.div>
         ) : (
           <motion.div
