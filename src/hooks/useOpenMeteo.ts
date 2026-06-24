@@ -58,7 +58,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const KEY_VERSION = 'v7';
+const KEY_VERSION = 'v8';
 
 function makeKey(coords: Coordinates, start: string, end: string, model: string): string {
   return `${KEY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}|${start}|${end}|${model}`;
@@ -254,7 +254,9 @@ function sharedFetch(
   return p;
 }
 
-export function useOpenMeteo(coords: Coordinates | null): ModuleState<ClimateData> {
+// _years is reserved for Plan 04 — useOpenMeteo always serves the 1-yr path;
+// 5/10-yr routing uses useClimateArchive. Param is inert here.
+export function useOpenMeteo(coords: Coordinates | null, _years: 1 = 1): ModuleState<ClimateData> {
   const [state, setState] = useState<ModuleState<ClimateData>>(() =>
     initialModuleState<ClimateData>(),
   );
