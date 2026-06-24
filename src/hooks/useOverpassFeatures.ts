@@ -61,7 +61,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const QUERY_VERSION = 'v6'; // v6: drop benches (IRRELEVANT_SUBTYPES) — invalidate stale cached entries
+const QUERY_VERSION = 'v7'; // v7: hospital no longer demoted to clinic by healthcare:speciality (v6: drop benches)
 
 function makeKey(coords: Coordinates): string {
   return `${QUERY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
@@ -129,9 +129,12 @@ function categorise(tags: Record<string, string>): {
   if (tags.natural === 'water') return { category: 'water', subtype: 'water' };
   if (tags.leisure === 'golf_course') return { category: 'park', subtype: 'golf_course' };
   if (tags.leisure === 'park') return { category: 'park', subtype: 'park' };
-  // Distinguish general hospitals from specialist clinics
+  // amenity=hospital is authoritative. Do NOT demote by healthcare:speciality —
+  // major hospitals list many specialities (general;emergency;oncology;…), which
+  // wrongly demoted real hospitals (e.g. Patras University Hospital) to 'clinic'
+  // while unspecified specialist institutes stayed 'hospital'. Only an explicit
+  // healthcare=clinic overrides.
   if (tags.amenity === 'hospital' || tags.healthcare === 'hospital') {
-    if (tags['healthcare:speciality']) return { category: 'amenity', subtype: 'clinic' };
     if (tags.healthcare === 'clinic') return { category: 'amenity', subtype: 'clinic' };
     return { category: 'amenity', subtype: 'hospital' };
   }
