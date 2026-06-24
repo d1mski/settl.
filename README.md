@@ -1,6 +1,6 @@
 # settl. [Location Intelligence]
 
-Pin a location, see what it's actually like to live there. Climate, wind, sun, air quality, hazards, what's nearby. A full year of data on one screen. Free, no API keys.
+Pin a location, see what it's actually like to live there. Climate, wind, sun, air quality, hazards, marine conditions, and what's nearby — plus live webcams. One to ten years of data on one screen. Free, no API keys for the core.
 
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 
@@ -23,9 +23,9 @@ The data exists — climate, wind, sun, earthquakes, wildfires, nearby amenities
 
 Temperature, precipitation, and seasonal heatmaps from Open-Meteo historical data. Wind roses showing prevailing direction and speed distribution across the year. Sun path, golden hour timing, daylight hours, and how much direct sun each side of a building gets (calculated with SunCalc). Real-time air quality including AQI, PM2.5, pollen, and pollutant breakdown.
 
-Recent earthquakes from USGS and active wildfires from NASA FIRMS. Schools, hospitals, transit stops, and parks pulled from OpenStreetMap. Building orientation and facade analysis. Everything gets rolled into a risk overview with severity scoring.
+Recent earthquakes from USGS, active wildfires from NASA FIRMS, and global river-flood risk from GloFAS. For coastal spots, live marine conditions — wave height, sea-surface temperature, and a WMO sea-state severity rating. Schools, hospitals, transit stops, parks, and infrastructure pulled from OpenStreetMap, plus nearby live webcams. Building orientation and facade analysis. Everything gets rolled into a risk overview with severity scoring.
 
-You can compare two locations side by side and bookmark spots you're considering.
+Climate can be viewed as a single year or averaged over the last 5 or 10 years (ERA5 reanalysis), so you see the long-run normal, not just one possibly-weird year. You can compare two locations side by side and bookmark spots you're considering.
 <p align="center">
   <img width="45%" src="https://github.com/user-attachments/assets/438311c8-d907-4d21-8845-9b09f5702f60" />
   <img width="45%" src="https://github.com/user-attachments/assets/6a060b4a-5260-453a-9d99-7edc7506262d" />
@@ -37,19 +37,21 @@ You can compare two locations side by side and bookmark spots you're considering
 
 ## Modules
 
-The app is organized into six modules. You pick a location on the map, then drill into whichever angle matters to you.
+The app is organized into modules (six everywhere, plus a seventh — Marine — that appears only for coastal locations). You pick a location on the map, then drill into whichever angle matters to you.
 
-**Climate** pulls a full year of historical daily data from Open-Meteo. You get monthly temperature and precipitation charts, a heatmap grid showing day-by-day patterns across the year, extreme day counts (how many days above 35C, below 0C, etc.), and UV index bands. Enough to see whether summers are brutal or winters are mild before you experience them.
+**Climate** pulls historical daily data from Open-Meteo. You get monthly temperature and precipitation charts, a heatmap grid showing day-by-day patterns across the year, extreme day counts (how many days above 35C, below 0C, etc.), and UV index bands. A **1 / 5 / 10-year selector** switches between a single recent year and 5- or 10-year ERA5 averages (with a monthly average high/low temperature range chart for the multi-year views) — enough to see whether summers are brutal or winters are mild before you experience them.
 
 **Wind** builds a wind rose from hourly historical data, so you can see which direction wind comes from most often and how hard it blows. There's a seasonal breakdown too, because wind in January and wind in July can be completely different stories.
 
 **Sun** calculates the sun path arc for any date using SunCalc, shows golden hour and daylight duration across the year, and (if building footprint data exists in OpenStreetMap) estimates how many hours of direct sun each facade of a building gets. Useful for figuring out which rooms get cooked in summer.
 
-**Air quality** shows real-time AQI, PM2.5, pollen counts, and individual pollutant levels over time. All from Open-Meteo's air quality API.
+**Air quality** shows real-time AQI, PM2.5, pollen counts (CAMS, where covered), and individual pollutant levels over time. All from Open-Meteo's air quality API.
 
-**Hazards** maps recent earthquakes within range (USGS data) and active wildfire detections (NASA FIRMS satellite data). Each gets a mini map and magnitude/intensity charts.
+**Marine** appears only for coastal locations: current wave height, sea-surface temperature, and a WMO sea-state severity badge from Open-Meteo's Marine API. Inland pins don't show the tab at all.
 
-**Context** pulls nearby points of interest from OpenStreetMap via the Overpass API: schools, hospitals, clinics, transit stops, parks, and bodies of water. It also grabs relevant Wikipedia articles about the area so you get some local background. The nearest feature of each type is shown with distance.
+**Hazards** maps recent earthquakes within range (USGS data), active wildfire detections (NASA FIRMS satellite data), and river-flood risk (GloFAS reanalysis), with a clear *not-applicable* state where a hazard doesn't apply rather than a misleading "all clear." Each gets a mini map and magnitude/intensity charts.
+
+**Context** pulls nearby points of interest from OpenStreetMap via the Overpass API: schools, hospitals, clinics, transit stops, harbours, parks, water, and infrastructure (power substations, wastewater, quarries, landfills, data centres, military sites). On the map, each type gets its own colour-coded icon, and the markers (plus nearby **live webcams** from Windy and relevant **Wikipedia** articles) show as soon as you drop a pin — no need to open the tab. The nearest feature of each type is shown with distance.
 
 ### Other features
 
@@ -64,21 +66,26 @@ npm install
 npm run dev
 ```
 
-No `.env` file, no API keys. Everything hits free public endpoints.
+No `.env` file and no API keys for the core app — everything hits free public endpoints. Live webcams are the one exception: they need a free [Windy](https://api.windy.com/keys) key in `VITE_WINDY_KEY`. Leave it unset and the rest of the app works unchanged; the webcams just don't appear.
 
 ## Built with
 
-React 18, TypeScript, Vite, Tailwind CSS, Leaflet, Recharts, Framer Motion
+React 18, TypeScript, Vite, Tailwind CSS, Leaflet, Recharts, Framer Motion, Lucide icons
 
 ## Where the data comes from
 
 All free, no auth needed:
 
-- [Open-Meteo](https://open-meteo.com/) for weather, climate history, and air quality
+- [Open-Meteo](https://open-meteo.com/) for weather, climate history, multi-year ERA5 averages, air quality + pollen, marine conditions, and GloFAS flood risk
 - [Nominatim](https://nominatim.org/) for geocoding
 - [Overpass](https://overpass-api.de/) for OpenStreetMap queries
+- [Wikipedia](https://www.mediawiki.org/wiki/API:Geosearch) for nearby articles
 - [USGS](https://earthquake.usgs.gov/fdsnws/event/1/) for earthquake data
 - [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) for wildfire detection
+
+Optional (needs a free key):
+
+- [Windy Webcams](https://api.windy.com/keys) for nearby live webcams (`VITE_WINDY_KEY`)
 
 ## License
 
