@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import type { ClimateData, Coordinates } from '../../types';
 import { useOpenMeteo } from '../../hooks/useOpenMeteo';
+import { useClimateArchive } from '../../hooks/useClimateArchive';
 import {
   buildMonthlyAggregates,
   buildTemperatureHeatmap,
@@ -59,12 +60,17 @@ interface Derived {
   data: ClimateData;
 }
 
-function deriveOne(data: ClimateData | null): Derived | null {
+function deriveOne(data: ClimateData | null, years: number): Derived | null {
   if (!data) return null;
+  const raw = countExtremeDays(data.daily);
+  const extremes = years > 1
+    ? { above35: Math.round(raw.above35 / years), below0: Math.round(raw.below0 / years),
+        heavyRain: Math.round(raw.heavyRain / years), strongGusts: Math.round(raw.strongGusts / years) }
+    : raw;
   return {
     heatmap: buildTemperatureHeatmap(data.hourly),
     monthly: buildMonthlyAggregates(data),
-    extremes: countExtremeDays(data.daily),
+    extremes,
     data,
   };
 }
@@ -82,12 +88,21 @@ function peakUv(d: Derived): number {
   return Math.max(...d.monthly.map((m) => m.uvMax));
 }
 
-export function ClimateModule({ coordsA, coordsB, compareMode }: Props) {
-  const stateA = useOpenMeteo(coordsA);
-  const stateB = useOpenMeteo(coordsB);
+export function ClimateModule({ coordsA, coordsB, compareMode, years, onYearsChange }: Props) {
+  const yearsValue = years ?? 1;
 
-  const derivedA = useMemo(() => deriveOne(stateA.data), [stateA.data]);
-  const derivedB = useMemo(() => deriveOne(stateB.data), [stateB.data]);
+  // Four unconditional null-gated hook calls — no Rules-of-Hooks violation.
+  // 1YR path: useOpenMeteo receives real coords; archive hooks receive null (idle).
+  // 5/10YR path: useOpenMeteo receives null (idle); archive hooks receive real coords.
+  const stateA1 = useOpenMeteo(yearsValue === 1 ? coordsA : null);
+  const stateB1 = useOpenMeteo(yearsValue === 1 ? coordsB : null);
+  const stateAArchive = useClimateArchive(yearsValue > 1 ? coordsA : null, (yearsValue === 1 ? 5 : yearsValue) as 5 | 10);
+  const stateBArchive = useClimateArchive(yearsValue > 1 ? coordsB : null, (yearsValue === 1 ? 5 : yearsValue) as 5 | 10);
+  const stateA = yearsValue === 1 ? stateA1 : stateAArchive;
+  const stateB = yearsValue === 1 ? stateB1 : stateBArchive;
+
+  const derivedA = useMemo(() => deriveOne(stateA.data, yearsValue), [stateA.data, yearsValue]);
+  const derivedB = useMemo(() => deriveOne(stateB.data, yearsValue), [stateB.data, yearsValue]);
 
   if (!coordsA) return <EmptyState />;
 
@@ -99,44 +114,80 @@ export function ClimateModule({ coordsA, coordsB, compareMode }: Props) {
   if (isCompare) {
     if (stateB.status === 'loading' || stateB.status === 'idle') return <LoadingSkeleton />;
     if (stateB.status === 'error' || !derivedB) return <ErrorState error={stateB.error} />;
-    return <CompareView a={derivedA} b={derivedB} />;
+    return <CompareView a={derivedA} b={derivedB} years={yearsValue} onYearsChange={onYearsChange} />;
   }
 
-  return <SingleView d={derivedA} />;
+  return <SingleView d={derivedA} years={yearsValue} onYearsChange={onYearsChange} />;
 }
 
-function SingleView({ d }: { d: Derived }) {
+const YEARS = [1, 5, 10] as const;
+
+function YearSelector({ years, onYearsChange }: { years: 1 | 5 | 10; onYearsChange?: (y: 1 | 5 | 10) => void }) {
+  return (
+    <div className="flex bg-void border border-edge rounded-md p-0.5 w-fit">
+      {YEARS.map(y => (
+        <button key={y} onClick={() => onYearsChange?.(y)}
+          className={`px-3 py-1 rounded text-[10px] font-mono font-semibold tracking-wider transition-all ${
+            years === y ? 'bg-panel text-ink shadow-sm' : 'text-muted cursor-pointer'}`}>
+          {y}YR
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function NaPlaceholder({ reason }: { reason: string }) {
+  return (
+    <div className="flex items-center justify-center h-[170px] text-[10px] font-mono uppercase tracking-widest text-muted text-center px-4">
+      N/A · {reason}
+    </div>
+  );
+}
+
+function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10; onYearsChange?: (y: 1 | 5 | 10) => void }) {
   const meanT = annualMean(d);
   const totalR = annualRain(d);
   const totalS = annualSun(d);
   const peakU = peakUv(d);
   const uv = uvBand(peakU);
 
+  // D-09: active-window subtitle suffix — empty string for 1YR (no change vs original)
+  const win = years === 1 ? '' : ` · ${years}-YR AVG`;
+
   return (
     <div className="space-y-5">
+      <YearSelector years={years} onYearsChange={onYearsChange} />
       <GridResolutionWarning resolved={d.data.resolved} />
 
-      <SectionContainer code="01" title="ANNUAL READOUT" subtitle="12-MONTH ROLLUP">
+      <SectionContainer code="01" title="ANNUAL READOUT" subtitle={years === 1 ? '12-MONTH ROLLUP' : `${years}-YR AVG`}>
         <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
           <StatReadout label="MEAN TEMP" value={`${meanT.toFixed(1)}°C`} tone="cyan" compact />
           <StatReadout label="TOTAL PRECIP" value={`${totalR.toFixed(0)} mm`} compact />
           <StatReadout label="SUN HOURS" value={totalS.toFixed(0)} compact />
-          <StatReadout
-            label="PEAK UV"
-            value={peakU.toFixed(1)}
-            hint={uv.label.toUpperCase()}
-            tone={uv.tone === 'risk' ? 'risk' : uv.tone === 'warn' ? 'warn' : 'good'}
-            compact
-          />
+          {years === 1 ? (
+            <StatReadout
+              label="PEAK UV"
+              value={peakU.toFixed(1)}
+              hint={uv.label.toUpperCase()}
+              tone={uv.tone === 'risk' ? 'risk' : uv.tone === 'warn' ? 'warn' : 'good'}
+              compact
+            />
+          ) : (
+            <StatReadout label="PEAK UV" value="--" hint="N/A · ERA5" tone="neutral" compact />
+          )}
         </div>
       </SectionContainer>
 
-      <SectionContainer code="02" title="THERMAL MATRIX" subtitle="MONTH × HOUR · MEAN °C">
-        <HeatmapGrid data={d.heatmap} />
+      <SectionContainer code="02" title="THERMAL MATRIX" subtitle={years === 1 ? 'MONTH × HOUR · MEAN °C' : 'MONTH × HOUR · N/A'}>
+        {years === 1 ? (
+          <HeatmapGrid data={d.heatmap} />
+        ) : (
+          <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
+        )}
       </SectionContainer>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <SectionContainer code="03" title="PRECIPITATION" subtitle="MM PER MONTH">
+        <SectionContainer code="03" title="PRECIPITATION" subtitle={`MM PER MONTH${win}`}>
           <ResponsiveContainer width="100%" height={170}>
             <BarChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
               <CartesianGrid {...GRID_PROPS} />
@@ -148,19 +199,23 @@ function SingleView({ d }: { d: Derived }) {
           </ResponsiveContainer>
         </SectionContainer>
 
-        <SectionContainer code="04" title="HUMIDITY" subtitle="MEAN %">
-          <ResponsiveContainer width="100%" height={170}>
-            <LineChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <CartesianGrid {...GRID_PROPS} />
-              <XAxis dataKey="label" {...AXIS_PROPS} />
-              <YAxis {...AXIS_PROPS} domain={[0, 100]} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('%')} />
-              <Line type="monotone" dataKey="humidityMean" stroke="#66ffa3" strokeWidth={1.8} dot={{ r: 2, fill: '#66ffa3' }} />
-            </LineChart>
-          </ResponsiveContainer>
+        <SectionContainer code="04" title="HUMIDITY" subtitle={years === 1 ? 'MEAN %' : 'MEAN % · N/A'}>
+          {years === 1 ? (
+            <ResponsiveContainer width="100%" height={170}>
+              <LineChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid {...GRID_PROPS} />
+                <XAxis dataKey="label" {...AXIS_PROPS} />
+                <YAxis {...AXIS_PROPS} domain={[0, 100]} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('%')} />
+                <Line type="monotone" dataKey="humidityMean" stroke="#66ffa3" strokeWidth={1.8} dot={{ r: 2, fill: '#66ffa3' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
+          )}
         </SectionContainer>
 
-        <SectionContainer code="05" title="SUNSHINE" subtitle="HOURS PER MONTH">
+        <SectionContainer code="05" title="SUNSHINE" subtitle={`HOURS PER MONTH${win}`}>
           <ResponsiveContainer width="100%" height={170}>
             <BarChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
               <CartesianGrid {...GRID_PROPS} />
@@ -172,26 +227,30 @@ function SingleView({ d }: { d: Derived }) {
           </ResponsiveContainer>
         </SectionContainer>
 
-        <SectionContainer code="06" title="UV INDEX" subtitle="MONTHLY MAX">
-          <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <CartesianGrid {...GRID_PROPS} />
-              <XAxis dataKey="label" {...AXIS_PROPS} />
-              <YAxis {...AXIS_PROPS} domain={[0, 12]} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum()} />
-              <Bar dataKey="uvMax" name="UV">
-                {d.monthly.map((entry, i) => {
-                  const band = uvBand(entry.uvMax);
-                  const fill = band.tone === 'risk' ? '#ff4d5e' : band.tone === 'warn' ? '#ffb347' : '#66ffa3';
-                  return <Cell key={i} fill={fill} />;
-                })}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        <SectionContainer code="06" title="UV INDEX" subtitle={years === 1 ? 'MONTHLY MAX' : 'MONTHLY MAX · N/A'}>
+          {years === 1 ? (
+            <ResponsiveContainer width="100%" height={170}>
+              <BarChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid {...GRID_PROPS} />
+                <XAxis dataKey="label" {...AXIS_PROPS} />
+                <YAxis {...AXIS_PROPS} domain={[0, 12]} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum()} />
+                <Bar dataKey="uvMax" name="UV">
+                  {d.monthly.map((entry, i) => {
+                    const band = uvBand(entry.uvMax);
+                    const fill = band.tone === 'risk' ? '#ff4d5e' : band.tone === 'warn' ? '#ffb347' : '#66ffa3';
+                    return <Cell key={i} fill={fill} />;
+                  })}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <NaPlaceholder reason="ERA5 ARCHIVE" />
+          )}
         </SectionContainer>
       </div>
 
-      <SectionContainer code="07" title="EXTREME DAYS" subtitle="THRESHOLD COUNTS · 12 MO">
+      <SectionContainer code="07" title="EXTREME DAYS" subtitle={years === 1 ? 'THRESHOLD COUNTS · 12 MO' : 'THRESHOLD COUNTS · /YR AVG'}>
         <div className="grid gap-2 grid-cols-2 md:grid-cols-4">
           <StatReadout label=">35°C" value={d.extremes.above35} hint="HOT DAYS" tone={d.extremes.above35 > 10 ? 'risk' : d.extremes.above35 > 0 ? 'warn' : 'neutral'} compact />
           <StatReadout label="<0°C" value={d.extremes.below0} hint="FROST" tone={d.extremes.below0 > 30 ? 'risk' : d.extremes.below0 > 0 ? 'warn' : 'neutral'} compact />
@@ -203,7 +262,7 @@ function SingleView({ d }: { d: Derived }) {
   );
 }
 
-function CompareView({ a, b }: { a: Derived; b: Derived }) {
+function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; years: 1 | 5 | 10; onYearsChange?: (y: 1 | 5 | 10) => void }) {
   const meanA = annualMean(a);
   const meanB = annualMean(b);
   const rainA = annualRain(a);
@@ -212,6 +271,9 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
   const sunB = annualSun(b);
   const uvA = peakUv(a);
   const uvB = peakUv(b);
+
+  // D-09: active-window suffix for compare subtitles
+  const win = years === 1 ? '' : ` · ${years}-YR AVG`;
 
   const merged = useMemo(
     () =>
@@ -231,6 +293,9 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
 
   return (
     <div className="space-y-5">
+      {/* D-10: single shared selector for both A and B */}
+      <YearSelector years={years} onYearsChange={onYearsChange} />
+
       <DeltaBanner
         items={[
           {
@@ -250,13 +315,13 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
           },
           {
             label: 'ΔPEAK UV',
-            text: signedFixed(uvB - uvA, 1),
-            tone: deltaTone(uvB - uvA, 'higher-bad', 0.5),
+            text: years === 1 ? signedFixed(uvB - uvA, 1) : '--',
+            tone: years === 1 ? deltaTone(uvB - uvA, 'higher-bad', 0.5) : 'neutral',
           },
         ]}
       />
 
-      <SectionContainer code="01" title="ANNUAL READOUT" subtitle="A ↔ B · 12 MO ROLLUP">
+      <SectionContainer code="01" title="ANNUAL READOUT" subtitle={years === 1 ? 'A ↔ B · 12 MO ROLLUP' : `A ↔ B · ${years}-YR AVG`}>
         <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
           <DualReadout
             label="MEAN TEMP"
@@ -279,55 +344,73 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
             delta={signedFixed(sunB - sunA, 0)}
             deltaTone={deltaTone(sunB - sunA, 'higher-good', 100)}
           />
-          <DualReadout
-            label="PEAK UV"
-            valueA={uvA.toFixed(1)}
-            valueB={uvB.toFixed(1)}
-            delta={signedFixed(uvB - uvA, 1)}
-            deltaTone={deltaTone(uvB - uvA, 'higher-bad', 0.5)}
-          />
+          {years === 1 ? (
+            <DualReadout
+              label="PEAK UV"
+              valueA={uvA.toFixed(1)}
+              valueB={uvB.toFixed(1)}
+              delta={signedFixed(uvB - uvA, 1)}
+              deltaTone={deltaTone(uvB - uvA, 'higher-bad', 0.5)}
+            />
+          ) : (
+            <DualReadout label="PEAK UV" valueA="--" valueB="--" delta="N/A · ERA5" deltaTone="neutral" />
+          )}
         </div>
       </SectionContainer>
 
-      <SectionContainer code="02" title="THERMAL MATRIX" subtitle="A | B · SHARED SCALE · MONTH × HOUR">
-        <div className="grid gap-3 md:grid-cols-2">
-          <SubChart label="A">
-            <HeatmapGrid
-              data={a.heatmap}
-              scaleMin={Math.min(a.heatmap.minTemp, b.heatmap.minTemp)}
-              scaleMax={Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp)}
-            />
-          </SubChart>
-          <SubChart label="B">
-            <HeatmapGrid
-              data={b.heatmap}
-              scaleMin={Math.min(a.heatmap.minTemp, b.heatmap.minTemp)}
-              scaleMax={Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp)}
-            />
-          </SubChart>
-        </div>
-        <div className="text-[9px] font-mono uppercase tracking-widest text-dim mt-2">
-          ※ Both heatmaps share {Math.min(a.heatmap.minTemp, b.heatmap.minTemp).toFixed(1)}°C →{' '}
-          {Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp).toFixed(1)}°C so cell colors are directly comparable.
-        </div>
+      <SectionContainer code="02" title="THERMAL MATRIX" subtitle={years === 1 ? 'A | B · SHARED SCALE · MONTH × HOUR' : 'A | B · N/A'}>
+        {years === 1 ? (
+          <>
+            <div className="grid gap-3 md:grid-cols-2">
+              <SubChart label="A">
+                <HeatmapGrid
+                  data={a.heatmap}
+                  scaleMin={Math.min(a.heatmap.minTemp, b.heatmap.minTemp)}
+                  scaleMax={Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp)}
+                />
+              </SubChart>
+              <SubChart label="B">
+                <HeatmapGrid
+                  data={b.heatmap}
+                  scaleMin={Math.min(a.heatmap.minTemp, b.heatmap.minTemp)}
+                  scaleMax={Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp)}
+                />
+              </SubChart>
+            </div>
+            <div className="text-[9px] font-mono uppercase tracking-widest text-dim mt-2">
+              ※ Both heatmaps share {Math.min(a.heatmap.minTemp, b.heatmap.minTemp).toFixed(1)}°C →{' '}
+              {Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp).toFixed(1)}°C so cell colors are directly comparable.
+            </div>
+          </>
+        ) : (
+          <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
+        )}
       </SectionContainer>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <SectionContainer code="03" title="PRECIPITATION" subtitle="MM · A vs B">
+        <SectionContainer code="03" title="PRECIPITATION" subtitle={`MM · A vs B${win}`}>
           <DualBarChart data={merged} aKey="rainA" bKey="rainB" unit="mm" />
         </SectionContainer>
-        <SectionContainer code="04" title="HUMIDITY" subtitle="MEAN % · A vs B">
-          <DualLineChart data={merged} aKey="humA" bKey="humB" yMax={100} unit="%" />
+        <SectionContainer code="04" title="HUMIDITY" subtitle={years === 1 ? 'MEAN % · A vs B' : 'MEAN % · N/A'}>
+          {years === 1 ? (
+            <DualLineChart data={merged} aKey="humA" bKey="humB" yMax={100} unit="%" />
+          ) : (
+            <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
+          )}
         </SectionContainer>
-        <SectionContainer code="05" title="SUNSHINE" subtitle="HRS · A vs B">
+        <SectionContainer code="05" title="SUNSHINE" subtitle={`HRS · A vs B${win}`}>
           <DualBarChart data={merged} aKey="sunA" bKey="sunB" unit="h" />
         </SectionContainer>
-        <SectionContainer code="06" title="UV INDEX" subtitle="MAX · A vs B">
-          <DualLineChart data={merged} aKey="uvA" bKey="uvB" yMax={12} />
+        <SectionContainer code="06" title="UV INDEX" subtitle={years === 1 ? 'MAX · A vs B' : 'MAX · N/A'}>
+          {years === 1 ? (
+            <DualLineChart data={merged} aKey="uvA" bKey="uvB" yMax={12} />
+          ) : (
+            <NaPlaceholder reason="ERA5 ARCHIVE" />
+          )}
         </SectionContainer>
       </div>
 
-      <SectionContainer code="07" title="EXTREME DAYS" subtitle="THRESHOLD COUNTS · A vs B">
+      <SectionContainer code="07" title="EXTREME DAYS" subtitle={years === 1 ? 'THRESHOLD COUNTS · A vs B' : 'THRESHOLD COUNTS · /YR AVG · A vs B'}>
         <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
           <DualReadout
             label=">35°C HOT DAYS"
