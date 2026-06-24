@@ -70,4 +70,5 @@ export const TTL = {
   wikipedia: 14 * 24 * 60 * 60 * 1000,
   nominatim: 30 * 24 * 60 * 60 * 1000,
   openMeteoFlood: 6 * 60 * 60 * 1000,  // 6 hours — GloFAS reanalysis updates daily
+  marineConditions: 15 * 60 * 1000,  // 15 min — Marine model updates ~15-min interval
 } as const;
