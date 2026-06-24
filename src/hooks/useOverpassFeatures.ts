@@ -61,7 +61,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const QUERY_VERSION = 'v7'; // v7: hospital no longer demoted to clinic by healthcare:speciality (v6: drop benches)
+const QUERY_VERSION = 'v8'; // v8: drop unnamed hospitals (v7: no speciality demotion; v6: drop benches)
 
 function makeKey(coords: Coordinates): string {
   return `${QUERY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
@@ -223,6 +223,9 @@ function interpret(coords: Coordinates, data: OverpassResponse): NearbyFeature[]
     if (category === 'other') continue;
     // Drop noise types that aren't meaningful "places nearby"
     if (IRRELEVANT_SUBTYPES.has(subtype)) continue;
+    // Unnamed hospitals are OSM mistags/stubs (real hospitals are named) — drop
+    // entirely so they don't appear as map pins, in counts, or as nearest-hospital.
+    if (subtype === 'hospital' && !tags.name) continue;
     out.push({
       id: el.id,
       elementType: el.type,
@@ -294,10 +297,7 @@ export function useOverpassFeatures(
 }
 
 const NEAREST_ROWS: Array<{ label: string; match: (f: NearbyFeature) => boolean }> = [
-  // Require a name: a bare unnamed amenity=hospital is almost always a mistag or
-  // incomplete OSM import (e.g. way/1081122641 in Patras) — useless as "nearest
-  // hospital" and often beats the real named hospital on distance.
-  { label: 'hospital', match: (f) => f.subtype === 'hospital' && !!f.name },
+  { label: 'hospital', match: (f) => f.subtype === 'hospital' },
   { label: 'pharmacy', match: (f) => f.subtype === 'pharmacy' },
   {
     label: 'supermarket',
