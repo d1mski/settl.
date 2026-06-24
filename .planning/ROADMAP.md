@@ -214,4 +214,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Zero-Risk Data Additions (Pollen + Flood) | 3/3 | Complete | 2026-06-22 |
 | 8. Overpass Expansion + Bug Fixes | 4/3 | Complete   | 2026-06-23 |
 | 9. Live Webcams (Windy) | 2/3 | In Progress|  |
-| 10. Marine + Climate Selector | 4/4 | Complete   | 2026-06-24 |
+| 10. Marine + Climate Selector | 4/4 | Complete    | 2026-06-24 |
