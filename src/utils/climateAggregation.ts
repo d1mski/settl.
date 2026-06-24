@@ -17,6 +17,10 @@ export interface MonthlyAggregate {
   tempMean: number;
   tempMin: number;
   tempMax: number;
+  /** Mean of daily temperatureMax values — avg high for the month */
+  avgHigh: number;
+  /** Mean of daily temperatureMin values — avg low for the month */
+  avgLow: number;
   humidityMean: number;
   rainSum: number;
   rainDays: number;
@@ -86,6 +90,10 @@ export function buildMonthlyAggregates(climate: ClimateData): MonthlyAggregate[]
     tempCount: number;
     tempMin: number;
     tempMax: number;
+    highSum: number;
+    highCount: number;
+    lowSum: number;
+    lowCount: number;
     humiditySum: number;
     humidityCount: number;
     rainSum: number;
@@ -101,6 +109,10 @@ export function buildMonthlyAggregates(climate: ClimateData): MonthlyAggregate[]
     tempCount: 0,
     tempMin: Infinity,
     tempMax: -Infinity,
+    highSum: 0,
+    highCount: 0,
+    lowSum: 0,
+    lowCount: 0,
     humiditySum: 0,
     humidityCount: 0,
     rainSum: 0,
@@ -126,8 +138,10 @@ export function buildMonthlyAggregates(climate: ClimateData): MonthlyAggregate[]
     }
     const tMin = daily.temperatureMin[i];
     if (Number.isFinite(tMin) && tMin < b.tempMin) b.tempMin = tMin;
+    if (Number.isFinite(tMin)) { b.lowSum += tMin; b.lowCount += 1; }
     const tMax = daily.temperatureMax[i];
     if (Number.isFinite(tMax) && tMax > b.tempMax) b.tempMax = tMax;
+    if (Number.isFinite(tMax)) { b.highSum += tMax; b.highCount += 1; }
     const rain = daily.rainSum[i];
     if (Number.isFinite(rain)) {
       b.rainSum += rain;
@@ -165,6 +179,8 @@ export function buildMonthlyAggregates(climate: ClimateData): MonthlyAggregate[]
     tempMean: b.tempCount ? b.tempSum / b.tempCount : 0,
     tempMin: Number.isFinite(b.tempMin) ? b.tempMin : 0,
     tempMax: Number.isFinite(b.tempMax) ? b.tempMax : 0,
+    avgHigh: b.highCount ? b.highSum / b.highCount : 0,
+    avgLow: b.lowCount ? b.lowSum / b.lowCount : 0,
     humidityMean: b.humidityCount ? b.humiditySum / b.humidityCount : 0,
     rainSum: b.rainSum,
     rainDays: b.rainDays,

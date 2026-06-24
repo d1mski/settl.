@@ -1,5 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -28,6 +30,7 @@ import { GridResolutionWarning } from '../GridResolutionWarning';
 import { StatReadout } from '../hud/StatReadout';
 import { DualReadout } from '../hud/DualReadout';
 import { SectionHeader } from '../hud/SectionHeader';
+import { YearSelector } from '../hud/YearSelector';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { signedFixed, deltaTone } from '../../utils/compareUtils';
 import { fmtTooltipNum } from '../../utils/chartFmt';
@@ -87,6 +90,12 @@ function annualSun(d: Derived): number {
 function peakUv(d: Derived): number {
   return Math.max(...d.monthly.map((m) => m.uvMax));
 }
+function annualAvgHigh(d: Derived): number {
+  return d.monthly.reduce((s, m) => s + m.avgHigh, 0) / d.monthly.length;
+}
+function annualAvgLow(d: Derived): number {
+  return d.monthly.reduce((s, m) => s + m.avgLow, 0) / d.monthly.length;
+}
 
 export function ClimateModule({ coordsA, coordsB, compareMode, years, onYearsChange }: Props) {
   const yearsValue = years ?? 1;
@@ -120,43 +129,29 @@ export function ClimateModule({ coordsA, coordsB, compareMode, years, onYearsCha
   return <SingleView d={derivedA} years={yearsValue} onYearsChange={onYearsChange} />;
 }
 
-const YEARS = [1, 5, 10] as const;
-
-function YearSelector({ years, onYearsChange }: { years: 1 | 5 | 10; onYearsChange?: (y: 1 | 5 | 10) => void }) {
-  return (
-    <div className="flex bg-void border border-edge rounded-md p-0.5 w-fit">
-      {YEARS.map(y => (
-        <button key={y} onClick={() => onYearsChange?.(y)}
-          className={`px-3 py-1 rounded text-[10px] font-mono font-semibold tracking-wider transition-all ${
-            years === y ? 'bg-panel text-ink shadow-sm' : 'text-muted cursor-pointer'}`}>
-          {y}YR
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function NaPlaceholder({ reason }: { reason: string }) {
-  return (
-    <div className="flex items-center justify-center h-[170px] text-[10px] font-mono uppercase tracking-widest text-muted text-center px-4">
-      N/A · {reason}
-    </div>
-  );
-}
-
 function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10; onYearsChange?: (y: 1 | 5 | 10) => void }) {
   const meanT = annualMean(d);
   const totalR = annualRain(d);
   const totalS = annualSun(d);
   const peakU = peakUv(d);
   const uv = uvBand(peakU);
+  const avgH = annualAvgHigh(d);
+  const avgL = annualAvgLow(d);
 
   // D-09: active-window subtitle suffix — empty string for 1YR (no change vs original)
   const win = years === 1 ? '' : ` · ${years}-YR AVG`;
+  const isMultiYear = years > 1;
 
   return (
     <div className="space-y-5">
-      <YearSelector years={years} onYearsChange={onYearsChange} />
+      <div className="space-y-1.5">
+        <YearSelector years={years} onYearsChange={onYearsChange} />
+        {isMultiYear && (
+          <p className="text-[9px] font-mono uppercase tracking-widest text-dim">
+            {years}-YEAR VIEW SHOWS DAILY CLIMATE AVERAGES — HOURLY &amp; UV DETAIL UNAVAILABLE
+          </p>
+        )}
+      </div>
       <GridResolutionWarning resolved={d.data.resolved} />
 
       <SectionContainer code="01" title="ANNUAL READOUT" subtitle={years === 1 ? '12-MONTH ROLLUP' : `${years}-YR AVG`}>
@@ -173,18 +168,38 @@ function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10
               compact
             />
           ) : (
-            <StatReadout label="PEAK UV" value="--" hint="N/A · ERA5" tone="neutral" compact />
+            <>
+              <StatReadout label="AVG HIGH" value={`${avgH.toFixed(1)}°C`} hint="MEAN DAILY MAX" tone="warn" compact />
+              <StatReadout label="AVG LOW" value={`${avgL.toFixed(1)}°C`} hint="MEAN DAILY MIN" compact />
+            </>
           )}
         </div>
       </SectionContainer>
 
-      <SectionContainer code="02" title="THERMAL MATRIX" subtitle={years === 1 ? 'MONTH × HOUR · MEAN °C' : 'MONTH × HOUR · N/A'}>
-        {years === 1 ? (
+      {years === 1 ? (
+        <SectionContainer code="02" title="THERMAL MATRIX" subtitle="MONTH × HOUR · MEAN °C">
           <HeatmapGrid data={d.heatmap} />
-        ) : (
-          <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
-        )}
-      </SectionContainer>
+        </SectionContainer>
+      ) : (
+        <SectionContainer code="02" title="TEMPERATURE RANGE" subtitle={`MONTHLY AVG HIGH–LOW · ${years}-YR`}>
+          <ResponsiveContainer width="100%" height={170}>
+            <AreaChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="tempRangeFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ffb347" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#7eeaff" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid {...GRID_PROPS} />
+              <XAxis dataKey="label" {...AXIS_PROPS} />
+              <YAxis {...AXIS_PROPS} unit="°" />
+              <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('°C')} />
+              <Area type="monotone" dataKey="avgHigh" name="AVG HIGH" stroke="#ffb347" strokeWidth={1.8} fill="url(#tempRangeFill)" dot={false} />
+              <Area type="monotone" dataKey="avgLow" name="AVG LOW" stroke="#7eeaff" strokeWidth={1.8} fill="none" dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </SectionContainer>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <SectionContainer code="03" title="PRECIPITATION" subtitle={`MM PER MONTH${win}`}>
@@ -199,8 +214,8 @@ function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10
           </ResponsiveContainer>
         </SectionContainer>
 
-        <SectionContainer code="04" title="HUMIDITY" subtitle={years === 1 ? 'MEAN %' : 'MEAN % · N/A'}>
-          {years === 1 ? (
+        {years === 1 && (
+          <SectionContainer code="04" title="HUMIDITY" subtitle="MEAN %">
             <ResponsiveContainer width="100%" height={170}>
               <LineChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid {...GRID_PROPS} />
@@ -210,10 +225,8 @@ function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10
                 <Line type="monotone" dataKey="humidityMean" stroke="#66ffa3" strokeWidth={1.8} dot={{ r: 2, fill: '#66ffa3' }} />
               </LineChart>
             </ResponsiveContainer>
-          ) : (
-            <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
-          )}
-        </SectionContainer>
+          </SectionContainer>
+        )}
 
         <SectionContainer code="05" title="SUNSHINE" subtitle={`HOURS PER MONTH${win}`}>
           <ResponsiveContainer width="100%" height={170}>
@@ -227,8 +240,8 @@ function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10
           </ResponsiveContainer>
         </SectionContainer>
 
-        <SectionContainer code="06" title="UV INDEX" subtitle={years === 1 ? 'MONTHLY MAX' : 'MONTHLY MAX · N/A'}>
-          {years === 1 ? (
+        {years === 1 && (
+          <SectionContainer code="06" title="UV INDEX" subtitle="MONTHLY MAX">
             <ResponsiveContainer width="100%" height={170}>
               <BarChart data={d.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid {...GRID_PROPS} />
@@ -244,10 +257,8 @@ function SingleView({ d, years, onYearsChange }: { d: Derived; years: 1 | 5 | 10
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <NaPlaceholder reason="ERA5 ARCHIVE" />
-          )}
-        </SectionContainer>
+          </SectionContainer>
+        )}
       </div>
 
       <SectionContainer code="07" title="EXTREME DAYS" subtitle={years === 1 ? 'THRESHOLD COUNTS · 12 MO' : 'THRESHOLD COUNTS · /YR AVG'}>
@@ -271,9 +282,14 @@ function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; y
   const sunB = annualSun(b);
   const uvA = peakUv(a);
   const uvB = peakUv(b);
+  const avgHighA = annualAvgHigh(a);
+  const avgHighB = annualAvgHigh(b);
+  const avgLowA = annualAvgLow(a);
+  const avgLowB = annualAvgLow(b);
 
   // D-09: active-window suffix for compare subtitles
   const win = years === 1 ? '' : ` · ${years}-YR AVG`;
+  const isMultiYear = years > 1;
 
   const merged = useMemo(
     () =>
@@ -287,6 +303,10 @@ function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; y
         sunB: b.monthly[i].sunshineHours,
         uvA: m.uvMax,
         uvB: b.monthly[i].uvMax,
+        avgHighA: m.avgHigh,
+        avgHighB: b.monthly[i].avgHigh,
+        avgLowA: m.avgLow,
+        avgLowB: b.monthly[i].avgLow,
       })),
     [a.monthly, b.monthly],
   );
@@ -294,7 +314,14 @@ function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; y
   return (
     <div className="space-y-5">
       {/* D-10: single shared selector for both A and B */}
-      <YearSelector years={years} onYearsChange={onYearsChange} />
+      <div className="space-y-1.5">
+        <YearSelector years={years} onYearsChange={onYearsChange} />
+        {isMultiYear && (
+          <p className="text-[9px] font-mono uppercase tracking-widest text-dim">
+            {years}-YEAR VIEW SHOWS DAILY CLIMATE AVERAGES — HOURLY &amp; UV DETAIL UNAVAILABLE
+          </p>
+        )}
+      </div>
 
       <DeltaBanner
         items={[
@@ -353,13 +380,28 @@ function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; y
               deltaTone={deltaTone(uvB - uvA, 'higher-bad', 0.5)}
             />
           ) : (
-            <DualReadout label="PEAK UV" valueA="--" valueB="--" delta="N/A · ERA5" deltaTone="neutral" />
+            <>
+              <DualReadout
+                label="AVG HIGH"
+                valueA={`${avgHighA.toFixed(1)}°C`}
+                valueB={`${avgHighB.toFixed(1)}°C`}
+                delta={`${signedFixed(avgHighB - avgHighA)}°C`}
+                deltaTone={deltaTone(avgHighB - avgHighA, 'higher-bad', 0.5)}
+              />
+              <DualReadout
+                label="AVG LOW"
+                valueA={`${avgLowA.toFixed(1)}°C`}
+                valueB={`${avgLowB.toFixed(1)}°C`}
+                delta={`${signedFixed(avgLowB - avgLowA)}°C`}
+                deltaTone={deltaTone(avgLowB - avgLowA, 'higher-bad', 0.5)}
+              />
+            </>
           )}
         </div>
       </SectionContainer>
 
-      <SectionContainer code="02" title="THERMAL MATRIX" subtitle={years === 1 ? 'A | B · SHARED SCALE · MONTH × HOUR' : 'A | B · N/A'}>
-        {years === 1 ? (
+      {years === 1 ? (
+        <SectionContainer code="02" title="THERMAL MATRIX" subtitle="A | B · SHARED SCALE · MONTH × HOUR">
           <>
             <div className="grid gap-3 md:grid-cols-2">
               <SubChart label="A">
@@ -382,32 +424,67 @@ function CompareView({ a, b, years, onYearsChange }: { a: Derived; b: Derived; y
               {Math.max(a.heatmap.maxTemp, b.heatmap.maxTemp).toFixed(1)}°C so cell colors are directly comparable.
             </div>
           </>
-        ) : (
-          <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
-        )}
-      </SectionContainer>
+        </SectionContainer>
+      ) : (
+        <SectionContainer code="02" title="TEMPERATURE RANGE" subtitle={`MONTHLY AVG HIGH–LOW · A vs B · ${years}-YR`}>
+          <div className="grid gap-3 md:grid-cols-2">
+            <SubChart label="A">
+              <ResponsiveContainer width="100%" height={170}>
+                <AreaChart data={merged} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="tempRangeFillCmpA" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ffb347" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#7eeaff" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid {...GRID_PROPS} />
+                  <XAxis dataKey="label" {...AXIS_PROPS} />
+                  <YAxis {...AXIS_PROPS} unit="°" />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('°C')} />
+                  <Area type="monotone" dataKey="avgHighA" name="HIGH" stroke="#ffb347" strokeWidth={1.8} fill="url(#tempRangeFillCmpA)" dot={false} />
+                  <Area type="monotone" dataKey="avgLowA" name="LOW" stroke="#7eeaff" strokeWidth={1.8} fill="none" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </SubChart>
+            <SubChart label="B">
+              <ResponsiveContainer width="100%" height={170}>
+                <AreaChart data={merged} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="tempRangeFillCmpB" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ffb347" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#7eeaff" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid {...GRID_PROPS} />
+                  <XAxis dataKey="label" {...AXIS_PROPS} />
+                  <YAxis {...AXIS_PROPS} unit="°" />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL} formatter={fmtTooltipNum('°C')} />
+                  <Area type="monotone" dataKey="avgHighB" name="HIGH" stroke="#ffb347" strokeWidth={1.8} fill="url(#tempRangeFillCmpB)" dot={false} />
+                  <Area type="monotone" dataKey="avgLowB" name="LOW" stroke="#7eeaff" strokeWidth={1.8} fill="none" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </SubChart>
+          </div>
+        </SectionContainer>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <SectionContainer code="03" title="PRECIPITATION" subtitle={`MM · A vs B${win}`}>
           <DualBarChart data={merged} aKey="rainA" bKey="rainB" unit="mm" />
         </SectionContainer>
-        <SectionContainer code="04" title="HUMIDITY" subtitle={years === 1 ? 'MEAN % · A vs B' : 'MEAN % · N/A'}>
-          {years === 1 ? (
+        {years === 1 && (
+          <SectionContainer code="04" title="HUMIDITY" subtitle="MEAN % · A vs B">
             <DualLineChart data={merged} aKey="humA" bKey="humB" yMax={100} unit="%" />
-          ) : (
-            <NaPlaceholder reason="HOURLY · ERA5 ARCHIVE" />
-          )}
-        </SectionContainer>
+          </SectionContainer>
+        )}
         <SectionContainer code="05" title="SUNSHINE" subtitle={`HRS · A vs B${win}`}>
           <DualBarChart data={merged} aKey="sunA" bKey="sunB" unit="h" />
         </SectionContainer>
-        <SectionContainer code="06" title="UV INDEX" subtitle={years === 1 ? 'MAX · A vs B' : 'MAX · N/A'}>
-          {years === 1 ? (
+        {years === 1 && (
+          <SectionContainer code="06" title="UV INDEX" subtitle="MAX · A vs B">
             <DualLineChart data={merged} aKey="uvA" bKey="uvB" yMax={12} />
-          ) : (
-            <NaPlaceholder reason="ERA5 ARCHIVE" />
-          )}
-        </SectionContainer>
+          </SectionContainer>
+        )}
       </div>
 
       <SectionContainer code="07" title="EXTREME DAYS" subtitle={years === 1 ? 'THRESHOLD COUNTS · A vs B' : 'THRESHOLD COUNTS · /YR AVG · A vs B'}>
