@@ -8,6 +8,7 @@ import {
   type NearbyFeature,
 } from '../../../hooks/useOverpassFeatures';
 import { useReverseGeocode } from '../../../hooks/useNominatim';
+import { featureDivIcon } from '../../../utils/featureIcons';
 import { useWebcams, pendingWebcam, type WindyWebcam } from '../../../hooks/useWebcams';
 import type { WikiArticle } from '../../../types';
 
@@ -122,17 +123,10 @@ function FeaturePins({
           const color = CATEGORY_COLORS[f.category];
           const dist = typeof f.distanceKm === 'number' ? f.distanceKm.toFixed(2) : '—';
           return (
-            <CircleMarker
+            <Marker
               key={`feat-${slot}-${f.elementType}-${f.id}`}
-              center={[f.lat, f.lon]}
-              radius={4}
-              pathOptions={{
-                color,
-                fillColor: color,
-                fillOpacity: slot === 'A' ? 0.7 : 0.5,
-                weight: 1,
-                dashArray: slot === 'B' ? '2 2' : undefined,
-              }}
+              position={[f.lat, f.lon]}
+              icon={featureDivIcon(f.subtype, f.category, color, slot === 'B')}
             >
               <Popup>
                 <div className="font-mono text-[10px] leading-snug">
@@ -145,7 +139,7 @@ function FeaturePins({
                   </div>
                 </div>
               </Popup>
-            </CircleMarker>
+            </Marker>
           );
         })}
     </>
