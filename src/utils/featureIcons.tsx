@@ -4,7 +4,7 @@ import {
   Plane, Shield, Zap, Droplets, Pickaxe, Trash2, Server, Factory, Building2,
   Anchor, Ship, TrainFront, Train, TramFront, Bus, Waves, Flag, Trees,
   Cross, Stethoscope, School, GraduationCap, Library, Drama, Film, Utensils,
-  Coffee, Beer, Armchair, Landmark, Pill, Fuel, SquareParking, Church, Mail,
+  Coffee, Beer, Landmark, Pill, Fuel, SquareParking, Church, Mail,
   ShoppingBag, AlertTriangle, MapPin,
   type LucideIcon,
 } from 'lucide-react';
@@ -47,7 +47,6 @@ const SUBTYPE_ICONS: Record<string, LucideIcon> = {
   cafe: Coffee,
   bar: Beer,
   pub: Beer,
-  bench: Armchair,
   // services
   bank: Landmark,
   pharmacy: Pill,

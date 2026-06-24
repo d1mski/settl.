@@ -61,7 +61,7 @@ function quantize(coords: Coordinates): Coordinates {
   };
 }
 
-const QUERY_VERSION = 'v5';
+const QUERY_VERSION = 'v6'; // v6: drop benches (IRRELEVANT_SUBTYPES) — invalidate stale cached entries
 
 function makeKey(coords: Coordinates): string {
   return `${QUERY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
@@ -205,6 +205,9 @@ function sharedFetchFeatures(coords: Coordinates): Promise<NearbyFeature[]> {
   return p;
 }
 
+// Subtypes too trivial to count as a "place nearby" — extend as needed.
+const IRRELEVANT_SUBTYPES = new Set<string>(['bench']);
+
 function interpret(coords: Coordinates, data: OverpassResponse): NearbyFeature[] {
   const out: NearbyFeature[] = [];
   for (const el of data.elements) {
@@ -215,6 +218,8 @@ function interpret(coords: Coordinates, data: OverpassResponse): NearbyFeature[]
     if (lat === undefined || lon === undefined) continue;
     const { category, subtype } = categorise(tags);
     if (category === 'other') continue;
+    // Drop noise types that aren't meaningful "places nearby"
+    if (IRRELEVANT_SUBTYPES.has(subtype)) continue;
     out.push({
       id: el.id,
       elementType: el.type,
