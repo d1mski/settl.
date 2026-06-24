@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Sun as SunLucide, Sunrise, Wind, TriangleAlert, Gauge, Globe } from 'lucide-react';
+import { Sun as SunLucide, Sunrise, Wind, TriangleAlert, Gauge, Globe, Waves } from 'lucide-react';
 import type { Coordinates, TabId } from '../../types';
 import { TAB_ORDER, TAB_LABELS } from '../../types';
 import { ReportPanel } from './ReportPanel';
@@ -35,6 +35,7 @@ const TAB_ICONS: Record<TabId, JSX.Element> = {
   hazards: <TriangleAlert className="w-5 h-5" strokeWidth={1.4} />,
   air:     <Gauge className="w-5 h-5" strokeWidth={1.4} />,
   context: <Globe className="w-5 h-5" strokeWidth={1.4} />,
+  marine:  <Waves className="w-5 h-5" strokeWidth={1.4} />,
 };
 
 interface Props {

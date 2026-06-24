@@ -1,4 +1,4 @@
-import { Sun, Sunrise, Wind, TriangleAlert, Gauge, Globe, LayoutDashboard, List } from 'lucide-react';
+import { Sun, Sunrise, Wind, TriangleAlert, Gauge, Globe, Waves, LayoutDashboard, List } from 'lucide-react';
 import type { TabId } from '../../types';
 import { TAB_ORDER } from '../../types';
 
@@ -9,6 +9,7 @@ const ICONS: Record<TabId, JSX.Element> = {
   hazards: <TriangleAlert className="w-full h-full" strokeWidth={1.4} />,
   air:     <Gauge className="w-full h-full" strokeWidth={1.4} />,
   context: <Globe className="w-full h-full" strokeWidth={1.4} />,
+  marine:  <Waves className="w-full h-full" strokeWidth={1.4} />,
 };
 
 
@@ -19,6 +20,7 @@ const LABELS: Record<TabId, string> = {
   hazards: 'HZD',
   air: 'AIR',
   context: 'CTX',
+  marine: 'MAR',
 };
 
 interface Props {
