@@ -294,7 +294,10 @@ export function useOverpassFeatures(
 }
 
 const NEAREST_ROWS: Array<{ label: string; match: (f: NearbyFeature) => boolean }> = [
-  { label: 'hospital', match: (f) => f.subtype === 'hospital' },
+  // Require a name: a bare unnamed amenity=hospital is almost always a mistag or
+  // incomplete OSM import (e.g. way/1081122641 in Patras) — useless as "nearest
+  // hospital" and often beats the real named hospital on distance.
+  { label: 'hospital', match: (f) => f.subtype === 'hospital' && !!f.name },
   { label: 'pharmacy', match: (f) => f.subtype === 'pharmacy' },
   {
     label: 'supermarket',
