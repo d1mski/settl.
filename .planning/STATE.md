@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Free Data Expansion + Live Webcams
-status: Ready to execute
-stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-06-24T07:56:11.661Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 10-04-PLAN.md
+last_updated: "2026-06-24T11:14:40.656Z"
 progress:
   total_phases: 10
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 25
-  completed_plans: 25
+  completed_plans: 26
 ---
 
 # Project State
@@ -56,6 +56,7 @@ Plan: 4 of 4
 | Phase 10 P01 | 15 | 3 tasks | 3 files |
 | Phase 10 P02 | 20 | 2 tasks | 2 files |
 | Phase 10-marine-climate-selector P03 | 25 | 4 tasks | 5 files |
+| Phase 10 P04 | 35 | 3 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,9 @@ Plan: 4 of 4
 - [Phase Phase 10]: ARCHIVE_KEY_VERSION = 'era5v1' independent of KEY_VERSION — new hook, no stale entries, namespaces never collide
 - [Phase 10-marine-climate-selector]: visibleTabs gating in ModuleSheet only — ModuleRail is dead code; marine entries added to ICONS/LABELS solely for tsc Record<TabId> exhaustiveness
 - [Phase 10-marine-climate-selector]: ClimateModule Props forward-declares years?/onYearsChange? without destructuring — avoids TS6133 (noUnusedParameters: true); Plan 04 implements selector behavior
+- [Phase 10]: Tasks 1+2 committed together in 10-04 — noUnusedParameters:true makes intermediate states non-compilable; combined commit is smallest tsc-clean unit
+- [Phase 10]: rainDays deflation (10-02 carry-forward) confirmed invisible in ClimateModule — not rendered; no fix applied in 10-04; future fix belongs in useClimateArchive.ts if rainDays ever displayed
+- [Phase 10]: CompareView ΔPEAK UV shows '--'/neutral on 5/10YR — uvIndexMax:[] yields -Infinity from peakUv(); NaN delta avoided by branching on years > 1
 
 ### Pending Todos
 
@@ -122,6 +126,6 @@ Plan: 4 of 4
 
 ## Session Continuity
 
-Last session: 2026-06-24T07:56:11.656Z
-Stopped at: Completed 10-03-PLAN.md
+Last session: 2026-06-24T11:14:40.652Z
+Stopped at: Completed 10-04-PLAN.md
 Resume file: None
