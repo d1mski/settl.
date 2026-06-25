@@ -10,6 +10,9 @@ const FIRMS_URL = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
 const FIRMS_MAP_KEY = import.meta.env.VITE_FIRMS_MAP_KEY ?? '';
 const FIRMS_SOURCE = 'VIIRS_SNPP_NRT';
 const FIRMS_DAY_RANGE = 5; // FIRMS VIIRS NRT area API max is 5; >5 returns HTTP 400
+// EONET leaves wildfires "open" for years; only show genuinely recent activity.
+const EONET_MAX_AGE_DAYS = 30;
+const EONET_MAX_AGE_MS = EONET_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 const BBOX_HALF_DEG = 2.0;
 const WILDFIRE_TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -59,6 +62,10 @@ async function fetchEonet(
     for (const ev of res.events) {
       const latest = ev.geometry[ev.geometry.length - 1];
       if (!latest) continue;
+
+      // EONET keeps old fires "open" indefinitely; drop anything not recently active.
+      const ageMs = Date.now() - new Date(latest.date).getTime();
+      if (!Number.isFinite(ageMs) || ageMs > EONET_MAX_AGE_MS) continue;
 
       let lat: number;
       let lon: number;
