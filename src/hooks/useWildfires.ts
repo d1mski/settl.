@@ -9,7 +9,7 @@ const EONET_URL = 'https://eonet.gsfc.nasa.gov/api/v3/events';
 const FIRMS_URL = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
 const FIRMS_MAP_KEY = import.meta.env.VITE_FIRMS_MAP_KEY ?? '';
 const FIRMS_SOURCE = 'VIIRS_SNPP_NRT';
-const FIRMS_DAY_RANGE = 7;
+const FIRMS_DAY_RANGE = 5; // FIRMS VIIRS NRT area API max is 5; >5 returns HTTP 400
 const BBOX_HALF_DEG = 2.0;
 const WILDFIRE_TTL_MS = 6 * 60 * 60 * 1000;
 
