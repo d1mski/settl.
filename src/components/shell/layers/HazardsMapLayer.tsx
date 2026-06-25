@@ -42,7 +42,8 @@ function FireShapes({ fires, slot }: { fires: WildfireEvent[]; slot: 'A' | 'B' }
             </Polygon>
           );
         }
-        const radius = fire.source === 'FIRMS' ? 3.5 : 6;
+        // Fire is the most prominent data marker: r8 = 16px = half the 32px target reticle.
+        const radius = 8;
         return (
           <CircleMarker
             key={`fire-${slot}-${fire.id}`}
@@ -64,23 +65,46 @@ function FireShapes({ fires, slot }: { fires: WildfireEvent[]; slot: 'A' | 'B' }
   );
 }
 
+// FRP (fire radiative power, MW) → plain-language fire intensity.
+function intensityLabel(frp: number): string {
+  if (frp < 10) return 'LOW';
+  if (frp < 50) return 'MODERATE';
+  if (frp < 300) return 'HIGH';
+  return 'EXTREME';
+}
+
+// FIRMS confidence: VIIRS uses l/n/h, MODIS uses 0–100.
+function confidenceLabel(conf: string): string {
+  const c = conf.toLowerCase();
+  if (c === 'l' || c === 'n' || c === 'h') {
+    return { l: 'LOW', n: 'LIKELY', h: 'CONFIRMED' }[c]!;
+  }
+  const num = Number(conf);
+  if (Number.isFinite(num)) return num < 30 ? 'LOW' : num < 80 ? 'LIKELY' : 'CONFIRMED';
+  return conf.toUpperCase();
+}
+
+function niceDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 function FirePopup({ fire, slot }: { fire: WildfireEvent; slot: 'A' | 'B' }) {
+  const isFirms = fire.source === 'FIRMS';
+  const heading = fire.title ?? 'ACTIVE FIRE';
+  const sourceLine = isFirms ? 'DETECTED BY SATELLITE' : 'REPORTED FIRE EVENT';
   return (
     <Popup>
       <div className="font-mono text-[10px] leading-snug" style={{ maxWidth: 220 }}>
-        <div className="font-bold uppercase tracking-wide">
-          {fire.title ?? `${fire.source} HOTSPOT`}
-        </div>
+        <div className="font-bold uppercase tracking-wide">{heading}</div>
         <div className="uppercase text-gray-500 mt-0.5">
-          {fire.source} · {fire.date.slice(0, 10)}
+          {sourceLine} · {niceDate(fire.date)}
         </div>
-        {fire.brightness != null && (
-          <div>BRIGHTNESS: {fire.brightness.toFixed(0)} K</div>
-        )}
-        {fire.frp != null && <div>FRP: {fire.frp.toFixed(1)} MW</div>}
-        {fire.confidence && <div>CONF: {fire.confidence.toUpperCase()}</div>}
+        {fire.frp != null && <div>INTENSITY: {intensityLabel(fire.frp)}</div>}
+        {fire.confidence && <div>DETECTION: {confidenceLabel(fire.confidence)}</div>}
         <div className={slot === 'A' ? 'text-cyan-600' : 'text-amber-600'}>
-          {fire.distanceKm.toFixed(1)} KM · TGT·{slot}
+          {fire.distanceKm.toFixed(1)} KM FROM TARGET {slot}
         </div>
       </div>
     </Popup>
