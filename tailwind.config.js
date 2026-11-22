@@ -45,8 +45,13 @@ export default {
       animation: {
         'pulse-dot': 'pulse-dot 2s ease-in-out infinite',
         'reveal': 'reveal 0.4s ease-out forwards',
+        'fade-in': 'fade-in 0.15s ease-out',
       },
       keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
         'pulse-dot': {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.4', transform: 'scale(0.85)' },
