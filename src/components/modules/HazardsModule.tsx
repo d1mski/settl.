@@ -18,6 +18,7 @@ import { SectionHeader } from '../hud/SectionHeader';
 import { LoadingSkeleton } from '../ui/LoadingSkeleton';
 import { signedFixed, deltaTone } from '../../utils/compareUtils';
 import { fmtTooltipNum } from '../../utils/chartFmt';
+import { cartoTileUrl } from '../../utils/cartoTiles';
 
 interface Props {
   coordsA: Coordinates | null;
@@ -156,7 +157,7 @@ function SingleView({
       <Section code="01" title="SEISMIC MAP" subtitle="RADIUS ∝ MAG · COLOR = DEPTH">
         <div className="border border-edge h-[320px] rounded-md overflow-hidden">
           <MapContainer center={[coords.lat, coords.lon]} zoom={9} scrollWheelZoom zoomControl={false} className="h-full w-full">
-            <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
+            <TileLayer attribution="" url={cartoTileUrl('dark_nolabels')} maxZoom={19} />
             {events.map((e) => (
               <CircleMarker key={e.id} center={[e.lat, e.lon]} radius={Math.max(3, (e.magnitude - 2) * 4)} pathOptions={{ color: depthColor(e.depth), fillColor: depthColor(e.depth), fillOpacity: 0.5, weight: 1 }}>
                 <Popup>
@@ -254,7 +255,7 @@ function CompareView({
       <Section code="01" title="SEISMIC MAP" subtitle="A (CYAN) ↔ B (AMBER) · M3.0+ · 100KM RADIUS">
         <div className="border border-edge h-[360px] rounded-md overflow-hidden">
           <MapContainer center={[centerLat, centerLon]} zoom={7} scrollWheelZoom zoomControl={false} className="h-full w-full">
-            <TileLayer attribution="" url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" maxZoom={19} />
+            <TileLayer attribution="" url={cartoTileUrl('dark_nolabels')} maxZoom={19} />
             <CircleMarker center={[coordsA.lat, coordsA.lon]} radius={5} pathOptions={{ color: '#7eeaff', fillColor: '#7eeaff', fillOpacity: 0.9, weight: 2 }}>
               <Popup>PIN A</Popup>
             </CircleMarker>

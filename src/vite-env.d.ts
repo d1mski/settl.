@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_CARTO_KEY?: string;
   readonly VITE_FIRMS_MAP_KEY?: string;
   readonly VITE_NOMINATIM_CONTACT?: string;
   readonly VITE_WINDY_KEY?: string;

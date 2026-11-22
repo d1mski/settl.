@@ -10,6 +10,7 @@ import {
 import type { Coordinates, TabId } from '../../types';
 import { iconA, iconB } from '../../utils/mapIcons';
 import { fetchIpLocation } from '../../utils/ipLocation';
+import { cartoTileUrl } from '../../utils/cartoTiles';
 import { escapeHtml, safeHttpsUrl } from '../../utils/escapeHtml';
 import { ContextMapLayer } from './layers/ContextMapLayer';
 import { HazardsMapLayer } from './layers/HazardsMapLayer';
@@ -180,8 +181,8 @@ export function MapCanvas({
 
   const showLine = compareMode && coordsA && coordsB;
   const baseUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    ? cartoTileUrl('dark_all')
+    : cartoTileUrl('light_all');
   const attribution =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
