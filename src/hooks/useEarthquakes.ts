@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
 import type { Coordinates, EarthquakeEvent, ModuleState } from '../types';
-import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
-import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
-import { createSharedMap, sharedFetch } from '../utils/sharedFetch';
+import { TTL } from '../utils/persistentCache';
+import { useCachedResource } from './useCachedResource';
 
 const BASE = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
 
@@ -23,9 +21,6 @@ interface USGSFeature {
 interface USGSResponse {
   features: USGSFeature[];
 }
-
-const cache = new Map<string, EarthquakeEvent[]>();
-const inflight = createSharedMap<EarthquakeEvent[]>();
 
 function makeKey(coords: Coordinates): string {
   return `${coords.lat.toFixed(3)}|${coords.lon.toFixed(3)}`;
@@ -76,62 +71,10 @@ async function fetchEvents(
   return events;
 }
 
-export function useEarthquakes(
-  coords: Coordinates | null,
-): ModuleState<EarthquakeEvent[]> {
-  const [state, setState] = useState<ModuleState<EarthquakeEvent[]>>(() =>
-    initialModuleState<EarthquakeEvent[]>(),
+export function useEarthquakes(coords: Coordinates | null): ModuleState<EarthquakeEvent[]> {
+  return useCachedResource(
+    coords && makeKey(coords),
+    (signal) => fetchEvents(coords!, signal),
+    TTL.earthquakes,
   );
-
-  useEffect(() => {
-    if (!coords) {
-      setState(initialModuleState<EarthquakeEvent[]>());
-      return;
-    }
-    const key = makeKey(coords);
-    const cached = cache.get(key);
-    if (cached) {
-      setState({ status: 'success', data: cached, error: null });
-      return;
-    }
-
-    let cancelled = false;
-    // Set once the shared fetch is subscribed; releasing it aborts the
-    // underlying request when this is the last subscriber (see sharedFetch).
-    let release: (() => void) | null = null;
-    setState({ status: 'loading', data: null, error: null });
-
-    void (async () => {
-      const persistent = await cacheGet<EarthquakeEvent[]>(key);
-      if (cancelled) return;
-      if (persistent) {
-        cache.set(key, persistent);
-        setState({ status: 'success', data: persistent, error: null });
-        return;
-      }
-
-      const sub = sharedFetch(inflight, key, (signal) => fetchEvents(coords, signal));
-      release = sub.release;
-      sub.promise
-        .then((events) => {
-          if (cancelled) return;
-          cache.set(key, events);
-          void cacheSet(key, events, TTL.earthquakes);
-          setState({ status: 'success', data: events, error: null });
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const message = err instanceof Error ? err.message : String(err);
-          setState({ status: 'error', data: null, error: message });
-        });
-    })();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [coords?.lat, coords?.lon]);
-
-  return state;
 }

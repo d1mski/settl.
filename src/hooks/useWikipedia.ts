@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
 import type { Coordinates, ModuleState, WikiArticle } from '../types';
-import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
-import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
-import { createSharedMap, sharedFetch } from '../utils/sharedFetch';
+import { TTL } from '../utils/persistentCache';
+import { useCachedResource } from './useCachedResource';
 
 interface GeoSearchResponse {
   query: {
@@ -26,9 +24,6 @@ interface ExtractsResponse {
     >;
   };
 }
-
-const cache = new Map<string, WikiArticle[]>();
-const inflight = createSharedMap<WikiArticle[]>();
 
 function makeKey(coords: Coordinates, countryCode: string | null): string {
   return `${coords.lat.toFixed(3)}|${coords.lon.toFixed(3)}|${countryCode ?? '-'}`;
@@ -105,59 +100,9 @@ export function useWikipedia(
   coords: Coordinates | null,
   countryCode: string | null,
 ): ModuleState<WikiArticle[]> {
-  const [state, setState] = useState<ModuleState<WikiArticle[]>>(() =>
-    initialModuleState<WikiArticle[]>(),
+  return useCachedResource(
+    coords && makeKey(coords, countryCode),
+    (signal) => fetchBoth(coords!, countryCode, signal),
+    TTL.wikipedia,
   );
-
-  useEffect(() => {
-    if (!coords) {
-      setState(initialModuleState<WikiArticle[]>());
-      return;
-    }
-    const key = makeKey(coords, countryCode);
-    const cached = cache.get(key);
-    if (cached) {
-      setState({ status: 'success', data: cached, error: null });
-      return;
-    }
-
-    let cancelled = false;
-    // Set once the shared fetch is subscribed; releasing it aborts the
-    // underlying request when this is the last subscriber (see sharedFetch).
-    let release: (() => void) | null = null;
-    setState({ status: 'loading', data: null, error: null });
-
-    void (async () => {
-      const persistent = await cacheGet<WikiArticle[]>(key);
-      if (cancelled) return;
-      if (persistent) {
-        cache.set(key, persistent);
-        setState({ status: 'success', data: persistent, error: null });
-        return;
-      }
-
-      const sub = sharedFetch(inflight, key, (signal) => fetchBoth(coords, countryCode, signal));
-      release = sub.release;
-      sub.promise
-        .then((articles) => {
-          if (cancelled) return;
-          cache.set(key, articles);
-          void cacheSet(key, articles, TTL.wikipedia);
-          setState({ status: 'success', data: articles, error: null });
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const message = err instanceof Error ? err.message : String(err);
-          setState({ status: 'error', data: null, error: message });
-        });
-    })();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [coords?.lat, coords?.lon, countryCode]);
-
-  return state;
 }
