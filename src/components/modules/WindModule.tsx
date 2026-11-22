@@ -20,6 +20,7 @@ import {
   type WindRoseMatrix,
 } from '../../utils/windRoseData';
 import { WindRose } from '../charts/WindRose';
+import { useCompassHeading } from '../../hooks/useCompassHeading';
 import { StatReadout } from '../hud/StatReadout';
 import { DualReadout } from '../hud/DualReadout';
 import { SectionHeader } from '../hud/SectionHeader';
@@ -72,6 +73,7 @@ export function WindModule({ coordsA, coordsB, compareMode }: Props) {
 
   const a = useMemo(() => deriveOne(stateA.data), [stateA.data]);
   const b = useMemo(() => deriveOne(stateB.data), [stateB.data]);
+  const compass = useCompassHeading();
 
   if (!coordsA) return <EmptyState />;
   if (stateA.status === 'loading' || stateA.status === 'idle') return <LoadingSkeleton />;
@@ -81,12 +83,14 @@ export function WindModule({ coordsA, coordsB, compareMode }: Props) {
   if (isCompare) {
     if (stateB.status === 'loading' || stateB.status === 'idle') return <LoadingSkeleton />;
     if (stateB.status === 'error' || !b) return <ErrorState error={stateB.error} />;
-    return <CompareView a={a} b={b} />;
+    return <CompareView a={a} b={b} compass={compass} />;
   }
-  return <SingleView d={a} />;
+  return <SingleView d={a} compass={compass} />;
 }
 
-function SingleView({ d }: { d: Derived }) {
+type Compass = ReturnType<typeof useCompassHeading>;
+
+function SingleView({ d, compass }: { d: Derived; compass: Compass }) {
   const { rose, monthly, seasonal } = d;
   const calmPct = rose.total > 0 ? (rose.calmCount / rose.total) * 100 : 0;
   const prevailing = DIRECTION_LABELS[rose.prevailingDirection];
@@ -100,8 +104,9 @@ function SingleView({ d }: { d: Derived }) {
         title="WIND ROSE"
         subtitle="10M SURFACE · 16 SECTORS · 5 SPEED BINS · 12 MO"
       >
+        <CompassButton compass={compass} />
         <div className="flex flex-col items-center md:flex-row md:items-start md:gap-5">
-          <WindRose matrix={rose} />
+          <WindRose matrix={rose} heading={compass.heading} />
           <div className="grid gap-2 w-full md:w-44 mt-3 md:mt-0">
             <StatReadout label="PREVAILING" value={prevailing} hint={`${(rose.prevailingDirection * 22.5).toFixed(0)}°`} tone="cyan" compact />
             <StatReadout label="CALM %" value={`${calmPct.toFixed(1)}%`} hint="< 0.5 KM/H" compact />
@@ -142,7 +147,7 @@ function SingleView({ d }: { d: Derived }) {
   );
 }
 
-function CompareView({ a, b }: { a: Derived; b: Derived }) {
+function CompareView({ a, b, compass }: { a: Derived; b: Derived; compass: Compass }) {
   const calmA = a.rose.total ? (a.rose.calmCount / a.rose.total) * 100 : 0;
   const calmB = b.rose.total ? (b.rose.calmCount / b.rose.total) * 100 : 0;
   const prevA = DIRECTION_LABELS[a.rose.prevailingDirection];
@@ -163,12 +168,13 @@ function CompareView({ a, b }: { a: Derived; b: Derived }) {
   return (
     <div className="space-y-5">
       <Section code="01" title="WIND ROSE" subtitle="A | B · 10M SURFACE · 16 SECTORS · 12 MO">
+        <CompassButton compass={compass} />
         <div className="grid gap-3 md:grid-cols-2">
           <SubChart label="A">
-            <WindRose matrix={a.rose} size={260} />
+            <WindRose matrix={a.rose} size={260} heading={compass.heading} />
           </SubChart>
           <SubChart label="B">
-            <WindRose matrix={b.rose} size={260} />
+            <WindRose matrix={b.rose} size={260} heading={compass.heading} />
           </SubChart>
         </div>
       </Section>
@@ -227,6 +233,22 @@ function Section({ code, title, subtitle, children }: { code: string; title: str
     <div>
       <SectionHeader code={code} title={title} subtitle={subtitle} />
       <div className="border border-edge bg-bg/40 p-3 rounded-md">{children}</div>
+    </div>
+  );
+}
+
+/** iOS only: compass events need a tap before they flow. */
+function CompassButton({ compass }: { compass: Compass }) {
+  if (!compass.needsPermission) return null;
+  return (
+    <div className="flex justify-center mb-2">
+      <button
+        type="button"
+        onClick={compass.request}
+        className="text-[8px] font-mono uppercase tracking-widest border border-edge bg-void px-2 py-1 rounded-md text-amber hover:border-amber hover:bg-amber/5 transition-colors"
+      >
+        Align to compass
+      </button>
     </div>
   );
 }

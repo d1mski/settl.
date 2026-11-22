@@ -4,6 +4,8 @@ import { SPEED_BUCKET_LABELS, DIRECTION_LABELS } from '../../utils/windRoseData'
 interface Props {
   matrix: WindRoseMatrix;
   size?: number;
+  /** Phone compass heading (deg clockwise from N). Rose rotates so its N points at real north. */
+  heading?: number | null;
 }
 
 const BUCKET_COLORS = ['#3d4759', '#7eeaff', '#a5d8ff', '#ffb347', '#ff4d5e'];
@@ -32,7 +34,7 @@ function wedgePath(a0: number, a1: number, r0: number, r1: number): string {
   return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${r1} ${r1} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} A ${r0} ${r0} 0 0 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
 }
 
-export function WindRose({ matrix, size = SIZE }: Props) {
+export function WindRose({ matrix, size = SIZE, heading = null }: Props) {
   const scale = matrix.maxDirectionCount > 0 ? OUTER_RADIUS / matrix.maxDirectionCount : 0;
 
   const wedges: Array<{ path: string; color: string; tooltip: string }> = [];
@@ -55,6 +57,13 @@ export function WindRose({ matrix, size = SIZE }: Props) {
   }
 
   const rings = [0.25, 0.5, 0.75, 1].map((f) => OUTER_RADIUS * f);
+  const rot = heading ?? 0;
+  const spin = (deg: number, box: 'view-box' | 'fill-box') => ({
+    transform: `rotate(${deg}deg)`,
+    transformBox: box,
+    transformOrigin: box === 'view-box' ? `${CENTER}px ${CENTER}px` : 'center',
+    transition: 'transform 200ms linear',
+  });
 
   return (
     <div className="flex flex-col items-center">
@@ -63,6 +72,15 @@ export function WindRose({ matrix, size = SIZE }: Props) {
         height={size}
         viewBox={`0 0 ${SIZE} ${SIZE}`}
       >
+        {heading !== null && (
+          <path
+            d={`M ${CENTER - 6} 6 L ${CENTER + 6} 6 L ${CENTER} 16 Z`}
+            fill="#ffb347"
+          >
+            <title>Your facing direction</title>
+          </path>
+        )}
+        <g style={spin(-rot, 'view-box')}>
         {rings.map((r, i) => (
           <circle
             key={i}
@@ -113,6 +131,7 @@ export function WindRose({ matrix, size = SIZE }: Props) {
               key={label}
               x={p.x}
               y={p.y + 4}
+              style={spin(rot, 'fill-box')}
               textAnchor="middle"
               fontSize={11}
               fontFamily="JetBrains Mono, monospace"
@@ -124,7 +143,14 @@ export function WindRose({ matrix, size = SIZE }: Props) {
             </text>
           );
         })}
+        </g>
       </svg>
+
+      {heading !== null && (
+        <div className="mt-2 text-[9px] font-mono uppercase tracking-widest text-amber">
+          COMPASS · FACING {(((Math.round(heading) % 360) + 360) % 360).toString().padStart(3, '0')}°
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap justify-center gap-3 text-[9px]">
         {SPEED_BUCKET_LABELS.map((label, i) => (
