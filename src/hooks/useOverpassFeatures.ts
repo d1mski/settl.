@@ -1,19 +1,8 @@
-import { useEffect, useState } from 'react';
 import type { Coordinates, ModuleState } from '../types';
-import { initialModuleState } from '../types';
-import { fetchJson } from '../utils/fetcher';
+import { fetchOverpass } from '../utils/overpass';
 import { haversine } from '../utils/coordinates';
-import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
-import { createSharedMap, sharedFetch } from '../utils/sharedFetch';
-import { sleep } from '../utils/sleep';
-import { overpassGate } from './overpassGate';
-
-const ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-  'https://z.overpass-api.de/api/interpreter',
-];
+import { TTL } from '../utils/persistentCache';
+import { useCachedResource } from './useCachedResource';
 
 export type FeatureCategory =
   | 'amenity'
@@ -50,9 +39,6 @@ interface OverpassElement {
 interface OverpassResponse {
   elements: OverpassElement[];
 }
-
-const cache = new Map<string, NearbyFeature[]>();
-const inflight = createSharedMap<NearbyFeature[]>();
 
 const COORD_PRECISION = 2;
 
@@ -153,43 +139,9 @@ function categorise(tags: Record<string, string>): {
   return { category: 'other', subtype: 'other' };
 }
 
-async function tryEndpoint(
-  url: string,
-  query: string,
-  signal: AbortSignal,
-): Promise<OverpassResponse> {
-  return fetchJson<OverpassResponse>(url, {
-    signal,
-    timeoutMs: 55000,
-    init: {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
-    },
-  });
-}
-
-async function fetchFeatures(
-  coords: Coordinates,
-  signal: AbortSignal,
-): Promise<NearbyFeature[]> {
-  const query = buildQuery(coords.lat, coords.lon);
-  let lastErr: unknown = null;
-  for (let i = 0; i < ENDPOINTS.length; i++) {
-    if (signal.aborted) throw new DOMException('aborted', 'AbortError');
-    const endpoint = ENDPOINTS[i];
-    try {
-      const data = await tryEndpoint(endpoint, query, signal);
-      return interpret(coords, data);
-    } catch (err) {
-      if (signal.aborted) throw err;
-      lastErr = err;
-      // Abortable: an abandoned retry must not sleep through its backoff
-      // still holding an overpassGate slot.
-      await sleep(800 * (i + 1), signal);
-    }
-  }
-  throw lastErr instanceof Error ? lastErr : new Error('Overpass unreachable');
+async function fetchFeatures(coords: Coordinates, signal: AbortSignal): Promise<NearbyFeature[]> {
+  const data = await fetchOverpass<OverpassResponse>(buildQuery(coords.lat, coords.lon), signal, 55000);
+  return interpret(coords, data);
 }
 
 // Subtypes too trivial to count as a "place nearby" — extend as needed.
@@ -225,74 +177,9 @@ function interpret(coords: Coordinates, data: OverpassResponse): NearbyFeature[]
   return out;
 }
 
-export function useOverpassFeatures(
-  coords: Coordinates | null,
-): ModuleState<NearbyFeature[]> {
-  const [state, setState] = useState<ModuleState<NearbyFeature[]>>(() =>
-    initialModuleState<NearbyFeature[]>(),
-  );
-
-  const qLat = coords ? Number(coords.lat.toFixed(COORD_PRECISION)) : null;
-  const qLon = coords ? Number(coords.lon.toFixed(COORD_PRECISION)) : null;
-
-  useEffect(() => {
-    if (!coords) {
-      setState(initialModuleState<NearbyFeature[]>());
-      return;
-    }
-    const qCoords = quantize(coords);
-    const key = makeKey(qCoords);
-    const cached = cache.get(key);
-    if (cached) {
-      setState({ status: 'success', data: cached, error: null });
-      return;
-    }
-
-    let cancelled = false;
-    // Set once the shared fetch is subscribed; releasing it aborts the
-    // underlying request when this is the last subscriber (see sharedFetch).
-    let release: (() => void) | null = null;
-    setState({ status: 'loading', data: null, error: null });
-
-    void (async () => {
-      const persistent = await cacheGet<NearbyFeature[]>(key);
-      if (cancelled) return;
-      if (persistent) {
-        cache.set(key, persistent);
-        setState({ status: 'success', data: persistent, error: null });
-        return;
-      }
-
-      const sub = sharedFetch(inflight, key, (signal) =>
-        overpassGate.run(async () => {
-          if (signal.aborted) throw new DOMException('aborted', 'AbortError');
-          const features = await fetchFeatures(qCoords, signal);
-          cache.set(key, features);
-          void cacheSet(key, features, TTL.overpassFeatures);
-          return features;
-        }),
-      );
-      release = sub.release;
-      sub.promise
-        .then((features) => {
-          if (cancelled) return;
-          setState({ status: 'success', data: features, error: null });
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const message = err instanceof Error ? err.message : String(err);
-          setState({ status: 'error', data: null, error: message });
-        });
-    })();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [qLat, qLon]);
-
-  return state;
+export function useOverpassFeatures(coords: Coordinates | null): ModuleState<NearbyFeature[]> {
+  const q = coords && quantize(coords);
+  return useCachedResource(q && makeKey(q), (signal) => fetchFeatures(q!, signal), TTL.overpassFeatures);
 }
 
 const NEAREST_ROWS: Array<{ label: string; match: (f: NearbyFeature) => boolean }> = [

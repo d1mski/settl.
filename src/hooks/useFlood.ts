@@ -1,14 +1,11 @@
 // src/hooks/useFlood.ts
-// Pattern mirrors useAirQuality.ts exactly — verified 2026-06-22
 // No-river behavior: desert → HTTP 200 all-zeros; ocean → HTTP 200 all-nulls
 // No HTTP 400 case detected — both return 200 (unlike Marine API in Phase 10)
 
-import { useEffect, useState } from 'react';
 import type { Coordinates, ModuleState } from '../types';
-import { initialModuleState } from '../types';
 import { fetchJson } from '../utils/fetcher';
-import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
-import { createSharedMap, sharedFetch } from '../utils/sharedFetch';
+import { TTL } from '../utils/persistentCache';
+import { useCachedResource } from './useCachedResource';
 
 const BASE = 'https://flood-api.open-meteo.com/v1/flood';
 const DAILY_VARS = ['river_discharge', 'river_discharge_p25', 'river_discharge_p75'];
@@ -28,11 +25,6 @@ interface FloodResponse {
     river_discharge_p75: (number | null)[];
   };
 }
-
-const cache = new Map<string, FloodSample[]>();
-// Separate sentinel for not-applicable to avoid null ambiguity
-const notApplicableCache = new Set<string>();
-const inflight = createSharedMap<FloodFetchResult>();
 
 function makeKey(coords: Coordinates): string {
   return `flood|${coords.lat.toFixed(4)}|${coords.lon.toFixed(4)}`;
@@ -80,89 +72,20 @@ async function fetchAndClassify(
   return { notApplicable: false, samples };
 }
 
+const NOT_APPLICABLE = 'not-applicable';
+
 export function useFlood(
   coords: Coordinates | null,
 ): ModuleState<FloodSample[]> & { notApplicable: boolean } {
-  const [state, setState] = useState<ModuleState<FloodSample[]>>(
-    () => initialModuleState<FloodSample[]>(),
+  // "No river within range" is a successful result, so it caches like any other.
+  const s = useCachedResource<FloodSample[] | typeof NOT_APPLICABLE>(
+    coords && makeKey(coords),
+    async (signal) => {
+      const r = await fetchAndClassify(coords!, signal);
+      return r.notApplicable ? NOT_APPLICABLE : r.samples;
+    },
+    TTL.openMeteoFlood,
   );
-  const [notApplicable, setNotApplicable] = useState(false);
-
-  useEffect(() => {
-    if (!coords) {
-      setState(initialModuleState<FloodSample[]>());
-      setNotApplicable(false);
-      return;
-    }
-    const key = makeKey(coords);
-
-    if (notApplicableCache.has(key)) {
-      setState({ status: 'success', data: [], error: null });
-      setNotApplicable(true);
-      return;
-    }
-    const cached = cache.get(key);
-    if (cached) {
-      setState({ status: 'success', data: cached, error: null });
-      setNotApplicable(false);
-      return;
-    }
-
-    let cancelled = false;
-    // Set once the shared fetch is subscribed; releasing it aborts the
-    // underlying request when this is the last subscriber (see sharedFetch).
-    let release: (() => void) | null = null;
-    setState({ status: 'loading', data: null, error: null });
-    setNotApplicable(false);
-
-    void (async () => {
-      // Check persistent cache
-      const persistent = await cacheGet<FloodSample[] | 'not-applicable'>(key);
-      if (cancelled) return;
-      if (persistent === 'not-applicable') {
-        notApplicableCache.add(key);
-        setState({ status: 'success', data: [], error: null });
-        setNotApplicable(true);
-        return;
-      }
-      if (persistent) {
-        cache.set(key, persistent);
-        setState({ status: 'success', data: persistent, error: null });
-        return;
-      }
-
-      const sub = sharedFetch(inflight, key, (signal) => fetchAndClassify(coords, signal));
-      release = sub.release;
-      sub.promise
-        .then((result) => {
-          if (cancelled) return;
-          if (result.notApplicable) {
-            // Sentinel is a successful result — genuinely no river within
-            // range, not a failure — so it caches like any other success.
-            notApplicableCache.add(key);
-            void cacheSet(key, 'not-applicable', TTL.openMeteoFlood);
-            setState({ status: 'success', data: [], error: null });
-            setNotApplicable(true);
-            return;
-          }
-          cache.set(key, result.samples);
-          void cacheSet(key, result.samples, TTL.openMeteoFlood);
-          setState({ status: 'success', data: result.samples, error: null });
-          setNotApplicable(false);
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const message = err instanceof Error ? err.message : String(err);
-          setState({ status: 'error', data: null, error: message });
-        });
-    })();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [coords?.lat, coords?.lon]);
-
-  return { ...state, notApplicable };
+  if (s.data === NOT_APPLICABLE) return { status: 'success', data: [], error: null, notApplicable: true };
+  return { status: s.status, data: s.data, error: s.error, notApplicable: false };
 }

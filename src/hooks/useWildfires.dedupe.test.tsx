@@ -2,9 +2,8 @@
 //
 // Mount-level tests for the sharedFetch scaffold, using useWildfires as the
 // representative hook — it has the most call sites (RiskPanel, HazardsModule,
-// HazardsMapLayer, ReportPanel all mount it with the same coords). Every other
-// data hook copies this same memory-Map → cacheGet → sharedFetch → cacheSet
-// shape, so a break here is a break everywhere.
+// HazardsMapLayer, ReportPanel all mount it with the same coords). The other
+// data hooks share this wiring through useCachedResource, tested separately.
 //
 // These cover what the pure-function tests can't: that the hook actually wires
 // sharedFetch up right on mount, unmount, and coord change. Manual QA can't

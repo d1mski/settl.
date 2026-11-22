@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import type {
   ClimateData,
   Coordinates,
@@ -7,12 +6,11 @@ import type {
   ModuleState,
   ResolvedLocation,
 } from '../types';
-import { initialModuleState } from '../types';
 import { fetchJson, FetchError } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
-import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
+import { TTL } from '../utils/persistentCache';
+import { errorText, useCachedResource } from './useCachedResource';
 import { Semaphore } from '../utils/semaphore';
-import { createSharedMap, sharedFetch } from '../utils/sharedFetch';
 
 const openMeteoGate = new Semaphore(2);
 
@@ -46,9 +44,6 @@ const DAILY_VARS = [
   'wind_direction_10m_dominant',
   'sunshine_duration',
 ];
-
-const cache = new Map<string, ClimateData>();
-const inflight = createSharedMap<ClimateData>();
 
 const COORD_PRECISION = 2;
 
@@ -234,77 +229,15 @@ async function fetchOpenMeteo(
 // _years is reserved for Plan 04 — useOpenMeteo always serves the 1-yr path;
 // 5/10-yr routing uses useClimateArchive. Param is inert here.
 export function useOpenMeteo(coords: Coordinates | null, _years: 1 = 1): ModuleState<ClimateData> {
-  const [state, setState] = useState<ModuleState<ClimateData>>(() =>
-    initialModuleState<ClimateData>(),
+  const req = coords && { coords, model: pickModel(coords), ...defaultDateRange() };
+  return useCachedResource(
+    req && makeKey(quantize(req.coords), req.start, req.end, req.model.id),
+    (signal) => openMeteoGate.run(() => fetchOpenMeteo(req!.coords, req!.start, req!.end, req!.model, signal)),
+    TTL.openMeteoArchive,
+    (err) =>
+      err instanceof FetchError && err.status === 429
+        ? 'Rate-limited by Open-Meteo (retried 3×). Wait 30s and try again.'
+        : errorText(err),
   );
-
-  const qLat = coords ? Number(coords.lat.toFixed(COORD_PRECISION)) : null;
-  const qLon = coords ? Number(coords.lon.toFixed(COORD_PRECISION)) : null;
-
-  useEffect(() => {
-    if (!coords) {
-      setState(initialModuleState<ClimateData>());
-      return;
-    }
-    const qCoords = quantize(coords);
-    const { start, end } = defaultDateRange();
-    const model = pickModel(coords);
-    const key = makeKey(qCoords, start, end, model.id);
-    const cached = cache.get(key);
-    if (cached) {
-      setState({ status: 'success', data: cached, error: null });
-      return;
-    }
-
-    let cancelled = false;
-    // Set once the shared fetch is subscribed; releasing it aborts the
-    // underlying request when this is the last subscriber (see sharedFetch).
-    let release: (() => void) | null = null;
-    setState({ status: 'loading', data: null, error: null });
-
-    void (async () => {
-      const persistent = await cacheGet<ClimateData>(key);
-      if (cancelled) return;
-      if (persistent) {
-        cache.set(key, persistent);
-        setState({ status: 'success', data: persistent, error: null });
-        return;
-      }
-
-      const sub = sharedFetch(inflight, key, (signal) =>
-        openMeteoGate.run(async () => {
-          if (signal.aborted) throw new DOMException('aborted', 'AbortError');
-          const data = await fetchOpenMeteo(coords, start, end, model, signal);
-          cache.set(key, data);
-          void cacheSet(key, data, TTL.openMeteoArchive);
-          return data;
-        }),
-      );
-      release = sub.release;
-      sub.promise
-        .then((data) => {
-          if (cancelled) return;
-          setState({ status: 'success', data, error: null });
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const friendlier =
-            err instanceof FetchError && err.status === 429
-              ? 'Rate-limited by Open-Meteo (retried 3×). Wait 30s and try again.'
-              : err instanceof Error
-              ? err.message
-              : String(err);
-          setState({ status: 'error', data: null, error: friendlier });
-        });
-    })();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [qLat, qLon]);
-
-  return state;
 }
 

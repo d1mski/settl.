@@ -1,5 +1,4 @@
 import { Suspense, lazy, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Sun as SunLucide, Sunrise, Wind, TriangleAlert, Gauge, Globe, Waves } from 'lucide-react';
 import type { Coordinates, TabId } from '../../types';
 import { TAB_LABELS } from '../../types';
@@ -89,63 +88,53 @@ export function ModuleSheet({ active, coordsA, coordsB, compareMode, view, resol
       </div>
 
       {/* Content */}
-      <AnimatePresence mode="wait">
-        {view === 'overview' ? (
-          <motion.div
-            key="overview"
-            className="flex-1 overflow-y-auto overflow-x-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <ReportPanel coordsA={coordsA} resolvedA={resolvedA} countryA={countryA} onDrillDown={onDrillDown} climateYears={climateYears} onClimateYearsChange={onClimateYearsChange} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="advanced"
-            className="flex-1 flex flex-col overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            {/* Horizontal module tabs — icon on top, label below */}
-            <div className="px-4 py-3 border-b border-edge flex gap-2 shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              {visibleTabs.map(id => (
-                <button
-                  key={id}
-                  onClick={() => onSelect(id)}
-                  disabled={!coordsA}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-md text-[9px] font-mono font-semibold tracking-wider transition-colors whitespace-nowrap min-w-[60px] ${
-                    active === id
-                      ? 'bg-cyan/10 text-cyan'
-                      : 'text-muted hover:text-ink hover:bg-edge/40'
-                  } disabled:opacity-30 disabled:cursor-not-allowed`}
-                >
-                  {TAB_ICONS[id]}
-                  {TAB_LABELS[id]}
-                </button>
-              ))}
-            </div>
+      {view === 'overview' ? (
+        <div
+          key="overview"
+          className="flex-1 overflow-y-auto overflow-x-hidden animate-fade-in"
+        >
+          <ReportPanel coordsA={coordsA} resolvedA={resolvedA} countryA={countryA} onDrillDown={onDrillDown} climateYears={climateYears} onClimateYearsChange={onClimateYearsChange} />
+        </div>
+      ) : (
+        <div
+          key="advanced"
+          className="flex-1 flex flex-col overflow-hidden animate-fade-in"
+        >
+          {/* Horizontal module tabs — icon on top, label below */}
+          <div className="px-4 py-3 border-b border-edge flex gap-2 shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {visibleTabs.map(id => (
+              <button
+                key={id}
+                onClick={() => onSelect(id)}
+                disabled={!coordsA}
+                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-md text-[9px] font-mono font-semibold tracking-wider transition-colors whitespace-nowrap min-w-[60px] ${
+                  active === id
+                    ? 'bg-cyan/10 text-cyan'
+                    : 'text-muted hover:text-ink hover:bg-edge/40'
+                } disabled:opacity-30 disabled:cursor-not-allowed`}
+              >
+                {TAB_ICONS[id]}
+                {TAB_LABELS[id]}
+              </button>
+            ))}
+          </div>
 
-            {/* Module content */}
-            <div className="flex-1 overflow-y-auto p-5 stagger">
-              <ErrorBoundary>
-                <Suspense fallback={<LoadingSkeleton />}>
-                  {active === 'climate' && <ClimateModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} years={climateYears} onYearsChange={onClimateYearsChange} />}
-                  {active === 'wind' && <WindModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
-                  {active === 'sun' && <SunModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
-                  {active === 'hazards' && <HazardsModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
-                  {active === 'air' && <AirQualityModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
-                  {active === 'context' && <ContextModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
-                  {active === 'marine' && <MarineModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Module content */}
+          <div className="flex-1 overflow-y-auto p-5 stagger">
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSkeleton />}>
+                {active === 'climate' && <ClimateModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} years={climateYears} onYearsChange={onClimateYearsChange} />}
+                {active === 'wind' && <WindModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+                {active === 'sun' && <SunModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+                {active === 'hazards' && <HazardsModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+                {active === 'air' && <AirQualityModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+                {active === 'context' && <ContextModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+                {active === 'marine' && <MarineModule coordsA={coordsA} coordsB={coordsB} compareMode={compareMode} />}
+              </Suspense>
+            </ErrorBoundary>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-edge px-4 py-2 text-[9px] font-mono uppercase tracking-widest text-dim flex items-center justify-between shrink-0">

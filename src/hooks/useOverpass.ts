@@ -1,20 +1,9 @@
-import { useEffect, useState } from 'react';
 import type { BuildingData, Coordinates, ModuleState } from '../types';
-import { initialModuleState } from '../types';
-import { fetchJson } from '../utils/fetcher';
+import { fetchOverpass } from '../utils/overpass';
 import { analyseBuildingPolygon, emptyBuilding } from '../utils/buildingOrientation';
 import { haversine } from '../utils/coordinates';
-import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
-import { createSharedMap, sharedFetch } from '../utils/sharedFetch';
-import { sleep } from '../utils/sleep';
-import { overpassGate } from './overpassGate';
-
-const ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://lz4.overpass-api.de/api/interpreter',
-  'https://z.overpass-api.de/api/interpreter',
-];
+import { TTL } from '../utils/persistentCache';
+import { useCachedResource } from './useCachedResource';
 
 interface OverpassWay {
   type: 'way';
@@ -40,9 +29,6 @@ interface OverpassResponse {
   elements: OverpassElement[];
 }
 
-const cache = new Map<string, BuildingData>();
-const inflight = createSharedMap<BuildingData>();
-
 const COORD_PRECISION = 5;
 
 function quantize(coords: Coordinates): Coordinates {
@@ -56,22 +42,6 @@ const KEY_VERSION = 'v2';
 
 function makeKey(coords: Coordinates): string {
   return `${KEY_VERSION}|${coords.lat.toFixed(COORD_PRECISION)}|${coords.lon.toFixed(COORD_PRECISION)}`;
-}
-
-async function fetchFromEndpoint(
-  url: string,
-  query: string,
-  signal: AbortSignal,
-): Promise<OverpassResponse> {
-  return fetchJson<OverpassResponse>(url, {
-    signal,
-    timeoutMs: 20000,
-    init: {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
-    },
-  });
 }
 
 const SEARCH_RADIUS_M = 400;
@@ -88,30 +58,9 @@ function buildQuery(coords: Coordinates): string {
   );
 }
 
-async function fetchBuilding(
-  coords: Coordinates,
-  signal: AbortSignal,
-): Promise<BuildingData> {
-  const query = buildQuery(coords);
-
-  let lastErr: unknown = null;
-  for (let i = 0; i < ENDPOINTS.length; i++) {
-    if (signal.aborted) throw new DOMException('aborted', 'AbortError');
-    const endpoint = ENDPOINTS[i];
-    try {
-      const data = await fetchFromEndpoint(endpoint, query, signal);
-      return interpretResponse(coords, data);
-    } catch (err) {
-      if (signal.aborted) throw err;
-      lastErr = err;
-      // Abortable: an abandoned retry must not sleep through its backoff
-      // still holding an overpassGate slot.
-      await sleep(800 * (i + 1), signal);
-    }
-  }
-  throw lastErr instanceof Error
-    ? lastErr
-    : new Error('Overpass unreachable');
+async function fetchBuilding(coords: Coordinates, signal: AbortSignal): Promise<BuildingData> {
+  const data = await fetchOverpass<OverpassResponse>(buildQuery(coords), signal, 20000);
+  return interpretResponse(coords, data);
 }
 
 function interpretResponse(
@@ -194,72 +143,7 @@ function interpretResponse(
   };
 }
 
-export function useOverpassBuilding(
-  coords: Coordinates | null,
-): ModuleState<BuildingData> {
-  const [state, setState] = useState<ModuleState<BuildingData>>(() =>
-    initialModuleState<BuildingData>(),
-  );
-
-  const qLat = coords ? Number(coords.lat.toFixed(COORD_PRECISION)) : null;
-  const qLon = coords ? Number(coords.lon.toFixed(COORD_PRECISION)) : null;
-
-  useEffect(() => {
-    if (!coords) {
-      setState(initialModuleState<BuildingData>());
-      return;
-    }
-    const qCoords = quantize(coords);
-    const key = makeKey(qCoords);
-    const cached = cache.get(key);
-    if (cached) {
-      setState({ status: 'success', data: cached, error: null });
-      return;
-    }
-
-    let cancelled = false;
-    // Set once the shared fetch is subscribed; releasing it aborts the
-    // underlying request when this is the last subscriber (see sharedFetch).
-    let release: (() => void) | null = null;
-    setState({ status: 'loading', data: null, error: null });
-
-    void (async () => {
-      const persistent = await cacheGet<BuildingData>(key);
-      if (cancelled) return;
-      if (persistent) {
-        cache.set(key, persistent);
-        setState({ status: 'success', data: persistent, error: null });
-        return;
-      }
-
-      const sub = sharedFetch(inflight, key, (signal) =>
-        overpassGate.run(async () => {
-          if (signal.aborted) throw new DOMException('aborted', 'AbortError');
-          const data = await fetchBuilding(qCoords, signal);
-          cache.set(key, data);
-          void cacheSet(key, data, TTL.overpassBuilding);
-          return data;
-        }),
-      );
-      release = sub.release;
-      sub.promise
-        .then((data) => {
-          if (cancelled) return;
-          setState({ status: 'success', data, error: null });
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const message = err instanceof Error ? err.message : String(err);
-          setState({ status: 'error', data: null, error: message });
-        });
-    })();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [qLat, qLon]);
-
-  return state;
+export function useOverpassBuilding(coords: Coordinates | null): ModuleState<BuildingData> {
+  const q = coords && quantize(coords);
+  return useCachedResource(q && makeKey(q), (signal) => fetchBuilding(q!, signal), TTL.overpassBuilding);
 }

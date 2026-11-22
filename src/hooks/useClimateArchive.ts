@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import type {
   ClimateData,
   Coordinates,
@@ -7,12 +6,11 @@ import type {
   ModuleState,
   ResolvedLocation,
 } from '../types';
-import { initialModuleState } from '../types';
 import { fetchJson, FetchError } from '../utils/fetcher';
 import { haversine } from '../utils/coordinates';
-import { cacheGet, cacheSet, TTL } from '../utils/persistentCache';
+import { TTL } from '../utils/persistentCache';
+import { errorText, useCachedResource } from './useCachedResource';
 import { Semaphore } from '../utils/semaphore';
-import { createSharedMap, sharedFetch } from '../utils/sharedFetch';
 
 // Rate-limit archive fetches to 2 concurrent — mirrors openMeteoGate in useOpenMeteo.
 const archiveGate = new Semaphore(2);
@@ -38,8 +36,6 @@ const DAILY_VARS = [
 ];
 
 // In-memory + idb cache — 30-day TTL (ERA5 reanalysis is stable; aggressive cache per RESEARCH).
-const cache = new Map<string, ClimateData>();
-const inflight = createSharedMap<ClimateData>();
 
 const COORD_PRECISION = 2;
 const ARCHIVE_KEY_VERSION = 'era5v1';
@@ -212,79 +208,20 @@ async function fetchClimateArchive(
 }
 
 export function useClimateArchive(coords: Coordinates | null, years: 5 | 10): ModuleState<ClimateData> {
-  const [state, setState] = useState<ModuleState<ClimateData>>(() =>
-    initialModuleState<ClimateData>(),
-  );
-
-  const qLat = coords ? Number(coords.lat.toFixed(COORD_PRECISION)) : null;
-  const qLon = coords ? Number(coords.lon.toFixed(COORD_PRECISION)) : null;
-
-  useEffect(() => {
-    if (!coords) {
-      setState(initialModuleState<ClimateData>());
-      return;
-    }
-    const qCoords: Coordinates = {
+  const req = coords && {
+    coords: {
       lat: Number(coords.lat.toFixed(COORD_PRECISION)),
       lon: Number(coords.lon.toFixed(COORD_PRECISION)),
-    };
-    const { start, end } = archiveDateRange(years);
-    const key = makeArchiveKey(qCoords, start, end, years);
-
-    const cached = cache.get(key);
-    if (cached) {
-      setState({ status: 'success', data: cached, error: null });
-      return;
-    }
-
-    let cancelled = false;
-    // Set once the shared fetch is subscribed; releasing it aborts the
-    // underlying request when this is the last subscriber (see sharedFetch).
-    let release: (() => void) | null = null;
-    setState({ status: 'loading', data: null, error: null });
-
-    void (async () => {
-      const persistent = await cacheGet<ClimateData>(key);
-      if (cancelled) return;
-      if (persistent) {
-        cache.set(key, persistent);
-        setState({ status: 'success', data: persistent, error: null });
-        return;
-      }
-
-      const sub = sharedFetch(inflight, key, (signal) =>
-        archiveGate.run(async () => {
-          if (signal.aborted) throw new DOMException('aborted', 'AbortError');
-          const data = await fetchClimateArchive(qCoords, start, end, years, signal);
-          cache.set(key, data);
-          void cacheSet(key, data, TTL.openMeteoArchive);
-          return data;
-        }),
-      );
-      release = sub.release;
-      sub.promise
-        .then((data) => {
-          if (cancelled) return;
-          setState({ status: 'success', data, error: null });
-        })
-        .catch((err: unknown) => {
-          if (cancelled) return;
-          if (err instanceof DOMException && err.name === 'AbortError') return;
-          const friendlier =
-            err instanceof FetchError && err.status === 429
-              ? 'Rate-limited by Open-Meteo Archive (retried 3×). Wait 30s and try again.'
-              : err instanceof Error
-              ? err.message
-              : String(err);
-          setState({ status: 'error', data: null, error: friendlier });
-        });
-    })();
-
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [qLat, qLon, years]);
-
-  return state;
+    },
+    ...archiveDateRange(years),
+  };
+  return useCachedResource(
+    req && makeArchiveKey(req.coords, req.start, req.end, years),
+    (signal) => archiveGate.run(() => fetchClimateArchive(req!.coords, req!.start, req!.end, years, signal)),
+    TTL.openMeteoArchive,
+    (err) =>
+      err instanceof FetchError && err.status === 429
+        ? 'Rate-limited by Open-Meteo Archive (retried 3×). Wait 30s and try again.'
+        : errorText(err),
+  );
 }
