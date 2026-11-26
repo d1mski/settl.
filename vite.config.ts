@@ -26,6 +26,10 @@ export default defineConfig({
   server: { port: 5173 },
   build: {
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        here: path.resolve(__dirname, 'here/index.html'),
+      },
       output: {
         // @sentry/react's entry is index.js, so its lazy chunk was emitted as
         // another index-*.js — indistinguishable from the app entry in the
