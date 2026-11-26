@@ -103,3 +103,18 @@ export function summariseSeasonalWind(hourly: HourlyWeather): SeasonalWind {
   const windChillFlag = winterMeanTemp < 5 && winterMeanSpeed > 15;
   return { winterMeanSpeed, winterMeanTemp, windChillFlag };
 }
+
+/** Rose for one calendar month (0-11) of the hourly series, or the whole series when month is null. */
+export function buildMonthRose(hourly: HourlyWeather, month: number | null): WindRoseMatrix {
+  if (month === null) return buildWindRose(hourly.windSpeed10m, hourly.windDirection10m);
+  const mm = String(month + 1).padStart(2, '0');
+  const speeds: number[] = [];
+  const dirs: number[] = [];
+  hourly.time.forEach((t, i) => {
+    if (t?.slice(5, 7) === mm) {
+      speeds.push(hourly.windSpeed10m[i]);
+      dirs.push(hourly.windDirection10m[i]);
+    }
+  });
+  return buildWindRose(speeds, dirs);
+}
